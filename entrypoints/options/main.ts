@@ -12,7 +12,9 @@ function loadSettings(): void {
     (items) => {
       const settings = items as Settings;
       const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
-      const defaultElementSearchEl = document.getElementById('defaultElementSearch') as HTMLInputElement;
+      const defaultElementSearchEl = document.getElementById(
+        'defaultElementSearch'
+      ) as HTMLInputElement;
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
@@ -28,7 +30,9 @@ function loadSettings(): void {
 // Save settings
 function saveSettings(): void {
   const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
-  const defaultElementSearchEl = document.getElementById('defaultElementSearch') as HTMLInputElement;
+  const defaultElementSearchEl = document.getElementById(
+    'defaultElementSearch'
+  ) as HTMLInputElement;
 
   if (!defaultRegexEl || !defaultElementSearchEl) {
     return;

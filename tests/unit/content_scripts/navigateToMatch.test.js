@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../../helpers/dom-helpers.js';
 
 // Mock state and functions that navigateToMatch depends on
@@ -26,13 +26,14 @@ function navigateToMatch(index) {
   }
 
   // Normalize index (wrap around)
-  if (index < 0) {
-    index = totalMatches - 1;
-  } else if (index >= totalMatches) {
-    index = 0;
+  let normalizedIndex = index;
+  if (normalizedIndex < 0) {
+    normalizedIndex = totalMatches - 1;
+  } else if (normalizedIndex >= totalMatches) {
+    normalizedIndex = 0;
   }
 
-  currentMatchIndex = index;
+  currentMatchIndex = normalizedIndex;
 
   // Update overlay colors (for text search)
   if (highlightData.ranges.length > 0) {
@@ -80,7 +81,7 @@ describe('navigateToMatch', () => {
     scrollIntoViewCalls = [];
 
     // Mock scrollIntoView (not available in jsdom)
-    Element.prototype.scrollIntoView = vi.fn(function(options) {
+    Element.prototype.scrollIntoView = vi.fn(function (_options) {
       // Track the call for testing
       scrollIntoViewCalls.push({ type: 'mock', element: this });
     });
@@ -113,7 +114,7 @@ describe('navigateToMatch', () => {
       document.body.innerHTML = '<div>Match 1</div><div>Match 2</div><div>Match 3</div>';
       const divs = document.querySelectorAll('div');
 
-      highlightData.ranges = Array.from(divs).map(div => {
+      highlightData.ranges = Array.from(divs).map((div) => {
         const range = document.createRange();
         range.selectNodeContents(div.firstChild);
         return range;
@@ -192,7 +193,8 @@ describe('navigateToMatch', () => {
 
   describe('Element search navigation', () => {
     beforeEach(() => {
-      document.body.innerHTML = '<div class="match">Elem 1</div><div class="match">Elem 2</div><div class="match">Elem 3</div>';
+      document.body.innerHTML =
+        '<div class="match">Elem 1</div><div class="match">Elem 2</div><div class="match">Elem 3</div>';
       highlightData.elements = Array.from(document.querySelectorAll('.match'));
     });
 
@@ -237,7 +239,7 @@ describe('navigateToMatch', () => {
     beforeEach(() => {
       document.body.innerHTML = '<div>1</div><div>2</div><div>3</div><div>4</div><div>5</div>';
       const divs = document.querySelectorAll('div');
-      highlightData.ranges = Array.from(divs).map(div => {
+      highlightData.ranges = Array.from(divs).map((div) => {
         const range = document.createRange();
         range.selectNodeContents(div.firstChild);
         return range;
@@ -287,7 +289,7 @@ describe('navigateToMatch', () => {
       // Start with text search
       document.body.innerHTML = '<div>Text 1</div><div>Text 2</div>';
       const divs = document.querySelectorAll('div');
-      highlightData.ranges = Array.from(divs).map(div => {
+      highlightData.ranges = Array.from(divs).map((div) => {
         const range = document.createRange();
         range.selectNodeContents(div.firstChild);
         return range;
@@ -331,7 +333,7 @@ describe('navigateToMatch', () => {
     beforeEach(() => {
       document.body.innerHTML = '<div>1</div><div>2</div><div>3</div>';
       const divs = document.querySelectorAll('div');
-      highlightData.ranges = Array.from(divs).map(div => {
+      highlightData.ranges = Array.from(divs).map((div) => {
         const range = document.createRange();
         range.selectNodeContents(div.firstChild);
         return range;

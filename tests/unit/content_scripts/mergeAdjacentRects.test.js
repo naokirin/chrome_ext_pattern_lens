@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Helper function extracted from main.js for testing
 function mergeAdjacentRects(rectList, tolerance = 1) {
@@ -10,7 +10,7 @@ function mergeAdjacentRects(rectList, tolerance = 1) {
 
   // 1. Group rectangles by line (using rounded y coordinate)
   const lines = new Map();
-  rects.forEach(rect => {
+  rects.forEach((rect) => {
     // Round y coordinate to absorb small pixel differences
     const lineY = Math.round(rect.y);
     if (!lines.has(lineY)) {
@@ -133,8 +133,8 @@ describe('mergeAdjacentRects', () => {
 
   describe('Multiple lines', () => {
     it('should keep rects on different lines separate', () => {
-      const rect1 = new DOMRect(10, 20, 100, 30);  // line y=20
-      const rect2 = new DOMRect(10, 60, 100, 30);  // line y=60
+      const rect1 = new DOMRect(10, 20, 100, 30); // line y=20
+      const rect2 = new DOMRect(10, 60, 100, 30); // line y=60
 
       const result = mergeAdjacentRects([rect1, rect2]);
 
@@ -142,10 +142,10 @@ describe('mergeAdjacentRects', () => {
     });
 
     it('should merge rects on same line but keep different lines separate', () => {
-      const line1rect1 = new DOMRect(10, 20, 50, 30);  // line y=20
-      const line1rect2 = new DOMRect(60, 20, 40, 30);  // line y=20
-      const line2rect1 = new DOMRect(10, 60, 50, 30);  // line y=60
-      const line2rect2 = new DOMRect(60, 60, 40, 30);  // line y=60
+      const line1rect1 = new DOMRect(10, 20, 50, 30); // line y=20
+      const line1rect2 = new DOMRect(60, 20, 40, 30); // line y=20
+      const line2rect1 = new DOMRect(10, 60, 50, 30); // line y=60
+      const line2rect2 = new DOMRect(60, 60, 40, 30); // line y=60
 
       const result = mergeAdjacentRects([line1rect1, line1rect2, line2rect1, line2rect2]);
 
@@ -171,9 +171,9 @@ describe('mergeAdjacentRects', () => {
 
   describe('Complex scenarios', () => {
     it('should merge multiple adjacent rects in sequence', () => {
-      const rect1 = new DOMRect(10, 20, 30, 30);  // right:40
-      const rect2 = new DOMRect(40, 20, 30, 30);  // left:40, right:70
-      const rect3 = new DOMRect(70, 20, 30, 30);  // left:70, right:100
+      const rect1 = new DOMRect(10, 20, 30, 30); // right:40
+      const rect2 = new DOMRect(40, 20, 30, 30); // left:40, right:70
+      const rect3 = new DOMRect(70, 20, 30, 30); // left:70, right:100
 
       const result = mergeAdjacentRects([rect1, rect2, rect3]);
 
@@ -183,7 +183,7 @@ describe('mergeAdjacentRects', () => {
     });
 
     it('should handle rects provided in wrong order', () => {
-      const rect1 = new DOMRect(70, 20, 30, 30);  // Will be sorted
+      const rect1 = new DOMRect(70, 20, 30, 30); // Will be sorted
       const rect2 = new DOMRect(10, 20, 30, 30);
       const rect3 = new DOMRect(40, 20, 30, 30);
 
@@ -195,20 +195,20 @@ describe('mergeAdjacentRects', () => {
     });
 
     it('should merge some rects but not others', () => {
-      const rect1 = new DOMRect(10, 20, 30, 30);  // right:40
-      const rect2 = new DOMRect(40, 20, 30, 30);  // left:40, right:70
-      const rect3 = new DOMRect(80, 20, 30, 30);  // left:80 (gap from rect2)
+      const rect1 = new DOMRect(10, 20, 30, 30); // right:40
+      const rect2 = new DOMRect(40, 20, 30, 30); // left:40, right:70
+      const rect3 = new DOMRect(80, 20, 30, 30); // left:80 (gap from rect2)
 
       const result = mergeAdjacentRects([rect1, rect2, rect3]);
 
       expect(result.length).toBe(2);
       expect(result[0].width).toBe(60); // rect1 + rect2
-      expect(result[1].left).toBe(80);  // rect3 alone
+      expect(result[1].left).toBe(80); // rect3 alone
     });
 
     it('should handle different heights on same line (use max)', () => {
-      const rect1 = new DOMRect(10, 20, 50, 25);  // height:25, top:20, bottom:45
-      const rect2 = new DOMRect(60, 20, 40, 30);  // height:30, top:20, bottom:50
+      const rect1 = new DOMRect(10, 20, 50, 25); // height:25, top:20, bottom:45
+      const rect2 = new DOMRect(60, 20, 40, 30); // height:30, top:20, bottom:50
 
       const result = mergeAdjacentRects([rect1, rect2]);
 
@@ -220,17 +220,9 @@ describe('mergeAdjacentRects', () => {
 
     it('should handle multi-line text wrapping scenario', () => {
       // Simulate text that wraps across 3 lines
-      const line1 = [
-        new DOMRect(10, 20, 40, 20),
-        new DOMRect(50, 20, 40, 20),
-      ];
-      const line2 = [
-        new DOMRect(10, 50, 40, 20),
-        new DOMRect(50, 50, 40, 20),
-      ];
-      const line3 = [
-        new DOMRect(10, 80, 30, 20),
-      ];
+      const line1 = [new DOMRect(10, 20, 40, 20), new DOMRect(50, 20, 40, 20)];
+      const line2 = [new DOMRect(10, 50, 40, 20), new DOMRect(50, 50, 40, 20)];
+      const line3 = [new DOMRect(10, 80, 30, 20)];
 
       const allRects = [...line1, ...line2, ...line3];
       const result = mergeAdjacentRects(allRects);
@@ -241,8 +233,8 @@ describe('mergeAdjacentRects', () => {
 
   describe('Edge cases', () => {
     it('should handle overlapping rects', () => {
-      const rect1 = new DOMRect(10, 20, 60, 30);  // right:70
-      const rect2 = new DOMRect(50, 20, 60, 30);  // left:50, right:110 (overlaps)
+      const rect1 = new DOMRect(10, 20, 60, 30); // right:70
+      const rect2 = new DOMRect(50, 20, 60, 30); // left:50, right:110 (overlaps)
 
       const result = mergeAdjacentRects([rect1, rect2]);
 

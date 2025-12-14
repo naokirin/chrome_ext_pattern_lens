@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createDOMFromHTML, cleanupDOM, visualizeBoundaries } from '../../helpers/dom-helpers.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { cleanupDOM, createDOMFromHTML, visualizeBoundaries } from '../../helpers/dom-helpers.js';
 
 // Since content_scripts/main.js is not a module, we need to test it by loading it in the global scope
 // For now, we'll manually extract and test the key functions
@@ -12,14 +12,41 @@ function isBlockLevel(element) {
     return false;
   }
 
-  const inlineElements = ['SPAN', 'STRONG', 'EM', 'B', 'I', 'CODE', 'KBD', 'SAMP', 'VAR', 'A', 'ABBR', 'CITE', 'Q', 'MARK', 'SMALL', 'SUB', 'SUP'];
+  const inlineElements = [
+    'SPAN',
+    'STRONG',
+    'EM',
+    'B',
+    'I',
+    'CODE',
+    'KBD',
+    'SAMP',
+    'VAR',
+    'A',
+    'ABBR',
+    'CITE',
+    'Q',
+    'MARK',
+    'SMALL',
+    'SUB',
+    'SUP',
+  ];
   if (inlineElements.includes(element.tagName)) {
     return false;
   }
 
   const style = window.getComputedStyle(element);
   const display = style.display;
-  return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
+  return [
+    'block',
+    'flex',
+    'grid',
+    'list-item',
+    'table',
+    'table-row',
+    'table-cell',
+    'flow-root',
+  ].includes(display);
 }
 
 function getNearestBlockAncestor(node) {
@@ -44,23 +71,19 @@ function createVirtualTextAndMap() {
   const charMap = [];
   let lastVisibleNode = null;
 
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode(node) {
-        const parent = node.parentElement;
-        if (!parent || !isVisible(parent)) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        // Skip completely empty text nodes (but keep whitespace-only nodes)
-        if (!node.nodeValue || node.nodeValue.length === 0) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    }
-  );
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent || !isVisible(parent)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      // Skip completely empty text nodes (but keep whitespace-only nodes)
+      if (!node.nodeValue || node.nodeValue.length === 0) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
 
   while (walker.nextNode()) {
     const currentNode = walker.currentNode;
@@ -120,7 +143,7 @@ describe('createVirtualTextAndMap', () => {
     expect(charMap.length).toBe(11); // 5 + 1 (boundary) + 5
 
     // Check boundary marker in charMap
-    const boundaryIndex = charMap.findIndex(item => item.type === 'block-boundary');
+    const boundaryIndex = charMap.findIndex((item) => item.type === 'block-boundary');
     expect(boundaryIndex).toBe(5);
     expect(charMap[boundaryIndex].node).toBe(null);
   });
@@ -223,7 +246,8 @@ describe('createVirtualTextAndMap', () => {
   });
 
   it('should handle mixed inline and block elements', () => {
-    document.body.innerHTML = '<div><span>git</span><span>commit</span><span>-m</span></div><div>"message"</div>';
+    document.body.innerHTML =
+      '<div><span>git</span><span>commit</span><span>-m</span></div><div>"message"</div>';
 
     const { virtualText, charMap } = createVirtualTextAndMap();
 

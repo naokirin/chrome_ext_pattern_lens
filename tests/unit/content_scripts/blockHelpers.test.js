@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanupDOM } from '../../helpers/dom-helpers.js';
 
 // Helper functions extracted from main.js for testing
@@ -8,14 +8,41 @@ function isBlockLevel(element) {
   }
 
   // Always treat these as inline elements regardless of CSS
-  const inlineElements = ['SPAN', 'STRONG', 'EM', 'B', 'I', 'CODE', 'KBD', 'SAMP', 'VAR', 'A', 'ABBR', 'CITE', 'Q', 'MARK', 'SMALL', 'SUB', 'SUP'];
+  const inlineElements = [
+    'SPAN',
+    'STRONG',
+    'EM',
+    'B',
+    'I',
+    'CODE',
+    'KBD',
+    'SAMP',
+    'VAR',
+    'A',
+    'ABBR',
+    'CITE',
+    'Q',
+    'MARK',
+    'SMALL',
+    'SUB',
+    'SUP',
+  ];
   if (inlineElements.includes(element.tagName)) {
     return false;
   }
 
   const style = window.getComputedStyle(element);
   const display = style.display;
-  return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
+  return [
+    'block',
+    'flex',
+    'grid',
+    'list-item',
+    'table',
+    'table-row',
+    'table-cell',
+    'flow-root',
+  ].includes(display);
 }
 
 function getNearestBlockAncestor(node) {
@@ -56,7 +83,7 @@ describe('isBlockLevel', () => {
     it('should identify H1-H6 as block-level', () => {
       const headings = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 
-      headings.forEach(tag => {
+      headings.forEach((tag) => {
         const heading = document.createElement(tag);
         document.body.appendChild(heading);
         expect(isBlockLevel(heading)).toBe(true);
@@ -144,9 +171,22 @@ describe('isBlockLevel', () => {
     });
 
     it('should identify all semantic inline elements', () => {
-      const inlineTags = ['b', 'i', 'kbd', 'samp', 'var', 'abbr', 'cite', 'q', 'mark', 'small', 'sub', 'sup'];
+      const inlineTags = [
+        'b',
+        'i',
+        'kbd',
+        'samp',
+        'var',
+        'abbr',
+        'cite',
+        'q',
+        'mark',
+        'small',
+        'sub',
+        'sup',
+      ];
 
-      inlineTags.forEach(tag => {
+      inlineTags.forEach((tag) => {
         const element = document.createElement(tag);
         document.body.appendChild(element);
         expect(isBlockLevel(element)).toBe(false);
@@ -361,7 +401,8 @@ describe('getNearestBlockAncestor', () => {
     });
 
     it('should work with semantic HTML5 elements', () => {
-      document.body.innerHTML = '<article id="article"><section id="section"><span>text</span></section></article>';
+      document.body.innerHTML =
+        '<article id="article"><section id="section"><span>text</span></section></article>';
       const span = document.querySelector('span');
       const textNode = span.firstChild;
 

@@ -1,14 +1,14 @@
 // Import shared type definitions
 import type {
+  CharMapEntry,
+  HighlightData,
+  NavigationResult,
   SearchMessage,
   SearchResponse,
-  StateResponse,
-  SearchState,
-  HighlightData,
-  CharMapEntry,
-  VirtualMatch,
-  NavigationResult,
   SearchResult,
+  SearchState,
+  StateResponse,
+  VirtualMatch,
 } from '~/lib/types';
 
 // Constants
@@ -24,7 +24,7 @@ const BLOCK_BOUNDARY_MARKER = '\uE000';
 const highlightData: HighlightData = {
   ranges: [],
   elements: [],
-  overlays: []
+  overlays: [],
 };
 
 // Current match navigation
@@ -36,7 +36,7 @@ let lastSearchState: SearchState = {
   useRegex: false,
   caseSensitive: false,
   useElementSearch: false,
-  elementSearchMode: 'css'
+  elementSearchMode: 'css',
 };
 
 // Initialize overlay container
@@ -62,7 +62,12 @@ function initializeOverlayContainer(): HTMLDivElement {
 }
 
 // Create overlay element for a rectangle
-function createOverlay(rect: DOMRect, scrollX: number, scrollY: number, isCurrent = false): HTMLDivElement {
+function createOverlay(
+  rect: DOMRect,
+  scrollX: number,
+  scrollY: number,
+  isCurrent = false
+): HTMLDivElement {
   const overlay = document.createElement('div');
   overlay.className = isCurrent ? `${HIGHLIGHT_CLASS} ${CURRENT_MATCH_CLASS}` : HIGHLIGHT_CLASS;
 
@@ -78,8 +83,8 @@ function createOverlay(rect: DOMRect, scrollX: number, scrollY: number, isCurren
     position: absolute;
     left: ${rect.left + scrollX - padding}px;
     top: ${rect.top + scrollY - padding}px;
-    width: ${rect.width + (padding * 2)}px;
-    height: ${rect.height + (padding * 2)}px;
+    width: ${rect.width + padding * 2}px;
+    height: ${rect.height + padding * 2}px;
     background-color: ${bgColor};
     border: ${borderWidth}px solid ${borderColor};
     border-radius: 2px;
@@ -105,7 +110,7 @@ function updateOverlayPositions(): void {
   highlightData.ranges.forEach((range, index) => {
     const rects = range.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
-    const isCurrent = (index === currentMatchIndex);
+    const isCurrent = index === currentMatchIndex;
     for (let i = 0; i < mergedRects.length; i++) {
       const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
       container.appendChild(overlay);
@@ -113,7 +118,7 @@ function updateOverlayPositions(): void {
     }
   });
 
-  highlightData.elements.forEach(element => {
+  highlightData.elements.forEach((element) => {
     const rects = element.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
     for (let i = 0; i < mergedRects.length; i++) {
@@ -208,7 +213,7 @@ function updateMinimap(): void {
       `;
 
       container.appendChild(marker);
-    } catch (error) {
+    } catch (_error) {
       // Failed to create minimap marker, silently ignore
     }
   });
@@ -232,13 +237,14 @@ function navigateToMatch(index: number): NavigationResult {
   }
 
   // Normalize index (wrap around)
-  if (index < 0) {
-    index = totalMatches - 1;
-  } else if (index >= totalMatches) {
-    index = 0;
+  let normalizedIndex = index;
+  if (normalizedIndex < 0) {
+    normalizedIndex = totalMatches - 1;
+  } else if (normalizedIndex >= totalMatches) {
+    normalizedIndex = 0;
   }
 
-  currentMatchIndex = index;
+  currentMatchIndex = normalizedIndex;
 
   // Update overlay colors (for text search)
   if (highlightData.ranges.length > 0) {
@@ -256,7 +262,7 @@ function navigateToMatch(index: number): NavigationResult {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } catch (error) {
+      } catch (_error) {
         // Failed to scroll to match, silently ignore
       }
     }
@@ -266,7 +272,7 @@ function navigateToMatch(index: number): NavigationResult {
     if (currentElement) {
       try {
         currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } catch (error) {
+      } catch (_error) {
         // Failed to scroll to element, silently ignore
       }
     }
@@ -282,14 +288,41 @@ function isBlockLevel(element: Element | null): boolean {
   }
 
   // Always treat these as inline elements regardless of CSS
-  const inlineElements = ['SPAN', 'STRONG', 'EM', 'B', 'I', 'CODE', 'KBD', 'SAMP', 'VAR', 'A', 'ABBR', 'CITE', 'Q', 'MARK', 'SMALL', 'SUB', 'SUP'];
+  const inlineElements = [
+    'SPAN',
+    'STRONG',
+    'EM',
+    'B',
+    'I',
+    'CODE',
+    'KBD',
+    'SAMP',
+    'VAR',
+    'A',
+    'ABBR',
+    'CITE',
+    'Q',
+    'MARK',
+    'SMALL',
+    'SUB',
+    'SUP',
+  ];
   if (inlineElements.includes(element.tagName)) {
     return false;
   }
 
   const style = window.getComputedStyle(element);
   const display = style.display;
-  return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
+  return [
+    'block',
+    'flex',
+    'grid',
+    'list-item',
+    'table',
+    'table-row',
+    'table-cell',
+    'flow-root',
+  ].includes(display);
 }
 
 // Helper: Find the nearest block-level ancestor
@@ -317,34 +350,30 @@ function createVirtualTextAndMap(): { virtualText: string; charMap: CharMapEntry
   const charMap: CharMapEntry[] = []; // Array of { node: TextNode, offset: number } for each character in virtualText
   let lastVisibleNode: Node | null = null;
 
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node: Node) => {
-        const parent = node.parentElement;
-        // Skip script, style, overlay container
-        if (
-          !parent ||
-          parent.tagName === 'SCRIPT' ||
-          parent.tagName === 'STYLE' ||
-          parent.id === HIGHLIGHT_OVERLAY_ID ||
-          parent.closest(`#${HIGHLIGHT_OVERLAY_ID}`)
-        ) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        // Skip invisible elements
-        if (!isVisible(parent)) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        // Skip completely empty text nodes (but keep whitespace-only nodes)
-        if (!node.nodeValue || node.nodeValue.length === 0) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    }
-  );
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node: Node) => {
+      const parent = node.parentElement;
+      // Skip script, style, overlay container
+      if (
+        !parent ||
+        parent.tagName === 'SCRIPT' ||
+        parent.tagName === 'STYLE' ||
+        parent.id === HIGHLIGHT_OVERLAY_ID ||
+        parent.closest(`#${HIGHLIGHT_OVERLAY_ID}`)
+      ) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      // Skip invisible elements
+      if (!isVisible(parent)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      // Skip completely empty text nodes (but keep whitespace-only nodes)
+      if (!node.nodeValue || node.nodeValue.length === 0) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
 
   while (walker.nextNode()) {
     const currentNode = walker.currentNode;
@@ -382,7 +411,12 @@ function createVirtualTextAndMap(): { virtualText: string; charMap: CharMapEntry
 }
 
 // Search for matches in virtual text
-function searchInVirtualText(query: string, virtualText: string, useRegex: boolean, caseSensitive: boolean): VirtualMatch[] {
+function searchInVirtualText(
+  query: string,
+  virtualText: string,
+  useRegex: boolean,
+  caseSensitive: boolean
+): VirtualMatch[] {
   const matches: VirtualMatch[] = [];
 
   if (useRegex) {
@@ -391,15 +425,20 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
     try {
       // Replace . with [^\uE000] to prevent matching across block boundaries
       // Handle escaped dots (\.) separately - they should match literal dots
-      const modifiedQuery = query.replace(/\\\./g, '\x00ESCAPED_DOT\x00')  // Temporarily replace \. (literal dot)
-        .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`)  // Replace . with [^boundary] (excluding newlines too)
-        .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
+      const ESCAPED_DOT_PLACEHOLDER = '\uE001ESCAPED_DOT\uE001';
+      const modifiedQuery = query
+        .replace(/\\\./g, ESCAPED_DOT_PLACEHOLDER) // Temporarily replace \. (literal dot)
+        .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`) // Replace . with [^boundary] (excluding newlines too)
+        .replace(
+          new RegExp(ESCAPED_DOT_PLACEHOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          '\\.'
+        ); // Restore \.
 
       // Use 'g' or 'gi' flags based on case-sensitivity (not 's') so that . does not match newlines
       const flags = caseSensitive ? 'g' : 'gi';
       const regex = new RegExp(modifiedQuery, flags);
-      let match: RegExpExecArray | null;
-      while ((match = regex.exec(virtualText)) !== null) {
+      let match: RegExpExecArray | null = regex.exec(virtualText);
+      while (match !== null) {
         // Filter out matches that cross block boundaries
         const matchedText = match[0];
         const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
@@ -415,8 +454,9 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
         if (match[0].length === 0) {
           regex.lastIndex++;
         }
+        match = regex.exec(virtualText);
       }
-    } catch (error) {
+    } catch (_error) {
       // Invalid regex pattern, return empty matches
       return matches;
     }
@@ -426,8 +466,8 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
     const normalizedQuery = escapedQuery.replace(/\s+/g, '\\s+');
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(normalizedQuery, flags);
-    let match: RegExpExecArray | null;
-    while ((match = regex.exec(virtualText)) !== null) {
+    let match: RegExpExecArray | null = regex.exec(virtualText);
+    while (match !== null) {
       // Filter out matches that cross block boundaries
       const matchedText = match[0];
       if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
@@ -436,6 +476,7 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
           end: match.index + match[0].length,
         });
       }
+      match = regex.exec(virtualText);
     }
   }
 
@@ -452,13 +493,13 @@ function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance = 1): D
 
   // 1. Group rectangles by line (using rounded y coordinate)
   const lines = new Map<number, DOMRect[]>();
-  rects.forEach(rect => {
+  rects.forEach((rect) => {
     // Round y coordinate to absorb small pixel differences
     const lineY = Math.round(rect.y);
     if (!lines.has(lineY)) {
       lines.set(lineY, []);
     }
-    lines.get(lineY)!.push(rect);
+    lines.get(lineY)?.push(rect);
   });
 
   const mergedRects: DOMRect[] = [];
@@ -522,7 +563,7 @@ function createRangeFromVirtualMatch(match: VirtualMatch, charMap: CharMapEntry[
     range.setEnd(endCharInfo.node, endCharInfo.offset + 1);
 
     return range;
-  } catch (error) {
+  } catch (_error) {
     // Failed to create range
     return null;
   }
@@ -554,7 +595,7 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
       const mergedRects = mergeAdjacentRects(rects);
 
       // Create overlay for each merged rectangle (handles multi-line matches)
-      const isCurrent = (count === 0); // First match is current
+      const isCurrent = count === 0; // First match is current
       for (let i = 0; i < mergedRects.length; i++) {
         const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
         container.appendChild(overlay);
@@ -564,7 +605,7 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
       // Store range for position updates
       highlightData.ranges.push(range);
       count++;
-    } catch (error) {
+    } catch (_error) {
       // Failed to create overlay for range, silently ignore
     }
   });
@@ -576,7 +617,11 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
 
     // Navigate to first match
     const navResult = navigateToMatch(0);
-    return { count: count, currentIndex: navResult.currentIndex, totalMatches: navResult.totalMatches };
+    return {
+      count: count,
+      currentIndex: navResult.currentIndex,
+      totalMatches: navResult.totalMatches,
+    };
   }
 
   return { count: 0, currentIndex: -1, totalMatches: 0 };
@@ -609,9 +654,8 @@ function searchElements(query: string, mode: 'css' | 'xpath'): SearchResult {
     }
 
     // Filter out overlay container and its children
-    elements = elements.filter(el => {
-      return el.id !== HIGHLIGHT_OVERLAY_ID &&
-        !el.closest(`#${HIGHLIGHT_OVERLAY_ID}`);
+    elements = elements.filter((el) => {
+      return el.id !== HIGHLIGHT_OVERLAY_ID && !el.closest(`#${HIGHLIGHT_OVERLAY_ID}`);
     });
 
     // Create overlays for each element
@@ -638,7 +682,11 @@ function searchElements(query: string, mode: 'css' | 'xpath'): SearchResult {
 
       // Navigate to first element
       const navResult = navigateToMatch(0);
-      return { count: elements.length, currentIndex: navResult.currentIndex, totalMatches: navResult.totalMatches };
+      return {
+        count: elements.length,
+        currentIndex: navResult.currentIndex,
+        totalMatches: navResult.totalMatches,
+      };
     }
 
     return { count: 0, currentIndex: -1, totalMatches: 0 };
@@ -667,7 +715,7 @@ export default defineContentScript({
             useRegex: searchMessage.useRegex,
             caseSensitive: searchMessage.caseSensitive,
             useElementSearch: searchMessage.useElementSearch,
-            elementSearchMode: searchMessage.elementSearchMode
+            elementSearchMode: searchMessage.elementSearchMode,
           };
 
           if (searchMessage.useElementSearch) {
@@ -676,15 +724,19 @@ export default defineContentScript({
               success: true,
               count: result.count,
               currentIndex: result.currentIndex,
-              totalMatches: result.totalMatches
+              totalMatches: result.totalMatches,
             } as SearchResponse);
           } else {
-            const result = searchText(searchMessage.query, searchMessage.useRegex, searchMessage.caseSensitive);
+            const result = searchText(
+              searchMessage.query,
+              searchMessage.useRegex,
+              searchMessage.caseSensitive
+            );
             sendResponse({
               success: true,
               count: result.count,
               currentIndex: result.currentIndex,
-              totalMatches: result.totalMatches
+              totalMatches: result.totalMatches,
             } as SearchResponse);
           }
         } catch (error) {
@@ -699,15 +751,23 @@ export default defineContentScript({
           useRegex: false,
           caseSensitive: false,
           useElementSearch: false,
-          elementSearchMode: 'css'
+          elementSearchMode: 'css',
         };
         sendResponse({ success: true } as SearchResponse);
       } else if (request.action === 'navigate-next') {
         const result = navigateToMatch(currentMatchIndex + 1);
-        sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches } as SearchResponse);
+        sendResponse({
+          success: true,
+          currentIndex: result.currentIndex,
+          totalMatches: result.totalMatches,
+        } as SearchResponse);
       } else if (request.action === 'navigate-prev') {
         const result = navigateToMatch(currentMatchIndex - 1);
-        sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches } as SearchResponse);
+        sendResponse({
+          success: true,
+          currentIndex: result.currentIndex,
+          totalMatches: result.totalMatches,
+        } as SearchResponse);
       } else if (request.action === 'get-state') {
         // Return current search state (support both text and element search)
         const totalMatches = highlightData.ranges.length || highlightData.elements.length;
@@ -715,7 +775,7 @@ export default defineContentScript({
           success: true,
           state: lastSearchState,
           currentIndex: currentMatchIndex,
-          totalMatches: totalMatches
+          totalMatches: totalMatches,
         } as StateResponse);
       }
 

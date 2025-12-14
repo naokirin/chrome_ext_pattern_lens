@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 const BLOCK_BOUNDARY_MARKER = '\uE000';
 
@@ -12,15 +12,20 @@ function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
     try {
       // Replace . with [^\uE000] to prevent matching across block boundaries
       // Handle escaped dots (\.) separately - they should match literal dots
-      const modifiedQuery = query.replace(/\\\./g, '\x00ESCAPED_DOT\x00')  // Temporarily replace \. (literal dot)
-                                  .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`)  // Replace . with [^boundary] (excluding newlines too)
-                                  .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
+      const ESCAPED_DOT_PLACEHOLDER = '\uE001ESCAPED_DOT\uE001';
+      const modifiedQuery = query
+        .replace(/\\\./g, ESCAPED_DOT_PLACEHOLDER) // Temporarily replace \. (literal dot)
+        .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`) // Replace . with [^boundary] (excluding newlines too)
+        .replace(
+          new RegExp(ESCAPED_DOT_PLACEHOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          '\\.'
+        ); // Restore \.
 
       // Use 'g' or 'gi' flags based on case-sensitivity (not 's') so that . does not match newlines
       const flags = caseSensitive ? 'g' : 'gi';
       const regex = new RegExp(modifiedQuery, flags);
-      let match;
-      while ((match = regex.exec(virtualText)) !== null) {
+      let match = regex.exec(virtualText);
+      while (match !== null) {
         // Filter out matches that cross block boundaries
         const matchedText = match[0];
         const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
@@ -35,6 +40,7 @@ function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
         if (match[0].length === 0) {
           regex.lastIndex++;
         }
+        match = regex.exec(virtualText);
       }
     } catch (error) {
       console.warn('Invalid regex pattern:', error);
@@ -46,8 +52,8 @@ function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
     const normalizedQuery = escapedQuery.replace(/\s+/g, '\\s+');
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(normalizedQuery, flags);
-    let match;
-    while ((match = regex.exec(virtualText)) !== null) {
+    let match = regex.exec(virtualText);
+    while (match !== null) {
       // Filter out matches that cross block boundaries
       const matchedText = match[0];
       if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
@@ -56,6 +62,7 @@ function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
           end: match.index + match[0].length,
         });
       }
+      match = regex.exec(virtualText);
     }
   }
 

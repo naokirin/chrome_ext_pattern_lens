@@ -1,13 +1,13 @@
 // Import shared type definitions
 import type {
-  SearchMessage,
   ClearMessage,
-  NavigateMessage,
   GetStateMessage,
-  SearchResponse,
-  StateResponse,
-  Settings,
+  NavigateMessage,
   Response,
+  SearchMessage,
+  SearchResponse,
+  Settings,
+  StateResponse,
 } from '~/lib/types';
 
 // DOM elements
@@ -27,7 +27,7 @@ const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
 const clearLink = document.getElementById('clearLink') as HTMLAnchorElement;
 
 // Track last search query to detect changes
-let lastSearchQuery = '';
+let _lastSearchQuery = '';
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 // Track the query that initiated the current search to detect if it's stale
 let currentSearchQuery = '';
@@ -123,9 +123,11 @@ async function performSearch(): Promise<void> {
     }
 
     // Check if the page is a special page where content scripts cannot run
-    if (tab.url?.startsWith('chrome://') ||
+    if (
+      tab.url?.startsWith('chrome://') ||
       tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')) {
+      tab.url?.startsWith('https://chrome.google.com/webstore')
+    ) {
       showResult('このページでは拡張機能を使用できません', true);
       return;
     }
@@ -154,16 +156,16 @@ async function performSearch(): Promise<void> {
         return;
       }
 
-      if (response && response.success) {
+      if (response?.success) {
         showResult(`${response.count} 件の結果が見つかりました`);
         // Update last search query
-        lastSearchQuery = query;
+        _lastSearchQuery = query;
         if (response.totalMatches && response.totalMatches > 0) {
           updateNavigation(response.currentIndex ?? 0, response.totalMatches);
         } else {
           hideNavigation();
         }
-      } else if (response && response.error) {
+      } else if (response?.error) {
         showResult(`エラー: ${response.error}`, true);
         hideNavigation();
       } else {
@@ -188,9 +190,11 @@ async function clearHighlights(): Promise<void> {
     }
 
     // Check if the page is a special page
-    if (tab.url?.startsWith('chrome://') ||
+    if (
+      tab.url?.startsWith('chrome://') ||
       tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')) {
+      tab.url?.startsWith('https://chrome.google.com/webstore')
+    ) {
       showResult('このページでは拡張機能を使用できません', true);
       return;
     }
@@ -202,11 +206,11 @@ async function clearHighlights(): Promise<void> {
         return;
       }
 
-      if (response && response.success) {
+      if (response?.success) {
         hideResult();
         hideNavigation();
         searchInput.value = '';
-        lastSearchQuery = '';
+        _lastSearchQuery = '';
       }
     });
   } catch (error) {
@@ -226,11 +230,15 @@ async function navigateNext(): Promise<void> {
 
     const message: NavigateMessage = { action: 'navigate-next' };
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
-      if (response && response.success && response.totalMatches !== undefined && response.currentIndex !== undefined) {
+      if (
+        response?.success &&
+        response.totalMatches !== undefined &&
+        response.currentIndex !== undefined
+      ) {
         updateNavigation(response.currentIndex, response.totalMatches);
       }
     });
-  } catch (error) {
+  } catch (_error) {
     // Navigation error silently ignored
   }
 }
@@ -246,11 +254,15 @@ async function navigatePrev(): Promise<void> {
 
     const message: NavigateMessage = { action: 'navigate-prev' };
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
-      if (response && response.success && response.totalMatches !== undefined && response.currentIndex !== undefined) {
+      if (
+        response?.success &&
+        response.totalMatches !== undefined &&
+        response.currentIndex !== undefined
+      ) {
         updateNavigation(response.currentIndex, response.totalMatches);
       }
     });
-  } catch (error) {
+  } catch (_error) {
     // Navigation error silently ignored
   }
 }
@@ -269,7 +281,7 @@ searchInput.addEventListener('input', () => {
   if (!query) {
     clearHighlights();
     currentSearchQuery = '';
-    lastSearchQuery = '';
+    _lastSearchQuery = '';
     return;
   }
 
@@ -356,7 +368,7 @@ searchInput.addEventListener('keydown', (e) => {
     searchInput.value = '';
     clearHighlights();
     currentSearchQuery = '';
-    lastSearchQuery = '';
+    _lastSearchQuery = '';
   }
 });
 
@@ -370,9 +382,11 @@ async function restoreSearchState(): Promise<void> {
     }
 
     // Check if the page is a special page
-    if (tab.url?.startsWith('chrome://') ||
+    if (
+      tab.url?.startsWith('chrome://') ||
       tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')) {
+      tab.url?.startsWith('https://chrome.google.com/webstore')
+    ) {
       return;
     }
 
@@ -383,7 +397,7 @@ async function restoreSearchState(): Promise<void> {
         return;
       }
 
-      if (response && response.success && response.state?.query) {
+      if (response?.success && response.state?.query) {
         // Restore search state
         const state = response.state;
         searchInput.value = state.query;
@@ -401,10 +415,10 @@ async function restoreSearchState(): Promise<void> {
           updateNavigation(response.currentIndex ?? 0, response.totalMatches);
         }
 
-        lastSearchQuery = state.query;
+        _lastSearchQuery = state.query;
       }
     });
-  } catch (error) {
+  } catch (_error) {
     // Failed to restore search state silently ignored
   }
 }

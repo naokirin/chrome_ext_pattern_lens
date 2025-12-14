@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanupDOM } from '../../helpers/dom-helpers.js';
 
 // Helper function extracted from main.js for testing
@@ -166,9 +166,7 @@ describe('createRangeFromVirtualMatch', () => {
 
   describe('Error handling', () => {
     it('should return null if startCharInfo is missing', () => {
-      const charMap = [
-        { node: document.createTextNode('test'), offset: 0 },
-      ];
+      const charMap = [{ node: document.createTextNode('test'), offset: 0 }];
 
       const match = { start: 10, end: 15 }; // Out of bounds
       const range = createRangeFromVirtualMatch(match, charMap);
