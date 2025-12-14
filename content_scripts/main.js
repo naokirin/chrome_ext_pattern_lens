@@ -1,6 +1,9 @@
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
 const HIGHLIGHT_CLASS = 'pattern-lens-highlight-overlay';
+// Use Unicode Private Use Area character as block boundary marker
+// This character won't appear in normal text and won't be matched by user regex accidentally
+const BLOCK_BOUNDARY_MARKER = '\uE000';
 
 // Store ranges and elements for cleanup
 let highlightData = {
@@ -174,12 +177,12 @@ function createVirtualTextAndMap() {
         const prevIsBlock = isBlockLevel(prevParent);
         const currentIsBlock = isBlockLevel(currentParent);
 
-        // Insert space only if either element is block-level
+        // Insert block boundary marker if either element is block-level
         if (prevIsBlock || currentIsBlock) {
-          if (!virtualText.endsWith(' ')) {
-            virtualText += ' ';
-            // Mark this space as synthetic (not from original DOM)
-            charMap.push({ node: null, offset: -1 });
+          if (!virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
+            virtualText += BLOCK_BOUNDARY_MARKER;
+            // Mark this as block boundary (not from original DOM)
+            charMap.push({ node: null, offset: -1, type: 'block-boundary' });
           }
         }
       }
@@ -210,10 +213,14 @@ function searchInVirtualText(query, virtualText, useRegex) {
       const regex = new RegExp(query, 'gis'); // 's' flag makes '.' match newlines too
       let match;
       while ((match = regex.exec(virtualText)) !== null) {
-        matches.push({
-          start: match.index,
-          end: match.index + match[0].length,
-        });
+        // Filter out matches that cross block boundaries
+        const matchedText = match[0];
+        if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
+          matches.push({
+            start: match.index,
+            end: match.index + match[0].length,
+          });
+        }
         // Prevent infinite loop on zero-length matches
         if (match[0].length === 0) {
           regex.lastIndex++;
@@ -229,10 +236,14 @@ function searchInVirtualText(query, virtualText, useRegex) {
     const regex = new RegExp(normalizedQuery, 'gi');
     let match;
     while ((match = regex.exec(virtualText)) !== null) {
-      matches.push({
-        start: match.index,
-        end: match.index + match[0].length,
-      });
+      // Filter out matches that cross block boundaries
+      const matchedText = match[0];
+      if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
+        matches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+        });
+      }
     }
   }
 
@@ -304,9 +315,9 @@ function createRangeFromVirtualMatch(match, charMap) {
       return null;
     }
 
-    // Skip synthetic spaces (auto-inserted spaces between elements)
+    // Skip block boundary markers (auto-inserted markers between block elements)
     if (!startCharInfo.node || !endCharInfo.node) {
-      console.warn('Match includes synthetic space, skipping');
+      console.warn('Match includes block boundary marker, skipping');
       return null;
     }
 
