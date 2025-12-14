@@ -151,7 +151,7 @@ describe('createVirtualTextAndMap', () => {
   it('should handle nested inline elements within block elements', () => {
     document.body.innerHTML = '<div><span>Hello</span><span>World</span></div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // All text is within the same block, so no boundary markers
     expect(virtualText).toBe('HelloWorld');
@@ -161,7 +161,7 @@ describe('createVirtualTextAndMap', () => {
   it('should preserve whitespace between inline elements', () => {
     document.body.innerHTML = '<div><span>Hello</span> <span>World</span></div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Whitespace text node should be preserved
     expect(virtualText).toBe('Hello World');
@@ -171,7 +171,7 @@ describe('createVirtualTextAndMap', () => {
   it('should handle paragraph elements (test case 2-2 from test-cross-element.html)', () => {
     document.body.innerHTML = '<p>Lorem ipsum</p><p>dolor sit</p>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Should insert boundary marker between paragraphs
     expect(virtualText).toBe(`Lorem ipsum${BLOCK_BOUNDARY_MARKER}dolor sit`);
@@ -181,7 +181,7 @@ describe('createVirtualTextAndMap', () => {
   it('should handle heading and paragraph elements (test case 2-3)', () => {
     document.body.innerHTML = '<h4>Important Note</h4><p>This is critical</p>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Should insert boundary marker between heading and paragraph
     expect(virtualText).toBe(`Important Note${BLOCK_BOUNDARY_MARKER}This is critical`);
@@ -196,7 +196,7 @@ describe('createVirtualTextAndMap', () => {
       </ul>
     `;
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // List items are block-level, so should have boundary markers between them
     const visible = visualizeBoundaries(virtualText);
@@ -217,7 +217,7 @@ describe('createVirtualTextAndMap', () => {
       </table>
     `;
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Table cells are block-level, so should have boundary markers
     const visible = visualizeBoundaries(virtualText);
@@ -230,7 +230,7 @@ describe('createVirtualTextAndMap', () => {
   it('should preserve whitespace-only text nodes', () => {
     document.body.innerHTML = '<div>   </div><div>Text</div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Whitespace-only text nodes are preserved, with boundary marker between blocks
     expect(virtualText).toBe(`   ${BLOCK_BOUNDARY_MARKER}Text`);
@@ -239,7 +239,7 @@ describe('createVirtualTextAndMap', () => {
   it('should skip hidden elements', () => {
     document.body.innerHTML = '<div style="display: none;">Hidden</div><div>Visible</div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Hidden elements should be skipped
     expect(virtualText).toBe('Visible');
@@ -249,7 +249,7 @@ describe('createVirtualTextAndMap', () => {
     document.body.innerHTML =
       '<div><span>git</span><span>commit</span><span>-m</span></div><div>"message"</div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { virtualText } = createVirtualTextAndMap();
 
     // Inline elements within same block: no boundary
     // Different block elements: boundary marker
@@ -260,7 +260,7 @@ describe('createVirtualTextAndMap', () => {
   it('should correctly map characters to DOM nodes', () => {
     document.body.innerHTML = '<div>AB</div><div>CD</div>';
 
-    const { virtualText, charMap } = createVirtualTextAndMap();
+    const { charMap } = createVirtualTextAndMap();
 
     // Verify character mapping
     expect(charMap[0].node.nodeValue).toBe('AB');
