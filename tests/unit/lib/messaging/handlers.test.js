@@ -1,0 +1,311 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as minimapModule from '~/lib/highlight/minimap';
+import * as overlayModule from '~/lib/highlight/overlay';
+import {
+  handleClear,
+  handleGetState,
+  handleNavigateNext,
+  handleNavigatePrev,
+  handleSearch,
+} from '~/lib/messaging/handlers';
+import * as navigatorModule from '~/lib/navigation/navigator';
+import * as elementSearchModule from '~/lib/search/elementSearch';
+import * as textSearchModule from '~/lib/search/textSearch';
+import { SearchStateManager } from '~/lib/state/searchState';
+import { cleanupDOM } from '../../../helpers/dom-helpers.js';
+
+describe('messaging/handlers', () => {
+  let stateManager;
+  let context;
+  let updateCallback;
+
+  beforeEach(() => {
+    cleanupDOM();
+    stateManager = new SearchStateManager();
+    updateCallback = vi.fn();
+    context = {
+      stateManager,
+      updateCallback,
+    };
+
+    // Mock dependencies
+    vi.spyOn(overlayModule, 'clearHighlights').mockImplementation(() => {});
+    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => {});
+    vi.spyOn(navigatorModule, 'navigateToMatch').mockReturnValue({
+      currentIndex: 0,
+      totalMatches: 1,
+    });
+    vi.spyOn(elementSearchModule, 'searchElements').mockReturnValue({
+      count: 1,
+      currentIndex: 0,
+      totalMatches: 1,
+    });
+    vi.spyOn(textSearchModule, 'searchText').mockReturnValue({
+      count: 1,
+      currentIndex: 0,
+      totalMatches: 1,
+    });
+  });
+
+  afterEach(() => {
+    cleanupDOM();
+    stateManager.clear();
+    vi.restoreAllMocks();
+  });
+
+  describe('handleSearch', () => {
+    it('要素検索モードで検索を実行できる', async () => {
+      const message = {
+        action: 'search',
+        query: '.test-class',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: true,
+        elementSearchMode: 'css',
+      };
+
+      const result = await handleSearch(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+      expect(result.currentIndex).toBe(0);
+      expect(result.totalMatches).toBe(1);
+      expect(elementSearchModule.searchElements).toHaveBeenCalledWith(
+        '.test-class',
+        'css',
+        stateManager
+      );
+    });
+
+    it('テキスト検索モードで検索を実行できる', async () => {
+      const message = {
+        action: 'search',
+        query: 'test query',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      };
+
+      const result = await handleSearch(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+      expect(textSearchModule.searchText).toHaveBeenCalledWith(
+        'test query',
+        false,
+        false,
+        stateManager
+      );
+    });
+
+    it('検索前にハイライトをクリアする', async () => {
+      const message = {
+        action: 'search',
+        query: 'test',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      };
+
+      await handleSearch(message, context);
+
+      expect(overlayModule.clearHighlights).toHaveBeenCalledWith(
+        stateManager,
+        minimapModule.removeMinimap,
+        updateCallback
+      );
+    });
+
+    it('検索状態を保存する', async () => {
+      const message = {
+        action: 'search',
+        query: 'test query',
+        useRegex: true,
+        caseSensitive: true,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      };
+
+      await handleSearch(message, context);
+
+      const savedState = stateManager.searchState;
+      expect(savedState.query).toBe('test query');
+      expect(savedState.useRegex).toBe(true);
+      expect(savedState.caseSensitive).toBe(true);
+      expect(savedState.useElementSearch).toBe(false);
+    });
+
+    it('エラーが発生した場合、エラーレスポンスを返す', async () => {
+      const error = new Error('Search failed');
+      vi.spyOn(textSearchModule, 'searchText').mockImplementation(() => {
+        throw error;
+      });
+
+      const message = {
+        action: 'search',
+        query: 'test',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      };
+
+      const result = await handleSearch(message, context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Search failed');
+    });
+  });
+
+  describe('handleClear', () => {
+    it('ハイライトをクリアする', () => {
+      const message = { action: 'clear' };
+
+      const result = handleClear(message, context);
+
+      expect(result.success).toBe(true);
+      expect(overlayModule.clearHighlights).toHaveBeenCalledWith(
+        stateManager,
+        minimapModule.removeMinimap,
+        updateCallback
+      );
+    });
+
+    it('検索状態をクリアする', () => {
+      // まず状態を設定
+      stateManager.updateSearchState({
+        query: 'test',
+        useRegex: true,
+        caseSensitive: true,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      });
+
+      const message = { action: 'clear' };
+      handleClear(message, context);
+
+      const clearedState = stateManager.searchState;
+      expect(clearedState.query).toBe('');
+      expect(clearedState.useRegex).toBe(false);
+      expect(clearedState.caseSensitive).toBe(false);
+      expect(clearedState.useElementSearch).toBe(false);
+    });
+
+    it('updateCallbackがnullの場合でもエラーを投げない', () => {
+      const contextWithoutCallback = {
+        stateManager,
+        updateCallback: null,
+      };
+      const message = { action: 'clear' };
+
+      expect(() => {
+        handleClear(message, contextWithoutCallback);
+      }).not.toThrow();
+    });
+  });
+
+  describe('handleNavigateNext', () => {
+    it('次のマッチにナビゲートする', () => {
+      // マッチを設定
+      const range = document.createRange();
+      range.selectNodeContents(document.body);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(0);
+
+      const message = { action: 'navigate-next' };
+      const result = handleNavigateNext(message, context);
+
+      expect(result.success).toBe(true);
+      expect(navigatorModule.navigateToMatch).toHaveBeenCalledWith(1, stateManager);
+    });
+
+    it('ナビゲーション結果を返す', () => {
+      const range = document.createRange();
+      range.selectNodeContents(document.body);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(0);
+
+      const message = { action: 'navigate-next' };
+      const result = handleNavigateNext(message, context);
+
+      expect(result.currentIndex).toBe(0);
+      expect(result.totalMatches).toBe(1);
+    });
+  });
+
+  describe('handleNavigatePrev', () => {
+    it('前のマッチにナビゲートする', () => {
+      // マッチを設定
+      const range = document.createRange();
+      range.selectNodeContents(document.body);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(1);
+
+      const message = { action: 'navigate-prev' };
+      const result = handleNavigatePrev(message, context);
+
+      expect(result.success).toBe(true);
+      expect(navigatorModule.navigateToMatch).toHaveBeenCalledWith(0, stateManager);
+    });
+
+    it('ナビゲーション結果を返す', () => {
+      const range = document.createRange();
+      range.selectNodeContents(document.body);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(1);
+
+      const message = { action: 'navigate-prev' };
+      const result = handleNavigatePrev(message, context);
+
+      expect(result.currentIndex).toBe(0);
+      expect(result.totalMatches).toBe(1);
+    });
+  });
+
+  describe('handleGetState', () => {
+    it('現在の検索状態を返す', () => {
+      stateManager.updateSearchState({
+        query: 'test query',
+        useRegex: true,
+        caseSensitive: true,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+      });
+      stateManager.setCurrentIndex(2);
+
+      const message = { action: 'get-state' };
+      const result = handleGetState(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.state?.query).toBe('test query');
+      expect(result.state?.useRegex).toBe(true);
+      expect(result.currentIndex).toBe(2);
+    });
+
+    it('状態が空の場合でも正しく動作する', () => {
+      const message = { action: 'get-state' };
+      const result = handleGetState(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.state).toBeDefined();
+      expect(result.currentIndex).toBe(-1);
+      expect(result.totalMatches).toBe(0);
+    });
+
+    it('マッチ数も返す', () => {
+      const range1 = document.createRange();
+      const range2 = document.createRange();
+      range1.selectNodeContents(document.body);
+      range2.selectNodeContents(document.body);
+      stateManager.addRange(range1);
+      stateManager.addRange(range2);
+
+      const message = { action: 'get-state' };
+      const result = handleGetState(message, context);
+
+      expect(result.totalMatches).toBe(2);
+    });
+  });
+});
