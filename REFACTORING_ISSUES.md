@@ -57,10 +57,10 @@ window.addEventListener('resize', updateOverlayPositions, { passive: true });
 
 ---
 
-## 3. 巨大なファイル（単一責任の原則違反）
+## 3. 巨大なファイル（単一責任の原則違反） ✅ 完了
 
 ### 問題点
-- `entrypoints/content.ts`が786行と非常に長い
+- `entrypoints/content.ts`が787行と非常に長い
 - 以下の責務が混在：
   - DOM操作（オーバーレイ作成・管理）
   - テキスト検索ロジック
@@ -70,15 +70,26 @@ window.addEventListener('resize', updateOverlayPositions, { passive: true });
   - メッセージハンドリング
   - 仮想テキスト生成
 
-### 推奨改善
-- 機能ごとにモジュール分割：
-  - `lib/highlight/overlay.ts`: オーバーレイ管理
-  - `lib/highlight/minimap.ts`: ミニマップ管理
-  - `lib/search/textSearch.ts`: テキスト検索
-  - `lib/search/elementSearch.ts`: 要素検索
-  - `lib/search/virtualText.ts`: 仮想テキスト生成
-  - `lib/navigation/navigator.ts`: ナビゲーション管理
-  - `lib/state/searchState.ts`: 検索状態管理
+### 実施した改善
+- ✅ 機能ごとにモジュール分割を実施：
+  - `lib/highlight/overlay.ts`: オーバーレイ管理（約200行）
+  - `lib/highlight/minimap.ts`: ミニマップ管理（約80行）
+  - `lib/search/virtualText.ts`: 仮想テキスト生成（約150行）
+  - `lib/search/textSearch.ts`: テキスト検索（約250行）
+  - `lib/search/elementSearch.ts`: 要素検索（約80行）
+  - `lib/navigation/navigator.ts`: ナビゲーション管理（約60行）
+  - `lib/state/searchState.ts`: 検索状態管理（既存）
+- ✅ `content.ts`を約90行に削減（メッセージハンドリングのみを担当）
+- ✅ 各モジュールが単一責任の原則に従うように設計
+
+### 変更ファイル
+- `lib/highlight/overlay.ts` (新規作成)
+- `lib/highlight/minimap.ts` (新規作成)
+- `lib/search/virtualText.ts` (新規作成)
+- `lib/search/textSearch.ts` (新規作成)
+- `lib/search/elementSearch.ts` (新規作成)
+- `lib/navigation/navigator.ts` (新規作成)
+- `entrypoints/content.ts` (大幅リファクタリング: 787行 → 約90行)
 
 ---
 
