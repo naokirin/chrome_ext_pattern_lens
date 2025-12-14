@@ -30,9 +30,13 @@ desktop.ini
 # Build outputs
 dist/
 build/
+.output/
 *.zip
 *.crx
 *.pem
+
+# WXT generated files
+.wxt/
 
 # Environment variables
 .env

@@ -1,0 +1,10 @@
+{
+  "extends": ".wxt/tsconfig.json",
+  "compilerOptions": {
+    // Add custom compiler options here if needed
+  },
+  "include": [
+    "entrypoints/**/*",
+    "tests/**/*"
+  ]
+}
