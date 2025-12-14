@@ -82,7 +82,7 @@ window.addEventListener('resize', updateOverlayPositions, { passive: true });
 
 ---
 
-## 4. 重複コード
+## 4. 重複コード ✅ 完了
 
 ### 4.1 特殊ページチェックの重複
 
@@ -103,17 +103,9 @@ if (
 - `entrypoints/popup/main.ts:194-200`
 - `entrypoints/popup/main.ts:386-391`
 
-#### 推奨改善
-- `lib/utils/tabUtils.ts`に共通関数を抽出
-```typescript
-export function isSpecialPage(url: string | undefined): boolean {
-  return (
-    url?.startsWith('chrome://') ||
-    url?.startsWith('chrome-extension://') ||
-    url?.startsWith('https://chrome.google.com/webstore')
-  ) ?? false;
-}
-```
+#### 実施した改善
+- ✅ `lib/utils/tabUtils.ts`に`isSpecialPage()`関数を抽出
+- ✅ 3箇所の特殊ページチェックを`isSpecialPage()`呼び出しに置き換え
 
 ### 4.2 タブ取得ロジックの重複
 
@@ -133,14 +125,14 @@ if (!tab.id) {
 - `entrypoints/popup/main.ts:249-253`
 - `entrypoints/popup/main.ts:378-382`
 
-#### 推奨改善
-- `lib/utils/tabUtils.ts`に共通関数を抽出
-```typescript
-export async function getActiveTab(): Promise<chrome.tabs.Tab | null> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tab?.id ? tab : null;
-}
-```
+#### 実施した改善
+- ✅ `lib/utils/tabUtils.ts`に`getActiveTab()`関数を抽出
+- ✅ 5箇所のタブ取得ロジックを`getActiveTab()`呼び出しに置き換え
+- ✅ 戻り値の型を`(chrome.tabs.Tab & { id: number }) | null`に調整して型安全性を向上
+
+### 変更ファイル
+- `lib/utils/tabUtils.ts` (新規作成)
+- `entrypoints/popup/main.ts` (リファクタリング)
 
 ---
 

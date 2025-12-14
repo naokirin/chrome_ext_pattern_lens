@@ -9,6 +9,7 @@ import type {
   Settings,
   StateResponse,
 } from '~/lib/types';
+import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
 
 // DOM elements
 const searchInput = document.getElementById('searchInput') as HTMLInputElement;
@@ -115,19 +116,15 @@ async function performSearch(): Promise<void> {
   currentSearchQuery = query;
 
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
 
-    if (!tab.id) {
+    if (!tab) {
       showResult('エラー: タブ情報を取得できませんでした', true);
       return;
     }
 
     // Check if the page is a special page where content scripts cannot run
-    if (
-      tab.url?.startsWith('chrome://') ||
-      tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')
-    ) {
+    if (isSpecialPage(tab.url)) {
       showResult('このページでは拡張機能を使用できません', true);
       return;
     }
@@ -142,6 +139,7 @@ async function performSearch(): Promise<void> {
     };
 
     // Send message to content script
+    // tab.id is guaranteed to be a number because getActiveTab() only returns tabs with IDs
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
       // Check if the query has changed since this search was initiated
       const currentQuery = searchInput.value.trim();
@@ -182,19 +180,15 @@ async function performSearch(): Promise<void> {
 // Clear highlights
 async function clearHighlights(): Promise<void> {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
 
-    if (!tab.id) {
+    if (!tab) {
       showResult('エラー: タブ情報を取得できませんでした', true);
       return;
     }
 
     // Check if the page is a special page
-    if (
-      tab.url?.startsWith('chrome://') ||
-      tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')
-    ) {
+    if (isSpecialPage(tab.url)) {
       showResult('このページでは拡張機能を使用できません', true);
       return;
     }
@@ -222,9 +216,9 @@ async function clearHighlights(): Promise<void> {
 // Navigate to next match
 async function navigateNext(): Promise<void> {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
 
-    if (!tab.id) {
+    if (!tab) {
       return;
     }
 
@@ -246,9 +240,9 @@ async function navigateNext(): Promise<void> {
 // Navigate to previous match
 async function navigatePrev(): Promise<void> {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
 
-    if (!tab.id) {
+    if (!tab) {
       return;
     }
 
@@ -375,18 +369,14 @@ searchInput.addEventListener('keydown', (e) => {
 // Restore previous search state from content script
 async function restoreSearchState(): Promise<void> {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
 
-    if (!tab.id) {
+    if (!tab) {
       return;
     }
 
     // Check if the page is a special page
-    if (
-      tab.url?.startsWith('chrome://') ||
-      tab.url?.startsWith('chrome-extension://') ||
-      tab.url?.startsWith('https://chrome.google.com/webstore')
-    ) {
+    if (isSpecialPage(tab.url)) {
       return;
     }
 
