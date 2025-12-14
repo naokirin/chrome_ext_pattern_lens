@@ -129,6 +129,18 @@ function isBlockLevel(element) {
   return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
 }
 
+// Helper: Find the nearest block-level ancestor
+function getNearestBlockAncestor(node) {
+  let current = node;
+  while (current && current !== document.body) {
+    if (current.nodeType === Node.ELEMENT_NODE && isBlockLevel(current)) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return document.body;
+}
+
 // Helper: Check if element is visible
 function isVisible(element) {
   if (!element) return false;
@@ -173,28 +185,19 @@ function createVirtualTextAndMap() {
 
   while (walker.nextNode()) {
     const currentNode = walker.currentNode;
-    const currentParent = currentNode.parentElement;
 
-    // 1. Handle element boundaries (insert marker only at actual block boundaries)
+    // 1. Handle element boundaries (insert marker when crossing block boundaries)
     if (lastVisibleNode) {
-      const prevParent = lastVisibleNode.parentElement;
+      // Find the nearest block-level ancestor for both nodes
+      const prevBlock = getNearestBlockAncestor(lastVisibleNode);
+      const currentBlock = getNearestBlockAncestor(currentNode);
 
-      // If different parents, determine if space should be inserted
-      if (prevParent !== currentParent) {
-        // Only insert boundary marker if we're crossing actual block element boundaries
-        // Check if either the previous or current element itself is block-level
-        // (not just their parent)
-        const prevIsBlock = isBlockLevel(prevParent);
-        const currentIsBlock = isBlockLevel(currentParent);
-
-        // Only insert marker if BOTH parents are block-level
-        // This prevents markers between inline siblings like <strong>A</strong> <em>B</em>
-        if (prevIsBlock && currentIsBlock) {
-          if (!virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
-            virtualText += BLOCK_BOUNDARY_MARKER;
-            // Mark this as block boundary (not from original DOM)
-            charMap.push({ node: null, offset: -1, type: 'block-boundary' });
-          }
+      // Insert boundary marker if we're moving to a different block element
+      if (prevBlock !== currentBlock) {
+        if (!virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
+          virtualText += BLOCK_BOUNDARY_MARKER;
+          // Mark this as block boundary (not from original DOM)
+          charMap.push({ node: null, offset: -1, type: 'block-boundary' });
         }
       }
     }
