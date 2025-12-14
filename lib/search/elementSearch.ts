@@ -1,3 +1,4 @@
+import { HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Element search functionality (CSS selector and XPath)
@@ -10,7 +11,6 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
-import { HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
 

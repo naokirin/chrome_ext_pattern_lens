@@ -1,3 +1,4 @@
+import { ESCAPED_DOT_PLACEHOLDER } from '~/lib/constants';
 import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Text search functionality using virtual text layer
@@ -11,7 +12,6 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
-import { ESCAPED_DOT_PLACEHOLDER } from '~/lib/constants';
 import { handleError } from '../utils/errorHandler';
 import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 

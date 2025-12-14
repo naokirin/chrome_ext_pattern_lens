@@ -1,3 +1,4 @@
+import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 // Import shared type definitions
 import type {
   ClearMessage,
@@ -9,7 +10,6 @@ import type {
   Settings,
   StateResponse,
 } from '~/lib/types';
-import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 import { getRequiredElementById } from '~/lib/utils/domUtils';
 import { handleError } from '~/lib/utils/errorHandler';
 import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';

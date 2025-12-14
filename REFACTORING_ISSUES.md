@@ -304,7 +304,7 @@ const borderWidth = 1;
 
 ---
 
-## 10. メッセージハンドリングの複雑さ
+## 10. メッセージハンドリングの複雑さ ✅ 完了
 
 ### 問題点
 - `content.ts`のメッセージハンドラーが巨大なif-elseチェーン
@@ -326,10 +326,27 @@ if (request.action === 'search') {
 }
 ```
 
-### 推奨改善
-- アクションごとにハンドラーを分離
-- ハンドラーマップを使用
-- 型安全なルーティング
+### 実施した改善
+- ✅ `lib/messaging/handlers.ts`を新規作成
+  - 各アクション用のハンドラー関数を分離
+    - `handleSearch()`: 検索アクション
+    - `handleClear()`: クリアアクション
+    - `handleNavigateNext()`: 次へナビゲーション
+    - `handleNavigatePrev()`: 前へナビゲーション
+    - `handleGetState()`: 状態取得
+  - `MessageHandlerContext`インターフェースでコンテキストを型安全に管理
+- ✅ `lib/messaging/router.ts`を新規作成
+  - ハンドラーマップを使用した型安全なルーティング
+  - `routeMessage()`関数でメッセージを適切なハンドラーにルーティング
+- ✅ `entrypoints/content.ts`を大幅に簡素化
+  - 121行から約30行に削減
+  - if-elseチェーンを`routeMessage()`呼び出しに置き換え
+  - 新しいアクション追加時はハンドラーを追加するだけで拡張可能
+
+### 変更ファイル
+- `lib/messaging/handlers.ts` (新規作成)
+- `lib/messaging/router.ts` (新規作成)
+- `entrypoints/content.ts` (大幅リファクタリング: 121行 → 約30行)
 
 ---
 

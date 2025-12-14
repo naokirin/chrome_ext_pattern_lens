@@ -1,7 +1,3 @@
-/**
- * Overlay management for highlighting search results
- */
-import type { SearchStateManager } from '~/lib/state/searchState';
 import {
   CURRENT_MATCH_CLASS,
   HIGHLIGHT_CLASS,
@@ -16,12 +12,19 @@ import {
   OVERLAY_Z_INDEX,
   RECT_MERGE_TOLERANCE,
 } from '~/lib/constants';
+/**
+ * Overlay management for highlighting search results
+ */
+import type { SearchStateManager } from '~/lib/state/searchState';
 import { getElementById } from '~/lib/utils/domUtils';
 
 /**
  * Merge adjacent rectangles on the same line
  */
-function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance = RECT_MERGE_TOLERANCE): DOMRect[] {
+function mergeAdjacentRects(
+  rectList: DOMRectList | DOMRect[],
+  tolerance = RECT_MERGE_TOLERANCE
+): DOMRect[] {
   if (!rectList || rectList.length === 0) {
     return [];
   }

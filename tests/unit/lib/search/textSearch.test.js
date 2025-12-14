@@ -184,9 +184,7 @@ describe('textSearch', () => {
     });
 
     it('ブロック境界マーカーを含むマッチでnullを返す', () => {
-      const charMap = [
-        { node: null, offset: -1, type: 'block-boundary' },
-      ];
+      const charMap = [{ node: null, offset: -1, type: 'block-boundary' }];
       const match = { start: 0, end: 1 };
 
       const range = createRangeFromVirtualMatch(match, charMap);
@@ -212,7 +210,7 @@ describe('textSearch', () => {
     beforeEach(() => {
       stateManager = new SearchStateManager();
       // jsdomではRange.getClientRects()が実装されていないため、モックを設定
-      Range.prototype.getClientRects = vi.fn(function () {
+      Range.prototype.getClientRects = vi.fn(() => {
         const rect = new DOMRect(0, 0, 100, 20);
         return {
           length: 1,
@@ -227,7 +225,7 @@ describe('textSearch', () => {
     afterEach(() => {
       stateManager.clear();
       // モックをクリーンアップ
-      delete Range.prototype.getClientRects;
+      Range.prototype.getClientRects = undefined;
     });
 
     it('シンプルなテキスト検索を実行できる', () => {
@@ -312,7 +310,7 @@ describe('textSearch', () => {
     it('マッチが見つかった場合イベントリスナーを設定する', () => {
       document.body.innerHTML = '<div>Hello World</div>';
 
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+      vi.spyOn(window, 'addEventListener');
 
       const result = searchText('Hello', false, false, stateManager);
 

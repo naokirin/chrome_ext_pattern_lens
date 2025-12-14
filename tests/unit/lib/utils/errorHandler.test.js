@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  ErrorSeverity,
+  PatternLensError,
   createHighSeverityError,
   createLowSeverityError,
   createMediumSeverityError,
-  ErrorSeverity,
   handleError,
-  PatternLensError,
   safeExecute,
   safeExecuteAsync,
 } from '~/lib/utils/errorHandler';
@@ -100,7 +100,7 @@ describe('errorHandler', () => {
     let consoleErrorSpy;
 
     beforeEach(() => {
-      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -176,9 +176,7 @@ describe('errorHandler', () => {
 
       handleError(error, 'TestContext');
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[TestContext]')
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('[TestContext]'));
     });
 
     it('originalErrorを含めてログに記録する', () => {
@@ -227,7 +225,7 @@ describe('errorHandler', () => {
       const fn = () => {
         throw new Error('Test error');
       };
-      const handleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const handleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       safeExecute(fn, 'TestContext');
 
@@ -285,7 +283,7 @@ describe('errorHandler', () => {
       const fn = async () => {
         throw new Error('Test error');
       };
-      const handleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const handleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       await safeExecuteAsync(fn, 'TestContext');
 

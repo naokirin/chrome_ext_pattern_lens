@@ -17,7 +17,7 @@ describe('elementSearch', () => {
       document.createElement('div')
     );
     vi.spyOn(overlayModule, 'createOverlay').mockReturnValue(document.createElement('div'));
-    vi.spyOn(overlayModule, 'setupEventListeners').mockImplementation(() => { });
+    vi.spyOn(overlayModule, 'setupEventListeners').mockImplementation(() => {});
     vi.spyOn(navigatorModule, 'navigateToMatch').mockReturnValue({
       currentIndex: 0,
       totalMatches: 1,

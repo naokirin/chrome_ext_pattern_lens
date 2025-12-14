@@ -1,9 +1,9 @@
+import { BLOCK_BOUNDARY_MARKER, HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 /**
  * Virtual text generation for text search
  * Creates a virtual text layer with character-level mapping (Chrome-like innerText behavior)
  */
 import type { CharMapEntry } from '~/lib/types';
-import { BLOCK_BOUNDARY_MARKER, HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 
 // Re-export for backward compatibility
 export { BLOCK_BOUNDARY_MARKER };

@@ -119,7 +119,10 @@ export function createLowSeverityError(message: string, originalError?: Error): 
 /**
  * Create a medium severity error (should be logged)
  */
-export function createMediumSeverityError(message: string, originalError?: Error): PatternLensError {
+export function createMediumSeverityError(
+  message: string,
+  originalError?: Error
+): PatternLensError {
   return new PatternLensError(message, ErrorSeverity.MEDIUM, originalError);
 }
 
@@ -137,11 +140,7 @@ export function createHighSeverityError(message: string, originalError?: Error):
  * @param defaultValue - Default value to return on error
  * @returns Result of function or default value on error
  */
-export function safeExecute<T>(
-  fn: () => T,
-  context?: string,
-  defaultValue?: T
-): T | undefined {
+export function safeExecute<T>(fn: () => T, context?: string, defaultValue?: T): T | undefined {
   try {
     return fn();
   } catch (error) {

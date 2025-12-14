@@ -1,7 +1,3 @@
-/**
- * Minimap management for showing search result positions
- */
-import type { SearchStateManager } from '~/lib/state/searchState';
 import {
   MINIMAP_BG_COLOR,
   MINIMAP_CONTAINER_ID,
@@ -12,6 +8,10 @@ import {
   MINIMAP_WIDTH,
   MINIMAP_Z_INDEX,
 } from '~/lib/constants';
+/**
+ * Minimap management for showing search result positions
+ */
+import type { SearchStateManager } from '~/lib/state/searchState';
 import { getElementById } from '~/lib/utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 

@@ -178,7 +178,8 @@ describe('virtualText', () => {
     });
 
     it('SCRIPTタグをスキップする', () => {
-      document.body.innerHTML = '<div>Hello</div><script>console.log("test");</script><div>World</div>';
+      document.body.innerHTML =
+        '<div>Hello</div><script>console.log("test");</script><div>World</div>';
 
       const { virtualText } = createVirtualTextAndMap();
 
@@ -187,7 +188,8 @@ describe('virtualText', () => {
     });
 
     it('STYLEタグをスキップする', () => {
-      document.body.innerHTML = '<div>Hello</div><style>.test { color: red; }</style><div>World</div>';
+      document.body.innerHTML =
+        '<div>Hello</div><style>.test { color: red; }</style><div>World</div>';
 
       const { virtualText } = createVirtualTextAndMap();
 
@@ -215,7 +217,7 @@ describe('virtualText', () => {
       const { virtualText } = createVirtualTextAndMap();
 
       // 空のテキストノードはスキップされる
-      expect(virtualText).toBe(`Text`);
+      expect(virtualText).toBe('Text');
     });
 
     it('ネストされたブロック要素を正しく処理する', () => {

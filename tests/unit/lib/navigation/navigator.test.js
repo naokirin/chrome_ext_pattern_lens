@@ -113,7 +113,8 @@ describe('navigator', () => {
     });
 
     it('要素検索で複数のマッチ間を移動できる', () => {
-      document.body.innerHTML = '<div class="test">1</div><div class="test">2</div><div class="test">3</div>';
+      document.body.innerHTML =
+        '<div class="test">1</div><div class="test">2</div><div class="test">3</div>';
       const elements = document.querySelectorAll('.test');
       elements.forEach((el) => stateManager.addElement(el));
 
@@ -137,7 +138,7 @@ describe('navigator', () => {
 
       // jsdomではscrollIntoViewが実装されていないため、モックを設定
       // startContainer.parentElementに対して呼ばれる
-      if (textNode && textNode.parentElement) {
+      if (textNode?.parentElement) {
         textNode.parentElement.scrollIntoView = vi.fn();
         const scrollIntoViewSpy = vi.spyOn(textNode.parentElement, 'scrollIntoView');
 
@@ -171,7 +172,7 @@ describe('navigator', () => {
       // jsdomではscrollIntoViewが実装されていないため、モックを設定
       // parentElementが存在することを確認
       const textNode = element.firstChild;
-      if (textNode && textNode.parentElement) {
+      if (textNode?.parentElement) {
         textNode.parentElement.scrollIntoView = vi.fn().mockImplementation(() => {
           throw new Error('Scroll error');
         });
