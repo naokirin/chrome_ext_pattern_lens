@@ -9,6 +9,7 @@ import type {
   StateResponse,
   VirtualMatch,
 } from '~/lib/types';
+import { getElementById } from '~/lib/utils/domUtils';
 
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
@@ -27,7 +28,7 @@ let eventListenersAttached = false;
 
 // Initialize overlay container
 function initializeOverlayContainer(): HTMLDivElement {
-  let container = document.getElementById(HIGHLIGHT_OVERLAY_ID) as HTMLDivElement;
+  let container = getElementById<HTMLDivElement>(HIGHLIGHT_OVERLAY_ID);
 
   if (!container) {
     container = document.createElement('div');
@@ -82,7 +83,7 @@ function createOverlay(
 
 // Update overlay positions (for scroll/resize events)
 function updateOverlayPositions(): void {
-  const container = document.getElementById(HIGHLIGHT_OVERLAY_ID) as HTMLDivElement;
+  const container = getElementById<HTMLDivElement>(HIGHLIGHT_OVERLAY_ID);
   if (!container) return;
 
   // Clear existing overlays
@@ -157,7 +158,7 @@ function clearHighlights(): void {
 
 // Get or create minimap container
 function getMinimapContainer(): HTMLDivElement {
-  let container = document.getElementById(MINIMAP_CONTAINER_ID) as HTMLDivElement;
+  let container = getElementById<HTMLDivElement>(MINIMAP_CONTAINER_ID);
   if (!container) {
     container = document.createElement('div');
     container.id = MINIMAP_CONTAINER_ID;

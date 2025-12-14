@@ -136,7 +136,7 @@ if (!tab.id) {
 
 ---
 
-## 5. 型安全性の問題
+## 5. 型安全性の問題 ✅ 完了
 
 ### 問題点
 - DOM要素取得時に`as`キャストを多用
@@ -154,10 +154,19 @@ let container = document.getElementById(HIGHLIGHT_OVERLAY_ID) as HTMLDivElement;
 // nullチェックは後で行っているが、型安全性が低い
 ```
 
-### 推奨改善
-- ヘルパー関数で安全に要素を取得
-- 早期リターンでnullチェックを明確化
-- オプショナルチェーンを活用
+### 実施した改善
+- ✅ `lib/utils/domUtils.ts`に安全なDOM要素取得関数を新規作成
+  - `getElementById<T>()`: nullを返す可能性がある要素取得（型安全）
+  - `getRequiredElementById<T>()`: 必須要素取得（存在しない場合はエラーを投げる）
+- ✅ `popup/main.ts`: 14箇所の`as`キャストを`getRequiredElementById()`に置き換え
+- ✅ `content.ts`: 3箇所の`as`キャストを`getElementById()`に置き換え
+- ✅ `options/main.ts`: 5箇所の`as`キャストを`getElementById()`に置き換え
+
+### 変更ファイル
+- `lib/utils/domUtils.ts` (新規作成)
+- `entrypoints/popup/main.ts` (リファクタリング)
+- `entrypoints/content.ts` (リファクタリング)
+- `entrypoints/options/main.ts` (リファクタリング)
 
 ---
 

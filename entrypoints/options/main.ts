@@ -1,5 +1,6 @@
 // Import shared type definitions
 import type { Settings } from '~/lib/types';
+import { getElementById } from '~/lib/utils/domUtils';
 
 // Load saved settings
 function loadSettings(): void {
@@ -11,10 +12,8 @@ function loadSettings(): void {
     },
     (items) => {
       const settings = items as Settings;
-      const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
-      const defaultElementSearchEl = document.getElementById(
-        'defaultElementSearch'
-      ) as HTMLInputElement;
+      const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
+      const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
@@ -29,10 +28,8 @@ function loadSettings(): void {
 
 // Save settings
 function saveSettings(): void {
-  const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
-  const defaultElementSearchEl = document.getElementById(
-    'defaultElementSearch'
-  ) as HTMLInputElement;
+  const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
+  const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
 
   if (!defaultRegexEl || !defaultElementSearchEl) {
     return;
@@ -45,7 +42,7 @@ function saveSettings(): void {
   };
 
   chrome.storage.sync.set(settings, () => {
-    const statusDiv = document.getElementById('saveStatus') as HTMLDivElement;
+    const statusDiv = getElementById<HTMLDivElement>('saveStatus');
     if (statusDiv) {
       statusDiv.style.display = 'block';
       statusDiv.classList.add('success');
@@ -61,8 +58,8 @@ function saveSettings(): void {
 document.addEventListener('DOMContentLoaded', loadSettings);
 
 // Auto-save on change
-const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
-const defaultElementSearchEl = document.getElementById('defaultElementSearch') as HTMLInputElement;
+const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
+const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
 
 if (defaultRegexEl) {
   defaultRegexEl.addEventListener('change', saveSettings);

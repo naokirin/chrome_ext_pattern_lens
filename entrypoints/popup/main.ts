@@ -10,22 +10,23 @@ import type {
   StateResponse,
 } from '~/lib/types';
 import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
+import { getRequiredElementById } from '~/lib/utils/domUtils';
 
-// DOM elements
-const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-const regexMode = document.getElementById('regexMode') as HTMLInputElement;
-const regexLabel = document.getElementById('regexLabel') as HTMLLabelElement;
-const caseSensitiveMode = document.getElementById('caseSensitiveMode') as HTMLInputElement;
-const caseSensitiveLabel = document.getElementById('caseSensitiveLabel') as HTMLLabelElement;
-const elementMode = document.getElementById('elementMode') as HTMLInputElement;
-const searchModeContainer = document.getElementById('searchModeContainer') as HTMLDivElement;
-const searchMode = document.getElementById('searchMode') as HTMLSelectElement;
-const results = document.getElementById('results') as HTMLDivElement;
-const navigation = document.getElementById('navigation') as HTMLDivElement;
-const matchCounter = document.getElementById('matchCounter') as HTMLSpanElement;
-const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
-const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
-const clearLink = document.getElementById('clearLink') as HTMLAnchorElement;
+// DOM elements - these are required elements in popup.html
+const searchInput = getRequiredElementById<HTMLInputElement>('searchInput');
+const regexMode = getRequiredElementById<HTMLInputElement>('regexMode');
+const regexLabel = getRequiredElementById<HTMLLabelElement>('regexLabel');
+const caseSensitiveMode = getRequiredElementById<HTMLInputElement>('caseSensitiveMode');
+const caseSensitiveLabel = getRequiredElementById<HTMLLabelElement>('caseSensitiveLabel');
+const elementMode = getRequiredElementById<HTMLInputElement>('elementMode');
+const searchModeContainer = getRequiredElementById<HTMLDivElement>('searchModeContainer');
+const searchMode = getRequiredElementById<HTMLSelectElement>('searchMode');
+const results = getRequiredElementById<HTMLDivElement>('results');
+const navigation = getRequiredElementById<HTMLDivElement>('navigation');
+const matchCounter = getRequiredElementById<HTMLSpanElement>('matchCounter');
+const prevBtn = getRequiredElementById<HTMLButtonElement>('prevBtn');
+const nextBtn = getRequiredElementById<HTMLButtonElement>('nextBtn');
+const clearLink = getRequiredElementById<HTMLAnchorElement>('clearLink');
 
 // Track last search query to detect changes
 let _lastSearchQuery = '';
