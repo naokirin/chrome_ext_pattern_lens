@@ -208,9 +208,17 @@ function searchInVirtualText(query, virtualText, useRegex) {
   const matches = [];
 
   if (useRegex) {
-    // Use user's regex pattern directly with dotAll flag for multiline matching
+    // Use user's regex pattern with dotAll flag for multiline matching
+    // Replace '.' with pattern that excludes block boundary marker
     try {
-      const regex = new RegExp(query, 'gis'); // 's' flag makes '.' match newlines too
+      // Replace . with [^\uE000] to prevent matching across block boundaries
+      // Handle escaped dots (\.) separately - they should match literal dots
+      const modifiedQuery = query.replace(/\\./g, '\x00ESCAPED_DOT\x00')  // Temporarily replace \.
+                                  .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}]`)  // Replace . with [^boundary]
+                                  .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
+
+      console.log('[Pattern Lens] Modified regex pattern:', modifiedQuery);
+      const regex = new RegExp(modifiedQuery, 'gis');
       let match;
       while ((match = regex.exec(virtualText)) !== null) {
         // Filter out matches that cross block boundaries
