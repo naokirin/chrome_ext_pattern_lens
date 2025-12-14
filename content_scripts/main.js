@@ -2,6 +2,7 @@
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
 const HIGHLIGHT_CLASS = 'pattern-lens-highlight-overlay';
 const CURRENT_MATCH_CLASS = 'pattern-lens-current-match';
+const MINIMAP_CONTAINER_ID = 'pattern-lens-minimap-container';
 // Use Unicode Private Use Area character as block boundary marker
 // This character won't appear in normal text and won't be matched by user regex accidentally
 const BLOCK_BOUNDARY_MARKER = '\uE000';
@@ -120,6 +121,85 @@ function clearHighlights() {
     overlays: []
   };
   currentMatchIndex = -1;
+
+  // Remove minimap
+  removeMinimap();
+}
+
+// Get or create minimap container
+function getMinimapContainer() {
+  let container = document.getElementById(MINIMAP_CONTAINER_ID);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = MINIMAP_CONTAINER_ID;
+    document.body.appendChild(container);
+  }
+  // Apply styles every time to handle resize
+  applyMinimapStyles(container);
+  return container;
+}
+
+// Apply styles to minimap container
+function applyMinimapStyles(container) {
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+  container.style.cssText = `
+    position: fixed;
+    top: 0;
+    right: ${scrollbarWidth}px;
+    width: 12px;
+    height: 100vh;
+    z-index: 2147483646;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.05);
+  `;
+}
+
+// Update minimap with current matches
+function updateMinimap() {
+  const container = getMinimapContainer();
+  container.innerHTML = '';
+
+  if (highlightData.ranges.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'block';
+
+  const pageHeight = document.documentElement.scrollHeight;
+
+  highlightData.ranges.forEach((range, index) => {
+    const marker = document.createElement('div');
+
+    try {
+      const rect = range.getBoundingClientRect();
+      const absoluteTop = rect.top + window.scrollY;
+      const relativeTop = (absoluteTop / pageHeight) * 100;
+
+      const isActive = index === currentMatchIndex;
+
+      marker.style.cssText = `
+        position: absolute;
+        top: ${relativeTop}%;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: ${isActive ? 'rgba(255, 87, 34, 0.9)' : 'rgba(255, 193, 7, 0.8)'};
+        border-radius: 1px;
+      `;
+
+      container.appendChild(marker);
+    } catch (error) {
+      console.warn('[Pattern Lens] Failed to create minimap marker:', error);
+    }
+  });
+}
+
+// Remove minimap from page
+function removeMinimap() {
+  const container = document.getElementById(MINIMAP_CONTAINER_ID);
+  if (container) {
+    container.remove();
+  }
 }
 
 // Navigate to a specific match index
@@ -141,6 +221,9 @@ function navigateToMatch(index) {
 
   // Update overlay colors
   updateOverlayPositions();
+
+  // Update minimap
+  updateMinimap();
 
   // Scroll to the current match
   const currentRange = highlightData.ranges[currentMatchIndex];
