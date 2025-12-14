@@ -658,8 +658,13 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       };
 
       if (request.useElementSearch) {
-        const count = searchElements(request.query, request.elementSearchMode);
-        sendResponse({ success: true, count: count, currentIndex: -1, totalMatches: count });
+        const result = searchElements(request.query, request.elementSearchMode);
+        sendResponse({
+          success: true,
+          count: result.count,
+          currentIndex: result.currentIndex,
+          totalMatches: result.totalMatches
+        });
       } else {
         const result = searchText(request.query, request.useRegex, request.caseSensitive);
         sendResponse({
@@ -690,12 +695,13 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     const result = navigateToMatch(currentMatchIndex - 1);
     sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches });
   } else if (request.action === 'get-state') {
-    // Return current search state
+    // Return current search state (support both text and element search)
+    const totalMatches = highlightData.ranges.length || highlightData.elements.length;
     sendResponse({
       success: true,
       state: lastSearchState,
       currentIndex: currentMatchIndex,
-      totalMatches: highlightData.ranges.length
+      totalMatches: totalMatches
     });
   }
 
