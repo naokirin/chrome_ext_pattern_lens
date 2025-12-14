@@ -175,17 +175,21 @@ function createVirtualTextAndMap() {
     const currentNode = walker.currentNode;
     const currentParent = currentNode.parentElement;
 
-    // 1. Handle element boundaries (insert space only at block element boundaries)
+    // 1. Handle element boundaries (insert marker only at actual block boundaries)
     if (lastVisibleNode) {
       const prevParent = lastVisibleNode.parentElement;
 
       // If different parents, determine if space should be inserted
       if (prevParent !== currentParent) {
+        // Only insert boundary marker if we're crossing actual block element boundaries
+        // Check if either the previous or current element itself is block-level
+        // (not just their parent)
         const prevIsBlock = isBlockLevel(prevParent);
         const currentIsBlock = isBlockLevel(currentParent);
 
-        // Insert block boundary marker if either element is block-level
-        if (prevIsBlock || currentIsBlock) {
+        // Only insert marker if BOTH parents are block-level
+        // This prevents markers between inline siblings like <strong>A</strong> <em>B</em>
+        if (prevIsBlock && currentIsBlock) {
           if (!virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
             virtualText += BLOCK_BOUNDARY_MARKER;
             // Mark this as block boundary (not from original DOM)
