@@ -52,6 +52,14 @@ async function performSearch() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+    // Check if the page is a special page where content scripts cannot run
+    if (tab.url.startsWith('chrome://') ||
+        tab.url.startsWith('chrome-extension://') ||
+        tab.url.startsWith('https://chrome.google.com/webstore')) {
+      showResult('このページでは拡張機能を使用できません', true);
+      return;
+    }
+
     const message = {
       action: 'search',
       query: query,
@@ -60,6 +68,13 @@ async function performSearch() {
       elementSearchMode: searchMode.value,
     };
 
+    // Inject content script before sending message
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content_scripts/main.js']
+    });
+
+    // Send message to content script
     chrome.tabs.sendMessage(tab.id, message, (response) => {
       if (chrome.runtime.lastError) {
         showResult('エラー: ページに接続できませんでした', true);
@@ -83,6 +98,20 @@ async function performSearch() {
 async function clearHighlights() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    // Check if the page is a special page
+    if (tab.url.startsWith('chrome://') ||
+        tab.url.startsWith('chrome-extension://') ||
+        tab.url.startsWith('https://chrome.google.com/webstore')) {
+      showResult('このページでは拡張機能を使用できません', true);
+      return;
+    }
+
+    // Inject content script before sending message
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content_scripts/main.js']
+    });
 
     chrome.tabs.sendMessage(tab.id, { action: 'clear' }, (response) => {
       if (chrome.runtime.lastError) {

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern Lens テストページ</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #555;
+      margin-top: 30px;
+    }
+    .test-section {
+      background-color: #f9f9f9;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+    }
+    .highlight-me {
+      background-color: #fff3cd;
+      padding: 5px;
+    }
+    code {
+      background-color: #e8e8e8;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    .info-box {
+      background-color: #e3f2fd;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    ul {
+      margin: 10px 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pattern Lens テストページ</h1>
+
+  <div class="info-box">
+    <strong>このページの使い方:</strong>
+    <p>Pattern Lens拡張機能の各機能をテストするためのサンプルページです。拡張機能アイコンをクリックして、以下の検索パターンを試してみてください。</p>
+  </div>
+
+  <h2>1. 通常のテキスト検索</h2>
+  <div class="test-section">
+    <p>このセクションには「テスト」という単語が複数回登場します。</p>
+    <ul>
+      <li>テスト項目1: 通常のテキスト検索をテストします</li>
+      <li>テスト項目2: ハイライト機能のテスト</li>
+      <li>テスト項目3: 複数マッチのテスト</li>
+    </ul>
+    <p><strong>検索例:</strong> <code>テスト</code></p>
+  </div>
+
+  <h2>2. 正規表現検索</h2>
+  <div class="test-section">
+    <p>電話番号: 03-1234-5678, 090-9876-5432</p>
+    <p>メールアドレス: test@example.com, user@sample.jp</p>
+    <p>日付: 2024-12-14, 2025-01-01</p>
+    <p>郵便番号: 100-0001, 150-0002</p>
+
+    <p><strong>検索例:</strong></p>
+    <ul>
+      <li>電話番号: <code>\d{2,4}-\d{4}-\d{4}</code></li>
+      <li>メールアドレス: <code>\w+@\w+\.\w+</code></li>
+      <li>日付: <code>\d{4}-\d{2}-\d{2}</code></li>
+      <li>3桁以上の数字: <code>\d{3,}</code></li>
+    </ul>
+  </div>
+
+  <h2>3. CSSセレクタ検索</h2>
+  <div class="test-section">
+    <p class="highlight-me">このパラグラフは<code>.highlight-me</code>クラスを持っています</p>
+    <div id="unique-element">このdivは<code>#unique-element</code>というIDを持っています</div>
+    <p>
+      <span class="highlight-me">このspanも<code>.highlight-me</code>クラスです</span>
+    </p>
+
+    <p><strong>検索例:</strong></p>
+    <ul>
+      <li>クラスセレクタ: <code>.highlight-me</code></li>
+      <li>IDセレクタ: <code>#unique-element</code></li>
+      <li>要素セレクタ: <code>h2</code></li>
+      <li>子孫セレクタ: <code>.test-section p</code></li>
+    </ul>
+  </div>
+
+  <h2>4. XPath検索</h2>
+  <div class="test-section">
+    <article>
+      <header>
+        <h3>記事タイトル</h3>
+      </header>
+      <div class="content">
+        <p>記事の本文です。XPath検索でこの要素を見つけることができます。</p>
+      </div>
+    </article>
+
+    <p><strong>検索例:</strong></p>
+    <ul>
+      <li>すべてのh2要素: <code>//h2</code></li>
+      <li>test-sectionクラス内のp要素: <code>//div[@class='test-section']//p</code></li>
+      <li>特定のテキストを含む要素: <code>//*[contains(text(), 'XPath')]</code></li>
+      <li>article要素内のp要素: <code>//article//p</code></li>
+    </ul>
+  </div>
+
+  <h2>5. 複雑なテキスト</h2>
+  <div class="test-section">
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pattern Lens は強力な検索ツールです。</p>
+    <p>Numbers: 123, 456, 789, 1000, 2000</p>
+    <p>Words: apple, banana, cherry, date, elderberry</p>
+    <p>Mixed: abc123, def456, ghi789</p>
+
+    <p><strong>検索例:</strong></p>
+    <ul>
+      <li>英単語のみ: <code>[a-z]+</code></li>
+      <li>数字のみ: <code>\d+</code></li>
+      <li>英数字の組み合わせ: <code>[a-z]+\d+</code></li>
+    </ul>
+  </div>
+
+  <h2>6. 日本語テキスト</h2>
+  <div class="test-section">
+    <p>吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。</p>
+    <p>何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。</p>
+    <p>吾輩はここで始めて人間というものを見た。</p>
+
+    <p><strong>検索例:</strong></p>
+    <ul>
+      <li>「吾輩」を検索</li>
+      <li>「ニャーニャー」を検索</li>
+      <li>ひらがな3文字以上: <code>[ぁ-ん]{3,}</code></li>
+    </ul>
+  </div>
+
+  <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+    <p>Pattern Lens テストページ - すべての機能を試してみてください</p>
+  </footer>
+</body>
+</html>
