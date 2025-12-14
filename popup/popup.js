@@ -15,6 +15,9 @@ const matchCounter = document.getElementById('matchCounter');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
+// Track last search query to detect changes
+let lastSearchQuery = '';
+
 // Load settings from storage
 function loadSettings() {
   chrome.storage.sync.get(
@@ -123,6 +126,8 @@ async function performSearch() {
 
       if (response && response.success) {
         showResult(`${response.count} 件の結果が見つかりました`);
+        // Update last search query
+        lastSearchQuery = query;
         if (response.totalMatches > 0) {
           updateNavigation(response.currentIndex, response.totalMatches);
         } else {
@@ -164,6 +169,7 @@ async function clearHighlights() {
         hideResult();
         hideNavigation();
         searchInput.value = '';
+        lastSearchQuery = '';
       }
     });
   } catch (error) {
@@ -208,17 +214,22 @@ nextBtn.addEventListener('click', navigateNext);
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
+    const currentQuery = searchInput.value.trim();
+    const queryChanged = currentQuery !== lastSearchQuery;
+
     if (e.shiftKey) {
-      // Shift+Enter: Navigate to previous match
-      if (navigation.style.display !== 'none') {
+      // Shift+Enter: Navigate to previous match (only if query hasn't changed)
+      if (!queryChanged && navigation.style.display !== 'none') {
         navigatePrev();
-      }
-    } else {
-      // Enter: If navigation is visible, go to next match, otherwise perform search
-      if (navigation.style.display !== 'none') {
-        navigateNext();
       } else {
         performSearch();
+      }
+    } else {
+      // Enter: If query changed, perform new search. Otherwise, navigate to next match
+      if (queryChanged || navigation.style.display === 'none') {
+        performSearch();
+      } else {
+        navigateNext();
       }
     }
   }
