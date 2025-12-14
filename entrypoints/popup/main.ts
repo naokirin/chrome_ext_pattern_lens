@@ -29,6 +29,8 @@ const clearLink = document.getElementById('clearLink') as HTMLAnchorElement;
 // Track last search query to detect changes
 let lastSearchQuery = '';
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+// Track the query that initiated the current search to detect if it's stale
+let currentSearchQuery = '';
 
 // Load settings from storage
 function loadSettings(): void {
@@ -109,6 +111,9 @@ async function performSearch(): Promise<void> {
     return;
   }
 
+  // Save the query at the start of the search to detect if it becomes stale
+  currentSearchQuery = query;
+
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -136,6 +141,13 @@ async function performSearch(): Promise<void> {
 
     // Send message to content script
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
+      // Check if the query has changed since this search was initiated
+      const currentQuery = searchInput.value.trim();
+      if (currentQuery !== currentSearchQuery) {
+        // Query has changed, ignore this stale response
+        return;
+      }
+
       if (chrome.runtime.lastError) {
         showResult('エラー: ページに接続できませんでした', true);
         hideNavigation();
@@ -248,6 +260,7 @@ searchInput.addEventListener('input', () => {
   // Clear existing timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout);
+    searchTimeout = null;
   }
 
   const query = searchInput.value.trim();
@@ -255,12 +268,23 @@ searchInput.addEventListener('input', () => {
   // If empty, clear highlights immediately
   if (!query) {
     clearHighlights();
+    currentSearchQuery = '';
+    lastSearchQuery = '';
     return;
   }
 
+  // Reset currentSearchQuery when input changes to ensure Enter key detects changes
+  // This allows Enter key to trigger a new search even if pressed immediately after input
+  currentSearchQuery = '';
+
   // Debounce search to avoid too many requests while typing
   searchTimeout = setTimeout(() => {
-    performSearch();
+    // Double-check the query hasn't changed during the debounce delay
+    const currentQuery = searchInput.value.trim();
+    if (currentQuery === query) {
+      performSearch();
+    }
+    searchTimeout = null;
   }, 300); // 300ms delay
 });
 
@@ -295,13 +319,24 @@ clearLink.addEventListener('click', (e) => {
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
+    e.stopPropagation();
     // Cancel pending auto-search
     if (searchTimeout) {
       clearTimeout(searchTimeout);
       searchTimeout = null;
     }
 
-    if (e.shiftKey) {
+    const currentQuery = searchInput.value.trim();
+
+    // Check if query has changed by comparing with currentSearchQuery
+    // currentSearchQuery is set when performSearch() starts, so if it doesn't match,
+    // it means the input has changed since the last search started
+    const queryChanged = !currentSearchQuery || currentQuery !== currentSearchQuery;
+
+    if (queryChanged) {
+      // Query has changed or no search has been performed yet, perform new search
+      performSearch();
+    } else if (e.shiftKey) {
       // Shift+Enter: Navigate to previous match
       if (navigation.style.display !== 'none') {
         navigatePrev();
@@ -320,6 +355,8 @@ searchInput.addEventListener('keydown', (e) => {
     // Escape: Clear search and highlights
     searchInput.value = '';
     clearHighlights();
+    currentSearchQuery = '';
+    lastSearchQuery = '';
   }
 });
 
