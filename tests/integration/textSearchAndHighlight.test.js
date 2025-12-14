@@ -1,13 +1,13 @@
 /**
  * 統合テスト: テキスト検索とハイライト表示
- * 
+ *
  * テストシナリオ:
  * 1. Popupでキーワードを入力し、検索を実行
  * 2. content.tsがメッセージを受け取り、検索とハイライト（オーバーレイ）を行う
  * 3. Popupに正しい件数が表示される
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 // Content scriptの関数をインポートするために、モジュールをモック
@@ -107,6 +107,7 @@ describe('統合テスト: テキスト検索とハイライト表示', () => {
           const searchText = caseSensitive ? bodyText : bodyText.toLowerCase();
           const searchQuery = caseSensitive ? query : query.toLowerCase();
           let index = -1;
+          // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
           while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
             matches++;
           }
@@ -237,6 +238,7 @@ describe('統合テスト: テキスト検索とハイライト表示', () => {
         const searchQuery = query.toLowerCase();
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -289,6 +291,7 @@ describe('統合テスト: テキスト検索とハイライト表示', () => {
         const searchQuery = caseSensitive ? query : query.toLowerCase();
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }

@@ -1,12 +1,12 @@
 /**
  * 統合テスト: 設定の永続化
- * 
+ *
  * テストシナリオ:
  * 1. Optionsページでデフォルト設定を変更し保存
  * 2. Popupを開いた際に、変更した設定が反映されていることを確認
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: 設定の永続化', () => {
@@ -268,7 +268,7 @@ describe('統合テスト: 設定の永続化', () => {
       defaultElementSearch: defaultElementSearchEl.checked,
     };
 
-    chrome.storage.sync.set(settings, () => { });
+    chrome.storage.sync.set(settings, () => {});
 
     // 両方の設定が保存されたことを確認
     expect(storedSettings.defaultRegex).toBe(true);

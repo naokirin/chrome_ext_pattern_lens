@@ -1,12 +1,12 @@
 /**
  * 統合テスト: 要素境界をまたぐ検索
- * 
+ *
  * テストシナリオ:
  * 1. test-cross-element.html のようなページで検索を実行
  * 2. <span>や<p>をまたぐキーワード（例: "ipsum dolor", "mkdir-p"）が正しくハイライトされることを確認
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: 要素境界をまたぐ検索', () => {
@@ -33,7 +33,11 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();

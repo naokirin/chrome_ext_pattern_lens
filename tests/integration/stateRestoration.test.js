@@ -1,12 +1,12 @@
 /**
  * 統合テスト: 検索状態の復元
- * 
+ *
  * テストシナリオ:
  * 1. 検索を実行後、Popupを閉じる
  * 2. Popupを再度開いた際に、前回の検索状態（キーワード、マッチ件数、現在位置）が復元されるか
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: 検索状態の復元', () => {
@@ -60,7 +60,11 @@ describe('統合テスト: 検索状態の復元', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();
@@ -111,6 +115,7 @@ describe('統合テスト: 検索状態の復元', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -124,7 +129,8 @@ describe('統合テスト: 検索状態の復元', () => {
           currentIndex: currentMatchIndex,
           totalMatches: totalMatches,
         };
-      } else if (request.action === 'get-state') {
+      }
+      if (request.action === 'get-state') {
         // 検索状態を返す（content.tsの動作を模倣）
         return {
           success: true,
@@ -178,6 +184,7 @@ describe('統合テスト: 検索状態の復元', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -191,7 +198,8 @@ describe('統合テスト: 検索状態の復元', () => {
           currentIndex: currentMatchIndex,
           totalMatches: totalMatches,
         };
-      } else if (request.action === 'get-state') {
+      }
+      if (request.action === 'get-state') {
         return {
           success: true,
           state: lastSearchState,
@@ -204,16 +212,20 @@ describe('統合テスト: 検索状態の復元', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // PopupのHTMLを再現
@@ -292,6 +304,7 @@ describe('統合テスト: 検索状態の復元', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -305,7 +318,8 @@ describe('統合テスト: 検索状態の復元', () => {
           currentIndex: currentMatchIndex,
           totalMatches: totalMatches,
         };
-      } else if (request.action === 'navigate-next') {
+      }
+      if (request.action === 'navigate-next') {
         if (totalMatches > 0) {
           currentMatchIndex = (currentMatchIndex + 1) % totalMatches;
         }
@@ -314,7 +328,8 @@ describe('統合テスト: 検索状態の復元', () => {
           currentIndex: currentMatchIndex,
           totalMatches: totalMatches,
         };
-      } else if (request.action === 'get-state') {
+      }
+      if (request.action === 'get-state') {
         return {
           success: true,
           state: lastSearchState,
@@ -327,16 +342,20 @@ describe('統合テスト: 検索状態の復元', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // ナビゲーションを実行
@@ -378,6 +397,7 @@ describe('統合テスト: 検索状態の復元', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -391,7 +411,8 @@ describe('統合テスト: 検索状態の復元', () => {
           currentIndex: currentMatchIndex,
           totalMatches: totalMatches,
         };
-      } else if (request.action === 'clear') {
+      }
+      if (request.action === 'clear') {
         // 検索状態をクリア（content.tsの動作を模倣）
         lastSearchState = {
           query: '',
@@ -404,7 +425,8 @@ describe('統合テスト: 検索状態の復元', () => {
         totalMatches = 0;
 
         return { success: true };
-      } else if (request.action === 'get-state') {
+      }
+      if (request.action === 'get-state') {
         return {
           success: true,
           state: lastSearchState,
@@ -417,16 +439,20 @@ describe('統合テスト: 検索状態の復元', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // ハイライトをクリア

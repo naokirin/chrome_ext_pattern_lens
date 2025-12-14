@@ -1,13 +1,13 @@
 /**
  * 統合テスト: CSS/XPathセレクタ検索
- * 
+ *
  * テストシナリオ:
  * 1. Popupで要素検索モードに切り替え、セレクタを入力
  * 2. searchElements が実行され、一致する要素がハイライトされることを確認
  * 3. 不正なセレクタのエラーハンドリング
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: CSS/XPathセレクタ検索', () => {
@@ -47,7 +47,11 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();
@@ -79,7 +83,11 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('CSSセレクタで要素を検索できる', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'css') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'css'
+      ) {
         const query = request.query;
         let elements = [];
 
@@ -87,10 +95,12 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
           elements = Array.from(document.querySelectorAll(query));
 
           // オーバーレイコンテナとその子要素を除外
-          const overlayContainer = document.getElementById('pattern-lens-overlay-container');
+          const _overlayContainer = document.getElementById('pattern-lens-overlay-container');
           elements = elements.filter((el) => {
-            return el.id !== 'pattern-lens-overlay-container' &&
-              !el.closest('#pattern-lens-overlay-container');
+            return (
+              el.id !== 'pattern-lens-overlay-container' &&
+              !el.closest('#pattern-lens-overlay-container')
+            );
           });
 
           // オーバーレイコンテナを作成
@@ -213,15 +223,21 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('IDセレクタで要素を検索できる', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'css') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'css'
+      ) {
         const query = request.query;
         let elements = [];
 
         try {
           elements = Array.from(document.querySelectorAll(query));
           elements = elements.filter((el) => {
-            return el.id !== 'pattern-lens-overlay-container' &&
-              !el.closest('#pattern-lens-overlay-container');
+            return (
+              el.id !== 'pattern-lens-overlay-container' &&
+              !el.closest('#pattern-lens-overlay-container')
+            );
           });
 
           let container = document.getElementById('pattern-lens-overlay-container');
@@ -280,7 +296,11 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('XPathセレクタで要素を検索できる', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'xpath') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'xpath'
+      ) {
         const query = request.query;
         let elements = [];
 
@@ -302,8 +322,10 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
           // オーバーレイコンテナを除外
           elements = elements.filter((el) => {
-            return el.id !== 'pattern-lens-overlay-container' &&
-              !el.closest('#pattern-lens-overlay-container');
+            return (
+              el.id !== 'pattern-lens-overlay-container' &&
+              !el.closest('#pattern-lens-overlay-container')
+            );
           });
 
           let container = document.getElementById('pattern-lens-overlay-container');
@@ -362,7 +384,11 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('不正なCSSセレクタでエラーが返される', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'css') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'css'
+      ) {
         const query = request.query;
 
         try {
@@ -405,17 +431,15 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('不正なXPathセレクタでエラーが返される', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'xpath') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'xpath'
+      ) {
         const query = request.query;
 
         try {
-          document.evaluate(
-            query,
-            document,
-            null,
-            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-            null
-          );
+          document.evaluate(query, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
           return {
             success: true,
             count: 0,
@@ -453,15 +477,21 @@ describe('統合テスト: CSS/XPathセレクタ検索', () => {
 
   it('要素検索でマッチしない場合、0件が返される', async () => {
     messageHandler = (request) => {
-      if (request.action === 'search' && request.useElementSearch && request.elementSearchMode === 'css') {
+      if (
+        request.action === 'search' &&
+        request.useElementSearch &&
+        request.elementSearchMode === 'css'
+      ) {
         const query = request.query;
         let elements = [];
 
         try {
           elements = Array.from(document.querySelectorAll(query));
           elements = elements.filter((el) => {
-            return el.id !== 'pattern-lens-overlay-container' &&
-              !el.closest('#pattern-lens-overlay-container');
+            return (
+              el.id !== 'pattern-lens-overlay-container' &&
+              !el.closest('#pattern-lens-overlay-container')
+            );
           });
 
           return {

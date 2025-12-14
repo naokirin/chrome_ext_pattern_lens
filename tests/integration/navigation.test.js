@@ -1,13 +1,13 @@
 /**
  * 統合テスト: 検索結果のナビゲーション
- * 
+ *
  * テストシナリオ:
  * 1. Popupの「次へ」「前へ」ボタン、または Enter/Shift+Enter を押す
  * 2. navigateToMatch が呼び出され、ハイライトとページスクロールが正しく連動することを確認
  * 3. 現在のマッチがオレンジ色でハイライトされる
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: 検索結果のナビゲーション', () => {
@@ -57,7 +57,11 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();
@@ -98,6 +102,7 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
         // マッチ数をカウント
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -119,7 +124,10 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
 
           // オーバーレイを作成
           const overlay = document.createElement('div');
-          overlay.className = i === 0 ? 'pattern-lens-highlight-overlay pattern-lens-current-match' : 'pattern-lens-highlight-overlay';
+          overlay.className =
+            i === 0
+              ? 'pattern-lens-highlight-overlay pattern-lens-current-match'
+              : 'pattern-lens-highlight-overlay';
           if (container) {
             container.appendChild(overlay);
           }
@@ -177,6 +185,7 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -195,7 +204,10 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           highlightData.ranges.push(range);
 
           const overlay = document.createElement('div');
-          overlay.className = i === 0 ? 'pattern-lens-highlight-overlay pattern-lens-current-match' : 'pattern-lens-highlight-overlay';
+          overlay.className =
+            i === 0
+              ? 'pattern-lens-highlight-overlay pattern-lens-current-match'
+              : 'pattern-lens-highlight-overlay';
           if (container) {
             container.appendChild(overlay);
           }
@@ -210,7 +222,8 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           currentIndex: currentMatchIndex,
           totalMatches: matches,
         };
-      } else if (request.action === 'navigate-next') {
+      }
+      if (request.action === 'navigate-next') {
         // 次のマッチに移動
         const totalMatches = highlightData.ranges.length;
         if (totalMatches === 0) {
@@ -290,6 +303,7 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -308,7 +322,10 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           highlightData.ranges.push(range);
 
           const overlay = document.createElement('div');
-          overlay.className = i === 0 ? 'pattern-lens-highlight-overlay pattern-lens-current-match' : 'pattern-lens-highlight-overlay';
+          overlay.className =
+            i === 0
+              ? 'pattern-lens-highlight-overlay pattern-lens-current-match'
+              : 'pattern-lens-highlight-overlay';
           if (container) {
             container.appendChild(overlay);
           }
@@ -323,7 +340,8 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           currentIndex: currentMatchIndex,
           totalMatches: matches,
         };
-      } else if (request.action === 'navigate-prev') {
+      }
+      if (request.action === 'navigate-prev') {
         const totalMatches = highlightData.ranges.length;
         if (totalMatches === 0) {
           return {
@@ -396,6 +414,7 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
 
         let matches = 0;
         let index = -1;
+        // biome-ignore lint/suspicious/noAssignInExpressions: ループ内でindexを更新する必要がある
         while ((index = searchText.indexOf(searchQuery, index + 1)) !== -1) {
           matches++;
         }
@@ -414,7 +433,10 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           highlightData.ranges.push(range);
 
           const overlay = document.createElement('div');
-          overlay.className = i === 0 ? 'pattern-lens-highlight-overlay pattern-lens-current-match' : 'pattern-lens-highlight-overlay';
+          overlay.className =
+            i === 0
+              ? 'pattern-lens-highlight-overlay pattern-lens-current-match'
+              : 'pattern-lens-highlight-overlay';
           if (container) {
             container.appendChild(overlay);
           }
@@ -429,7 +451,8 @@ describe('統合テスト: 検索結果のナビゲーション', () => {
           currentIndex: currentMatchIndex,
           totalMatches: matches,
         };
-      } else if (request.action === 'navigate-next') {
+      }
+      if (request.action === 'navigate-next') {
         const totalMatches = highlightData.ranges.length;
         if (totalMatches === 0) {
           return {

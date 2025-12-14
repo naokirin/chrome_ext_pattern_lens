@@ -1,13 +1,13 @@
 /**
  * 統合テスト: ミニマップとの連携
- * 
+ *
  * テストシナリオ:
  * 1. 検索実行後、ミニマップにハイライト位置が正しく表示されるか
  * 2. ナビゲーション時に、ミニマップ上のアクティブなマーカーが更新されるか
  * 3. 検索結果が0件の場合、ミニマップが非表示になるか
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: ミニマップとの連携', () => {
@@ -57,7 +57,11 @@ describe('統合テスト: ミニマップとの連携', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();
@@ -143,7 +147,7 @@ describe('統合テスト: ミニマップとの連携', () => {
           // テスト環境ではgetBoundingClientRect()が空の矩形を返す可能性がある
           if (elementRect.width === 0 && elementRect.height === 0) {
             // フォールバック: インデックスに基づいて位置を計算
-            absoluteTop = (index * 200) + 100; // 簡易的な位置計算
+            absoluteTop = index * 200 + 100; // 簡易的な位置計算
           } else {
             absoluteTop = elementRect.top + (window.scrollY || window.pageYOffset || 0);
           }
@@ -151,7 +155,7 @@ describe('統合テスト: ミニマップとの連携', () => {
           absoluteTop = rect.top + (window.scrollY || window.pageYOffset || 0);
         } else {
           // フォールバック: インデックスに基づいて位置を計算
-          absoluteTop = (index * 200) + 100; // 簡易的な位置計算
+          absoluteTop = index * 200 + 100; // 簡易的な位置計算
         }
 
         const relativeTop = pageHeight > 0 ? (absoluteTop / pageHeight) * 100 : 0;
@@ -172,7 +176,7 @@ describe('統合テスト: ミニマップとの連携', () => {
       } catch (_error) {
         // Failed to create minimap marker, silently ignore
         // テスト環境では、エラーが発生してもマーカーを作成する
-        const fallbackTop = (index * 200) + 100;
+        const fallbackTop = index * 200 + 100;
         const relativeTop = pageHeight > 0 ? (fallbackTop / pageHeight) * 100 : 0;
         const isActive = index === currentMatchIndex;
         marker.style.cssText = `
@@ -272,7 +276,8 @@ describe('統合テスト: ミニマップとの連携', () => {
           currentIndex: currentMatchIndex,
           totalMatches: highlightData.ranges.length,
         };
-      } else if (request.action === 'navigate-next') {
+      }
+      if (request.action === 'navigate-next') {
         const totalMatches = highlightData.ranges.length;
         if (totalMatches === 0) {
           return {
@@ -296,16 +301,20 @@ describe('統合テスト: ミニマップとの連携', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // 最初のマーカーがアクティブであることを確認
@@ -426,7 +435,8 @@ describe('統合テスト: ミニマップとの連携', () => {
           currentIndex: currentMatchIndex,
           totalMatches: highlightData.ranges.length,
         };
-      } else if (request.action === 'clear') {
+      }
+      if (request.action === 'clear') {
         highlightData.ranges = [];
         highlightData.elements = [];
         highlightData.overlays = [];
@@ -445,16 +455,20 @@ describe('統合テスト: ミニマップとの連携', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // ミニマップが存在することを確認

@@ -1,12 +1,12 @@
 /**
  * 統合テスト: スクロール/リサイズ時の追従
- * 
+ *
  * テストシナリオ:
  * 1. ページをスクロールまたはウィンドウサイズを変更
  * 2. updateOverlayPositions が呼ばれ、オーバーレイの位置が正しく更新されることを確認
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 describe('統合テスト: スクロール/リサイズ時の追従', () => {
@@ -85,7 +85,11 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       storage: {
         sync: {
           get: vi.fn((_keys, callback) => {
-            callback({ defaultRegex: false, defaultCaseSensitive: false, defaultElementSearch: false });
+            callback({
+              defaultRegex: false,
+              defaultCaseSensitive: false,
+              defaultElementSearch: false,
+            });
           }),
           set: vi.fn((_items, callback) => {
             if (callback) callback();
@@ -219,7 +223,8 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
             highlightData.ranges.push(range);
 
             // オーバーレイを作成
-            const container = document.getElementById('pattern-lens-overlay-container') ||
+            const container =
+              document.getElementById('pattern-lens-overlay-container') ||
               (() => {
                 const c = document.createElement('div');
                 c.id = 'pattern-lens-overlay-container';
@@ -273,23 +278,27 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // 最初のオーバーレイの位置を記録
     const firstOverlay = highlightData.overlays[0];
     expect(firstOverlay).toBeTruthy();
-    const initialTop = parseInt(firstOverlay.style.top) || 0;
-    const initialScrollY = window.scrollY || window.pageYOffset;
+    const _initialTop = Number.parseInt(firstOverlay.style.top) || 0;
+    const _initialScrollY = window.scrollY || window.pageYOffset;
 
     // rangesが正しく設定されていることを確認
     expect(highlightData.ranges.length).toBeGreaterThan(0);
@@ -308,7 +317,7 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
     expect(highlightData.overlays.length).toBeGreaterThan(0);
     const newOverlay = highlightData.overlays[0];
     expect(newOverlay).toBeTruthy();
-    const newTop = parseInt(newOverlay.style.top) || 0;
+    const _newTop = Number.parseInt(newOverlay.style.top) || 0;
 
     // getClientRects()はビューポート座標を返すため、スクロール位置を加算すると位置が変わる
     // スクロール位置が変更された場合、位置が更新されることを確認
@@ -334,7 +343,8 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
             range.selectNodeContents(p);
             highlightData.ranges.push(range);
 
-            const container = document.getElementById('pattern-lens-overlay-container') ||
+            const container =
+              document.getElementById('pattern-lens-overlay-container') ||
               (() => {
                 const c = document.createElement('div');
                 c.id = 'pattern-lens-overlay-container';
@@ -388,22 +398,26 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // 最初のオーバーレイの位置を記録
     const firstOverlay = highlightData.overlays[0];
     expect(firstOverlay).toBeTruthy();
-    const initialLeft = parseInt(firstOverlay.style.left) || 0;
+    const _initialLeft = Number.parseInt(firstOverlay.style.left) || 0;
 
     // ウィンドウサイズを変更（これにより要素の位置が変わる可能性がある）
     Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true });
@@ -448,7 +462,8 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
           currentIndex: highlightData.ranges.length > 0 ? 0 : -1,
           totalMatches: highlightData.ranges.length,
         };
-      } else if (request.action === 'clear') {
+      }
+      if (request.action === 'clear') {
         highlightData.ranges = [];
         highlightData.elements = [];
         highlightData.overlays = [];
@@ -474,16 +489,20 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
 
     // 検索を実行
     await new Promise((resolve) => {
-      chrome.tabs.sendMessage(1, {
-        action: 'search',
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-      }, () => {
-        resolve(null);
-      });
+      chrome.tabs.sendMessage(
+        1,
+        {
+          action: 'search',
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+        },
+        () => {
+          resolve(null);
+        }
+      );
     });
 
     // ハイライトをクリア
