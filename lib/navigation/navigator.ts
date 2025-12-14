@@ -8,17 +8,13 @@ import { updateOverlayPositions } from '../highlight/overlay';
 import { handleError } from '../utils/errorHandler';
 
 /**
- * Navigate to a specific match index
+ * Normalize match index (wrap around)
  */
-export function navigateToMatch(index: number, stateManager: SearchStateManager): NavigationResult {
-  // Support both text search (ranges) and element search (elements)
-  const totalMatches = stateManager.totalMatches;
-
+export function normalizeMatchIndex(index: number, totalMatches: number): number {
   if (totalMatches === 0) {
-    return { currentIndex: -1, totalMatches: 0 };
+    return -1;
   }
 
-  // Normalize index (wrap around)
   let normalizedIndex = index;
   if (normalizedIndex < 0) {
     normalizedIndex = totalMatches - 1;
@@ -26,15 +22,23 @@ export function navigateToMatch(index: number, stateManager: SearchStateManager)
     normalizedIndex = 0;
   }
 
-  stateManager.setCurrentIndex(normalizedIndex);
+  return normalizedIndex;
+}
 
-  // Update overlay colors (for text search)
+/**
+ * Update highlight for current match (overlay colors and minimap)
+ */
+export function updateMatchHighlight(stateManager: SearchStateManager): void {
   if (stateManager.hasTextMatches()) {
     updateOverlayPositions(stateManager);
     updateMinimap(stateManager);
   }
+}
 
-  // Scroll to the current match
+/**
+ * Scroll to the current match
+ */
+export function scrollToMatch(stateManager: SearchStateManager): void {
   if (stateManager.hasTextMatches()) {
     // Text search: scroll to range
     const currentRange = stateManager.getCurrentRange();
@@ -46,7 +50,7 @@ export function navigateToMatch(index: number, stateManager: SearchStateManager)
         }
       } catch (error) {
         // Failed to scroll to match
-        handleError(error, 'navigateToMatch: Failed to scroll to text match', undefined);
+        handleError(error, 'scrollToMatch: Failed to scroll to text match', undefined);
       }
     }
   } else if (stateManager.hasElementMatches()) {
@@ -57,10 +61,31 @@ export function navigateToMatch(index: number, stateManager: SearchStateManager)
         currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (error) {
         // Failed to scroll to element
-        handleError(error, 'navigateToMatch: Failed to scroll to element', undefined);
+        handleError(error, 'scrollToMatch: Failed to scroll to element', undefined);
       }
     }
   }
+}
+
+/**
+ * Navigate to a specific match index
+ */
+export function navigateToMatch(index: number, stateManager: SearchStateManager): NavigationResult {
+  const totalMatches = stateManager.totalMatches;
+
+  if (totalMatches === 0) {
+    return { currentIndex: -1, totalMatches: 0 };
+  }
+
+  // Normalize index (wrap around)
+  const normalizedIndex = normalizeMatchIndex(index, totalMatches);
+  stateManager.setCurrentIndex(normalizedIndex);
+
+  // Update highlight for current match
+  updateMatchHighlight(stateManager);
+
+  // Scroll to the current match
+  scrollToMatch(stateManager);
 
   return { currentIndex: stateManager.currentIndex, totalMatches: totalMatches };
 }

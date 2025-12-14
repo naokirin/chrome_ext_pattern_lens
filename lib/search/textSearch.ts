@@ -185,30 +185,46 @@ export function createRangeFromVirtualMatch(
 }
 
 /**
- * Search and highlight text using virtual text layer and overlay
+ * Create text matches from query using virtual text layer
+ * @returns Array of DOM Ranges representing matches
  */
-export function searchText(
+export function createTextMatches(
   query: string,
   useRegex: boolean,
-  caseSensitive: boolean,
-  stateManager: SearchStateManager
-): SearchResult {
-  let count = 0;
-  const container = initializeOverlayContainer();
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
-
+  caseSensitive: boolean
+): Range[] {
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
 
   // Step 2: Search in virtual text
   const matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
 
-  // Step 3: Convert virtual matches to DOM ranges and create overlays
+  // Step 3: Convert virtual matches to DOM ranges
+  const ranges: Range[] = [];
   matches.forEach((match) => {
     const range = createRangeFromVirtualMatch(match, charMap);
-    if (!range) return;
+    if (range) {
+      ranges.push(range);
+    }
+  });
 
+  return ranges;
+}
+
+/**
+ * Create overlays from DOM ranges and add them to state manager
+ * @returns Number of matches processed
+ */
+export function createOverlaysFromRanges(
+  ranges: Range[],
+  stateManager: SearchStateManager
+): number {
+  const container = initializeOverlayContainer();
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+  let count = 0;
+
+  ranges.forEach((range) => {
     try {
       // Get rectangles for this range
       const rects = range.getClientRects();
@@ -229,11 +245,29 @@ export function searchText(
       count++;
     } catch (error) {
       // Failed to create overlay for range
-      handleError(error, 'searchText: Failed to create overlay for range', undefined);
+      handleError(error, 'createOverlaysFromRanges: Failed to create overlay for range', undefined);
     }
   });
 
-  // Add event listeners for scroll and resize
+  return count;
+}
+
+/**
+ * Search and highlight text using virtual text layer and overlay
+ */
+export function searchText(
+  query: string,
+  useRegex: boolean,
+  caseSensitive: boolean,
+  stateManager: SearchStateManager
+): SearchResult {
+  // Step 1: Create text matches
+  const ranges = createTextMatches(query, useRegex, caseSensitive);
+
+  // Step 2: Create overlays from ranges
+  const count = createOverlaysFromRanges(ranges, stateManager);
+
+  // Step 3: Add event listeners and navigate to first match
   if (count > 0) {
     setupEventListeners(stateManager, () => updateOverlayPositions(stateManager));
 

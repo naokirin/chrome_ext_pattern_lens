@@ -15,6 +15,73 @@ import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
 
 /**
+ * Find elements by CSS selector or XPath
+ * @returns Array of matching elements
+ * @throws Error if query is invalid
+ */
+export function findElements(query: string, mode: 'css' | 'xpath'): Element[] {
+  let elements: Element[] = [];
+
+  if (mode === 'css') {
+    elements = Array.from(document.querySelectorAll(query));
+  } else if (mode === 'xpath') {
+    const result = document.evaluate(
+      query,
+      document,
+      null,
+      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+      null
+    );
+    for (let i = 0; i < result.snapshotLength; i++) {
+      const item = result.snapshotItem(i);
+      if (item && item.nodeType === Node.ELEMENT_NODE) {
+        elements.push(item as Element);
+      }
+    }
+  }
+
+  // Filter out overlay container and its children
+  elements = elements.filter((el) => {
+    return el.id !== HIGHLIGHT_OVERLAY_ID && !el.closest(`#${HIGHLIGHT_OVERLAY_ID}`);
+  });
+
+  return elements;
+}
+
+/**
+ * Create overlays from elements and add them to state manager
+ * @returns Number of elements processed
+ */
+export function createOverlaysFromElements(
+  elements: Element[],
+  stateManager: SearchStateManager
+): number {
+  const container = initializeOverlayContainer();
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+  let count = 0;
+
+  elements.forEach((element) => {
+    if (element.nodeType === Node.ELEMENT_NODE) {
+      const rects = element.getClientRects();
+      const mergedRects = mergeAdjacentRects(rects);
+
+      for (let i = 0; i < mergedRects.length; i++) {
+        const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
+        container.appendChild(overlay);
+        stateManager.addOverlay(overlay);
+      }
+
+      // Store element for position updates
+      stateManager.addElement(element);
+      count++;
+    }
+  });
+
+  return count;
+}
+
+/**
  * Search elements by CSS selector or XPath using overlay
  */
 export function searchElements(
@@ -22,60 +89,21 @@ export function searchElements(
   mode: 'css' | 'xpath',
   stateManager: SearchStateManager
 ): SearchResult {
-  const container = initializeOverlayContainer();
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
-  let elements: Element[] = [];
-
   try {
-    if (mode === 'css') {
-      elements = Array.from(document.querySelectorAll(query));
-    } else if (mode === 'xpath') {
-      const result = document.evaluate(
-        query,
-        document,
-        null,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-        null
-      );
-      for (let i = 0; i < result.snapshotLength; i++) {
-        const item = result.snapshotItem(i);
-        if (item && item.nodeType === Node.ELEMENT_NODE) {
-          elements.push(item as Element);
-        }
-      }
-    }
+    // Step 1: Find elements
+    const elements = findElements(query, mode);
 
-    // Filter out overlay container and its children
-    elements = elements.filter((el) => {
-      return el.id !== HIGHLIGHT_OVERLAY_ID && !el.closest(`#${HIGHLIGHT_OVERLAY_ID}`);
-    });
+    // Step 2: Create overlays from elements
+    const count = createOverlaysFromElements(elements, stateManager);
 
-    // Create overlays for each element
-    elements.forEach((element) => {
-      if (element.nodeType === Node.ELEMENT_NODE) {
-        const rects = element.getClientRects();
-        const mergedRects = mergeAdjacentRects(rects);
-
-        for (let i = 0; i < mergedRects.length; i++) {
-          const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
-          container.appendChild(overlay);
-          stateManager.addOverlay(overlay);
-        }
-
-        // Store element for position updates
-        stateManager.addElement(element);
-      }
-    });
-
-    // Add event listeners for scroll and resize
-    if (elements.length > 0) {
+    // Step 3: Add event listeners and navigate to first element
+    if (count > 0) {
       setupEventListeners(stateManager, () => updateOverlayPositions(stateManager));
 
       // Navigate to first element
       const navResult = navigateToMatch(0, stateManager);
       return {
-        count: elements.length,
+        count: count,
         currentIndex: navResult.currentIndex,
         totalMatches: navResult.totalMatches,
       };

@@ -275,7 +275,7 @@ const borderWidth = 1;
 
 ---
 
-## 8. 関数の責務が大きすぎる
+## 8. 関数の責務が大きすぎる ✅ 完了
 
 ### 問題点
 - 一部の関数が複数の責務を持っている
@@ -283,10 +283,27 @@ const borderWidth = 1;
 #### 該当例
 - `searchText()`: 仮想テキスト生成、検索、オーバーレイ作成、イベントリスナー登録をすべて実行
 - `navigateToMatch()`: インデックス正規化、オーバーレイ更新、ミニマップ更新、スクロールをすべて実行
+- `searchElements()`: 要素検索、オーバーレイ作成、イベントリスナー登録、ナビゲーションをすべて実行
 
-### 推奨改善
-- 関数を小さな単位に分割
-- 単一責任の原則に従う
+### 実施した改善
+- ✅ `lib/search/textSearch.ts`を分割
+  - `createTextMatches()`: 仮想テキスト生成と検索を行い、Rangeの配列を返す
+  - `createOverlaysFromRanges()`: Rangeの配列からオーバーレイを作成し、stateManagerに追加
+  - `searchText()`: 上記を組み合わせ、イベントリスナー登録とナビゲーションも行う（オーケストレーション）
+- ✅ `lib/navigation/navigator.ts`を分割
+  - `normalizeMatchIndex()`: インデックス正規化（wrap around）
+  - `updateMatchHighlight()`: オーバーレイとミニマップの更新
+  - `scrollToMatch()`: 現在のマッチ位置へのスクロール
+  - `navigateToMatch()`: 上記を組み合わせてナビゲーションを実行（オーケストレーション）
+- ✅ `lib/search/elementSearch.ts`を分割
+  - `findElements()`: 要素検索（CSS/XPath）を行い、Elementの配列を返す
+  - `createOverlaysFromElements()`: Elementの配列からオーバーレイを作成し、stateManagerに追加
+  - `searchElements()`: 上記を組み合わせ、イベントリスナー登録とナビゲーションも行う（オーケストレーション）
+
+### 変更ファイル
+- `lib/search/textSearch.ts` (リファクタリング)
+- `lib/navigation/navigator.ts` (リファクタリング)
+- `lib/search/elementSearch.ts` (リファクタリング)
 
 ---
 
