@@ -1,15 +1,14 @@
 // Import shared type definitions
 import type {
   CharMapEntry,
-  HighlightData,
   NavigationResult,
   SearchMessage,
   SearchResponse,
   SearchResult,
-  SearchState,
   StateResponse,
   VirtualMatch,
 } from '~/lib/types';
+import { SearchStateManager } from '~/lib/state/searchState';
 
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
@@ -20,24 +19,8 @@ const MINIMAP_CONTAINER_ID = 'pattern-lens-minimap-container';
 // This character won't appear in normal text and won't be matched by user regex accidentally
 const BLOCK_BOUNDARY_MARKER = '\uE000';
 
-// Store ranges and elements for cleanup
-const highlightData: HighlightData = {
-  ranges: [],
-  elements: [],
-  overlays: [],
-};
-
-// Current match navigation
-let currentMatchIndex = -1;
-
-// Store last search parameters for state restoration
-let lastSearchState: SearchState = {
-  query: '',
-  useRegex: false,
-  caseSensitive: false,
-  useElementSearch: false,
-  elementSearchMode: 'css',
-};
+// State management instance
+const stateManager = new SearchStateManager();
 
 // Initialize overlay container
 function initializeOverlayContainer(): HTMLDivElement {
@@ -101,30 +84,30 @@ function updateOverlayPositions(): void {
 
   // Clear existing overlays
   container.innerHTML = '';
-  highlightData.overlays = [];
+  stateManager.clearOverlays();
 
   const scrollX = window.scrollX || window.pageXOffset;
   const scrollY = window.scrollY || window.pageYOffset;
 
   // Recreate overlays from stored ranges and elements
-  highlightData.ranges.forEach((range, index) => {
+  stateManager.forEachRange((range, index) => {
     const rects = range.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
-    const isCurrent = index === currentMatchIndex;
+    const isCurrent = index === stateManager.currentIndex;
     for (let i = 0; i < mergedRects.length; i++) {
       const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
       container.appendChild(overlay);
-      highlightData.overlays.push(overlay);
+      stateManager.addOverlay(overlay);
     }
   });
 
-  highlightData.elements.forEach((element) => {
+  stateManager.forEachElement((element) => {
     const rects = element.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
     for (let i = 0; i < mergedRects.length; i++) {
       const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
       container.appendChild(overlay);
-      highlightData.overlays.push(overlay);
+      stateManager.addOverlay(overlay);
     }
   });
 }
@@ -142,10 +125,7 @@ function clearHighlights(): void {
   window.removeEventListener('resize', updateOverlayPositions);
 
   // Clear stored data
-  highlightData.ranges.length = 0;
-  highlightData.elements.length = 0;
-  highlightData.overlays.length = 0;
-  currentMatchIndex = -1;
+  stateManager.clear();
 
   // Remove minimap
   removeMinimap();
@@ -184,7 +164,7 @@ function updateMinimap(): void {
   const container = getMinimapContainer();
   container.innerHTML = '';
 
-  if (highlightData.ranges.length === 0) {
+  if (!stateManager.hasTextMatches()) {
     container.style.display = 'none';
     return;
   }
@@ -192,7 +172,7 @@ function updateMinimap(): void {
 
   const pageHeight = document.documentElement.scrollHeight;
 
-  highlightData.ranges.forEach((range, index) => {
+  stateManager.forEachRange((range, index) => {
     const marker = document.createElement('div');
 
     try {
@@ -200,7 +180,7 @@ function updateMinimap(): void {
       const absoluteTop = rect.top + window.scrollY;
       const relativeTop = (absoluteTop / pageHeight) * 100;
 
-      const isActive = index === currentMatchIndex;
+      const isActive = index === stateManager.currentIndex;
 
       marker.style.cssText = `
         position: absolute;
@@ -230,7 +210,7 @@ function removeMinimap(): void {
 // Navigate to a specific match index
 function navigateToMatch(index: number): NavigationResult {
   // Support both text search (ranges) and element search (elements)
-  const totalMatches = highlightData.ranges.length || highlightData.elements.length;
+  const totalMatches = stateManager.totalMatches;
 
   if (totalMatches === 0) {
     return { currentIndex: -1, totalMatches: 0 };
@@ -244,18 +224,18 @@ function navigateToMatch(index: number): NavigationResult {
     normalizedIndex = 0;
   }
 
-  currentMatchIndex = normalizedIndex;
+  stateManager.setCurrentIndex(normalizedIndex);
 
   // Update overlay colors (for text search)
-  if (highlightData.ranges.length > 0) {
+  if (stateManager.hasTextMatches()) {
     updateOverlayPositions();
     updateMinimap();
   }
 
   // Scroll to the current match
-  if (highlightData.ranges.length > 0) {
+  if (stateManager.hasTextMatches()) {
     // Text search: scroll to range
-    const currentRange = highlightData.ranges[currentMatchIndex];
+    const currentRange = stateManager.getCurrentRange();
     if (currentRange) {
       try {
         const element = currentRange.startContainer.parentElement;
@@ -266,9 +246,9 @@ function navigateToMatch(index: number): NavigationResult {
         // Failed to scroll to match, silently ignore
       }
     }
-  } else if (highlightData.elements.length > 0) {
+  } else if (stateManager.hasElementMatches()) {
     // Element search: scroll to element
-    const currentElement = highlightData.elements[currentMatchIndex];
+    const currentElement = stateManager.getCurrentElement();
     if (currentElement) {
       try {
         currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -278,7 +258,7 @@ function navigateToMatch(index: number): NavigationResult {
     }
   }
 
-  return { currentIndex: currentMatchIndex, totalMatches: totalMatches };
+  return { currentIndex: stateManager.currentIndex, totalMatches: totalMatches };
 }
 
 // Helper: Check if element is block-level
@@ -599,11 +579,11 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
       for (let i = 0; i < mergedRects.length; i++) {
         const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
         container.appendChild(overlay);
-        highlightData.overlays.push(overlay);
+        stateManager.addOverlay(overlay);
       }
 
       // Store range for position updates
-      highlightData.ranges.push(range);
+      stateManager.addRange(range);
       count++;
     } catch (_error) {
       // Failed to create overlay for range, silently ignore
@@ -667,11 +647,11 @@ function searchElements(query: string, mode: 'css' | 'xpath'): SearchResult {
         for (let i = 0; i < mergedRects.length; i++) {
           const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
           container.appendChild(overlay);
-          highlightData.overlays.push(overlay);
+          stateManager.addOverlay(overlay);
         }
 
         // Store element for position updates
-        highlightData.elements.push(element);
+        stateManager.addElement(element);
       }
     });
 
@@ -710,13 +690,13 @@ export default defineContentScript({
           const searchMessage = request as SearchMessage;
 
           // Save search state
-          lastSearchState = {
+          stateManager.updateSearchState({
             query: searchMessage.query,
             useRegex: searchMessage.useRegex,
             caseSensitive: searchMessage.caseSensitive,
             useElementSearch: searchMessage.useElementSearch,
             elementSearchMode: searchMessage.elementSearchMode,
-          };
+          });
 
           if (searchMessage.useElementSearch) {
             const result = searchElements(searchMessage.query, searchMessage.elementSearchMode);
@@ -746,23 +726,23 @@ export default defineContentScript({
       } else if (request.action === 'clear') {
         clearHighlights();
         // Clear search state
-        lastSearchState = {
+        stateManager.updateSearchState({
           query: '',
           useRegex: false,
           caseSensitive: false,
           useElementSearch: false,
           elementSearchMode: 'css',
-        };
+        });
         sendResponse({ success: true } as SearchResponse);
       } else if (request.action === 'navigate-next') {
-        const result = navigateToMatch(currentMatchIndex + 1);
+        const result = navigateToMatch(stateManager.currentIndex + 1);
         sendResponse({
           success: true,
           currentIndex: result.currentIndex,
           totalMatches: result.totalMatches,
         } as SearchResponse);
       } else if (request.action === 'navigate-prev') {
-        const result = navigateToMatch(currentMatchIndex - 1);
+        const result = navigateToMatch(stateManager.currentIndex - 1);
         sendResponse({
           success: true,
           currentIndex: result.currentIndex,
@@ -770,12 +750,11 @@ export default defineContentScript({
         } as SearchResponse);
       } else if (request.action === 'get-state') {
         // Return current search state (support both text and element search)
-        const totalMatches = highlightData.ranges.length || highlightData.elements.length;
         sendResponse({
           success: true,
-          state: lastSearchState,
-          currentIndex: currentMatchIndex,
-          totalMatches: totalMatches,
+          state: stateManager.searchState,
+          currentIndex: stateManager.currentIndex,
+          totalMatches: stateManager.totalMatches,
         } as StateResponse);
       }
 
