@@ -1,3 +1,4 @@
+import { SearchStateManager } from '~/lib/state/searchState';
 // Import shared type definitions
 import type {
   CharMapEntry,
@@ -8,7 +9,6 @@ import type {
   StateResponse,
   VirtualMatch,
 } from '~/lib/types';
-import { SearchStateManager } from '~/lib/state/searchState';
 
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
@@ -21,6 +21,9 @@ const BLOCK_BOUNDARY_MARKER = '\uE000';
 
 // State management instance
 const stateManager = new SearchStateManager();
+
+// Track event listener registration state
+let eventListenersAttached = false;
 
 // Initialize overlay container
 function initializeOverlayContainer(): HTMLDivElement {
@@ -112,6 +115,28 @@ function updateOverlayPositions(): void {
   });
 }
 
+// Setup event listeners for scroll and resize (prevent duplicate registration)
+function setupEventListeners(): void {
+  if (eventListenersAttached) {
+    return; // Already attached, skip
+  }
+
+  window.addEventListener('scroll', updateOverlayPositions, { passive: true });
+  window.addEventListener('resize', updateOverlayPositions, { passive: true });
+  eventListenersAttached = true;
+}
+
+// Remove event listeners for scroll and resize
+function removeEventListeners(): void {
+  if (!eventListenersAttached) {
+    return; // Not attached, skip
+  }
+
+  window.removeEventListener('scroll', updateOverlayPositions);
+  window.removeEventListener('resize', updateOverlayPositions);
+  eventListenersAttached = false;
+}
+
 // Remove all highlights
 function clearHighlights(): void {
   // Remove overlay container
@@ -121,8 +146,7 @@ function clearHighlights(): void {
   }
 
   // Remove event listeners
-  window.removeEventListener('scroll', updateOverlayPositions);
-  window.removeEventListener('resize', updateOverlayPositions);
+  removeEventListeners();
 
   // Clear stored data
   stateManager.clear();
@@ -592,8 +616,7 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
 
   // Add event listeners for scroll and resize
   if (count > 0) {
-    window.addEventListener('scroll', updateOverlayPositions, { passive: true });
-    window.addEventListener('resize', updateOverlayPositions, { passive: true });
+    setupEventListeners();
 
     // Navigate to first match
     const navResult = navigateToMatch(0);
@@ -657,8 +680,7 @@ function searchElements(query: string, mode: 'css' | 'xpath'): SearchResult {
 
     // Add event listeners for scroll and resize
     if (elements.length > 0) {
-      window.addEventListener('scroll', updateOverlayPositions, { passive: true });
-      window.addEventListener('resize', updateOverlayPositions, { passive: true });
+      setupEventListeners();
 
       // Navigate to first element
       const navResult = navigateToMatch(0);

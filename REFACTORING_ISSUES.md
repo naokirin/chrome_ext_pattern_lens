@@ -27,7 +27,7 @@
 
 ---
 
-## 2. イベントリスナーの重複登録リスク
+## 2. イベントリスナーの重複登録リスク ✅ 完了
 
 ### 問題点
 - `searchText()`と`searchElements()`で`scroll`/`resize`イベントリスナーを毎回登録
@@ -45,10 +45,15 @@ window.addEventListener('scroll', updateOverlayPositions, { passive: true });
 window.addEventListener('resize', updateOverlayPositions, { passive: true });
 ```
 
-### 推奨改善
-- イベントリスナーの登録状態を追跡
-- 登録前に既存リスナーの存在を確認
-- または、イベントリスナー管理を専用の関数/クラスに分離
+### 実施した改善
+- ✅ `eventListenersAttached`フラグで登録状態を追跡
+- ✅ `setupEventListeners()`関数を作成（登録前に状態をチェック）
+- ✅ `removeEventListeners()`関数を作成（削除前に状態をチェック）
+- ✅ `searchText()`と`searchElements()`で`setupEventListeners()`を使用
+- ✅ `clearHighlights()`で`removeEventListeners()`を使用
+
+### 変更ファイル
+- `entrypoints/content.ts` (リファクタリング)
 
 ---
 
