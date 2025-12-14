@@ -92,12 +92,6 @@ async function performSearch() {
       elementSearchMode: searchMode.value,
     };
 
-    // Inject content script before sending message
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content_scripts/main.js']
-    });
-
     // Send message to content script
     chrome.tabs.sendMessage(tab.id, message, (response) => {
       if (chrome.runtime.lastError) {
@@ -130,12 +124,6 @@ async function clearHighlights() {
       showResult('このページでは拡張機能を使用できません', true);
       return;
     }
-
-    // Inject content script before sending message
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content_scripts/main.js']
-    });
 
     chrome.tabs.sendMessage(tab.id, { action: 'clear' }, (response) => {
       if (chrome.runtime.lastError) {
