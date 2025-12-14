@@ -7,8 +7,6 @@ const caseSensitiveLabel = document.getElementById('caseSensitiveLabel');
 const elementMode = document.getElementById('elementMode');
 const searchModeContainer = document.getElementById('searchModeContainer');
 const searchMode = document.getElementById('searchMode');
-const searchBtn = document.getElementById('searchBtn');
-const clearBtn = document.getElementById('clearBtn');
 const results = document.getElementById('results');
 const navigation = document.getElementById('navigation');
 const matchCounter = document.getElementById('matchCounter');
@@ -248,8 +246,6 @@ searchMode.addEventListener('change', () => {
     performSearch();
   }
 });
-searchBtn.addEventListener('click', performSearch);
-clearBtn.addEventListener('click', clearHighlights);
 prevBtn.addEventListener('click', navigatePrev);
 nextBtn.addEventListener('click', navigateNext);
 searchInput.addEventListener('keydown', (e) => {
