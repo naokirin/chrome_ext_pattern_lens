@@ -3,6 +3,7 @@
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
 import { getElementById } from '~/lib/utils/domUtils';
+import { handleError } from '../utils/errorHandler';
 
 // Constants
 const MINIMAP_CONTAINER_ID = 'pattern-lens-minimap-container';
@@ -75,8 +76,9 @@ export function updateMinimap(stateManager: SearchStateManager): void {
       `;
 
       container.appendChild(marker);
-    } catch (_error) {
-      // Failed to create minimap marker, silently ignore
+    } catch (error) {
+      // Failed to create minimap marker
+      handleError(error, 'updateMinimap: Failed to create minimap marker', undefined);
     }
   });
 }

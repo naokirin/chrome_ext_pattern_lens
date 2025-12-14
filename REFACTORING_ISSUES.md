@@ -181,7 +181,7 @@ let container = document.getElementById(HIGHLIGHT_OVERLAY_ID) as HTMLDivElement;
 
 ---
 
-## 6. エラーハンドリングの一貫性の欠如
+## 6. エラーハンドリングの一貫性の欠如 ✅ 完了
 
 ### 問題点
 - 一部のエラーは無視（`catch (_error) { /* silently ignore */ }`）
@@ -202,10 +202,30 @@ catch (error) {
 }
 ```
 
-### 推奨改善
-- エラーハンドリングの戦略を統一
-- エラーログの記録（開発時）
-- ユーザー向けエラーメッセージの統一
+### 実施した改善
+- ✅ `lib/utils/errorHandler.ts`にエラーハンドリングユーティリティを作成
+  - `ErrorSeverity` enum: LOW, MEDIUM, HIGHの3段階
+  - `PatternLensError`クラス: カスタムエラークラス
+  - `handleError()`関数: 統一的なエラーハンドリング
+  - `safeExecute()` / `safeExecuteAsync()`: 安全な関数実行
+- ✅ lib内のエラーハンドリングを統一
+  - `lib/search/textSearch.ts`: 正規表現エラー、Range作成エラー
+  - `lib/search/elementSearch.ts`: CSS/XPathエラー
+  - `lib/navigation/navigator.ts`: スクロールエラー
+  - `lib/highlight/minimap.ts`: ミニマップ作成エラー
+- ✅ entrypoints内のエラーハンドリングを統一
+  - `entrypoints/content.ts`: メッセージハンドリングエラー
+  - `entrypoints/popup/main.ts`: ユーザー向けエラー表示、Chrome runtimeエラー
+- ✅ エラーの重要度に応じた適切な処理（無視/ログ/ユーザー通知）
+
+### 変更ファイル
+- `lib/utils/errorHandler.ts` (新規作成)
+- `lib/search/textSearch.ts` (リファクタリング)
+- `lib/search/elementSearch.ts` (リファクタリング)
+- `lib/navigation/navigator.ts` (リファクタリング)
+- `lib/highlight/minimap.ts` (リファクタリング)
+- `entrypoints/content.ts` (リファクタリング)
+- `entrypoints/popup/main.ts` (リファクタリング)
 
 ---
 

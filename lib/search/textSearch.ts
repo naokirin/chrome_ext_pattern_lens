@@ -11,6 +11,7 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { handleError } from '../utils/errorHandler';
 import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 
 /**
@@ -116,8 +117,9 @@ export function searchInVirtualText(
         }
         match = regex.exec(virtualText);
       }
-    } catch (_error) {
+    } catch (error) {
       // Invalid regex pattern, return empty matches
+      handleError(error, 'searchInVirtualText: Invalid regex pattern', undefined);
       return matches;
     }
   } else {
@@ -175,8 +177,9 @@ export function createRangeFromVirtualMatch(
     range.setEnd(endCharInfo.node, endCharInfo.offset + 1);
 
     return range;
-  } catch (_error) {
+  } catch (error) {
     // Failed to create range
+    handleError(error, 'createRangeFromVirtualMatch: Failed to create range', undefined);
     return null;
   }
 }
@@ -224,8 +227,9 @@ export function searchText(
       // Store range for position updates
       stateManager.addRange(range);
       count++;
-    } catch (_error) {
-      // Failed to create overlay for range, silently ignore
+    } catch (error) {
+      // Failed to create overlay for range
+      handleError(error, 'searchText: Failed to create overlay for range', undefined);
     }
   });
 

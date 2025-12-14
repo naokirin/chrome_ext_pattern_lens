@@ -10,6 +10,7 @@ import type {
   StateResponse,
 } from '~/lib/types';
 import { getRequiredElementById } from '~/lib/utils/domUtils';
+import { handleError } from '~/lib/utils/errorHandler';
 import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
 
 // DOM elements - these are required elements in popup.html
@@ -150,7 +151,10 @@ async function performSearch(): Promise<void> {
       }
 
       if (chrome.runtime.lastError) {
-        showResult('エラー: ページに接続できませんでした', true);
+        const error = new Error(chrome.runtime.lastError.message || 'ページに接続できませんでした');
+        handleError(error, 'performSearch: Chrome runtime error', (err) => {
+          showResult(`エラー: ${err.message}`, true);
+        });
         hideNavigation();
         return;
       }
@@ -165,16 +169,23 @@ async function performSearch(): Promise<void> {
           hideNavigation();
         }
       } else if (response?.error) {
-        showResult(`エラー: ${response.error}`, true);
+        const error = new Error(response.error);
+        handleError(error, 'performSearch: Search response error', (err) => {
+          showResult(`エラー: ${err.message}`, true);
+        });
         hideNavigation();
       } else {
-        showResult('検索に失敗しました', true);
+        const error = new Error('検索に失敗しました');
+        handleError(error, 'performSearch: Unknown search failure', (err) => {
+          showResult(`エラー: ${err.message}`, true);
+        });
         hideNavigation();
       }
     });
   } catch (error) {
-    const err = error as Error;
-    showResult(`エラー: ${err.message}`, true);
+    handleError(error, 'performSearch: Exception', (err) => {
+      showResult(`エラー: ${err.message}`, true);
+    });
   }
 }
 
@@ -197,7 +208,10 @@ async function clearHighlights(): Promise<void> {
     const message: ClearMessage = { action: 'clear' };
     chrome.tabs.sendMessage(tab.id, message, (response: Response | undefined) => {
       if (chrome.runtime.lastError) {
-        showResult('エラー: ページに接続できませんでした', true);
+        const error = new Error(chrome.runtime.lastError.message || 'ページに接続できませんでした');
+        handleError(error, 'clearHighlights: Chrome runtime error', (err) => {
+          showResult(`エラー: ${err.message}`, true);
+        });
         return;
       }
 
@@ -209,8 +223,9 @@ async function clearHighlights(): Promise<void> {
       }
     });
   } catch (error) {
-    const err = error as Error;
-    showResult(`エラー: ${err.message}`, true);
+    handleError(error, 'clearHighlights: Exception', (err) => {
+      showResult(`エラー: ${err.message}`, true);
+    });
   }
 }
 
@@ -233,8 +248,9 @@ async function navigateNext(): Promise<void> {
         updateNavigation(response.currentIndex, response.totalMatches);
       }
     });
-  } catch (_error) {
-    // Navigation error silently ignored
+  } catch (error) {
+    // Navigation errors are non-critical, log but don't show to user
+    handleError(error, 'navigateNext: Navigation error', undefined);
   }
 }
 
@@ -257,8 +273,9 @@ async function navigatePrev(): Promise<void> {
         updateNavigation(response.currentIndex, response.totalMatches);
       }
     });
-  } catch (_error) {
-    // Navigation error silently ignored
+  } catch (error) {
+    // Navigation errors are non-critical, log but don't show to user
+    handleError(error, 'navigatePrev: Navigation error', undefined);
   }
 }
 
@@ -384,7 +401,9 @@ async function restoreSearchState(): Promise<void> {
     const message: GetStateMessage = { action: 'get-state' };
     chrome.tabs.sendMessage(tab.id, message, (response: StateResponse | undefined) => {
       if (chrome.runtime.lastError) {
-        // Content script not loaded yet, ignore
+        // Content script not loaded yet, ignore (low severity)
+        const error = new Error(chrome.runtime.lastError.message || 'Content script not loaded');
+        handleError(error, 'restoreSearchState: Chrome runtime error', undefined);
         return;
       }
 
@@ -409,8 +428,9 @@ async function restoreSearchState(): Promise<void> {
         _lastSearchQuery = state.query;
       }
     });
-  } catch (_error) {
-    // Failed to restore search state silently ignored
+  } catch (error) {
+    // Failed to restore search state (non-critical)
+    handleError(error, 'restoreSearchState: Exception', undefined);
   }
 }
 

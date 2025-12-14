@@ -5,6 +5,7 @@ import type { SearchStateManager } from '~/lib/state/searchState';
 import type { NavigationResult } from '~/lib/types';
 import { updateMinimap } from '../highlight/minimap';
 import { updateOverlayPositions } from '../highlight/overlay';
+import { handleError } from '../utils/errorHandler';
 
 /**
  * Navigate to a specific match index
@@ -43,8 +44,9 @@ export function navigateToMatch(index: number, stateManager: SearchStateManager)
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } catch (_error) {
-        // Failed to scroll to match, silently ignore
+      } catch (error) {
+        // Failed to scroll to match
+        handleError(error, 'navigateToMatch: Failed to scroll to text match', undefined);
       }
     }
   } else if (stateManager.hasElementMatches()) {
@@ -53,8 +55,9 @@ export function navigateToMatch(index: number, stateManager: SearchStateManager)
     if (currentElement) {
       try {
         currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } catch (_error) {
-        // Failed to scroll to element, silently ignore
+      } catch (error) {
+        // Failed to scroll to element
+        handleError(error, 'navigateToMatch: Failed to scroll to element', undefined);
       }
     }
   }

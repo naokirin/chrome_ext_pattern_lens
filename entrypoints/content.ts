@@ -10,6 +10,7 @@ import { searchText } from '~/lib/search/textSearch';
 import { SearchStateManager } from '~/lib/state/searchState';
 // Import shared type definitions
 import type { SearchMessage, SearchResponse, StateResponse } from '~/lib/types';
+import { handleError } from '~/lib/utils/errorHandler';
 
 // State management instance
 const stateManager = new SearchStateManager();
@@ -73,6 +74,7 @@ export default defineContentScript({
           }
         } catch (error) {
           const err = error as Error;
+          handleError(error, 'content: Search action failed', undefined);
           sendResponse({ success: false, error: err.message } as SearchResponse);
         }
       } else if (request.action === 'clear') {

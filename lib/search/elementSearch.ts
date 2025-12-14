@@ -10,6 +10,7 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
 
 // Constants
@@ -85,6 +86,8 @@ export function searchElements(
     return { count: 0, currentIndex: -1, totalMatches: 0 };
   } catch (error) {
     const err = error as Error;
-    throw new Error(`Invalid ${mode === 'css' ? 'CSS selector' : 'XPath'}: ${err.message}`);
+    const errorMessage = `Invalid ${mode === 'css' ? 'CSS selector' : 'XPath'}: ${err.message}`;
+    handleError(error, `searchElements: ${errorMessage}`, undefined);
+    throw new Error(errorMessage);
   }
 }
