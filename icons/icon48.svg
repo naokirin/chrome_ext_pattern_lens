@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="grad48" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2196F3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded rectangle background -->
+  <rect width="48" height="48" rx="9.600000000000001" fill="url(#grad48)"/>
+
+  <!-- Magnifying glass icon -->
+  <circle cx="19.200000000000003" cy="19.200000000000003" r="9.600000000000001"
+          fill="none" stroke="white" stroke-width="2"/>
+  <line x1="25.92" y1="25.92"
+        x2="33.599999999999994" y2="33.599999999999994"
+        stroke="white" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Pattern symbol (regex-like) -->
+  <text x="35.04" y="14.399999999999999"
+        font-family="monospace" font-size="9.600000000000001"
+        fill="white" font-weight="bold">.*</text>
+</svg>

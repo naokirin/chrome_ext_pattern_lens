@@ -51,3 +51,6 @@ logs/
 # Biome
 .biome/
 
+# Icon generation script (temporary)
+generate-icons.js
+
