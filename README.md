@@ -138,11 +138,11 @@ chrome_ext_pattern_lens/
 ## 技術的な特徴
 
 ### 要素境界をまたぐ検索
-Chrome標準の検索（Ctrl+F）と同様に、HTML要素の境界をまたいだテキストも検索できます。
+Chrome標準の検索（Ctrl+F）と同様に、HTMLのインライン要素の境界をまたいだテキストも検索できます。
 
 **例**: 以下のHTMLで「Hello World」を検索可能
 ```html
-<div>Hello</div><div>World</div>
+<div><strong>Hello</strong> <em>World</em></div>
 ```
 
 **実装方法**:
