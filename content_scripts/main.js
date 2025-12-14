@@ -229,7 +229,8 @@ function searchInVirtualText(query, virtualText, useRegex) {
                                   .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
 
       console.log('[Pattern Lens] Modified regex pattern:', modifiedQuery);
-      const regex = new RegExp(modifiedQuery, 'gis');
+      // Use 'gi' flags only (not 's') so that . does not match newlines
+      const regex = new RegExp(modifiedQuery, 'gi');
       let match;
       while ((match = regex.exec(virtualText)) !== null) {
         // Filter out matches that cross block boundaries
