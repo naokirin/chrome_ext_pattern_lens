@@ -231,7 +231,7 @@ async function navigateNext(): Promise<void> {
       }
     });
   } catch (error) {
-    console.error('Navigation error:', error);
+    // Navigation error silently ignored
   }
 }
 
@@ -251,7 +251,7 @@ async function navigatePrev(): Promise<void> {
       }
     });
   } catch (error) {
-    console.error('Navigation error:', error);
+    // Navigation error silently ignored
   }
 }
 
@@ -405,7 +405,7 @@ async function restoreSearchState(): Promise<void> {
       }
     });
   } catch (error) {
-    console.error('Failed to restore search state:', error);
+    // Failed to restore search state silently ignored
   }
 }
 

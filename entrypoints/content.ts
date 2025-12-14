@@ -214,7 +214,7 @@ function updateMinimap(): void {
 
       container.appendChild(marker);
     } catch (error) {
-      console.warn('[Pattern Lens] Failed to create minimap marker:', error);
+      // Failed to create minimap marker, silently ignore
     }
   });
 }
@@ -262,7 +262,7 @@ function navigateToMatch(index: number): NavigationResult {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       } catch (error) {
-        console.warn('[Pattern Lens] Failed to scroll to match:', error);
+        // Failed to scroll to match, silently ignore
       }
     }
   } else if (highlightData.elements.length > 0) {
@@ -272,7 +272,7 @@ function navigateToMatch(index: number): NavigationResult {
       try {
         currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (error) {
-        console.warn('[Pattern Lens] Failed to scroll to element:', error);
+        // Failed to scroll to element, silently ignore
       }
     }
   }
@@ -400,7 +400,6 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
         .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`)  // Replace . with [^boundary] (excluding newlines too)
         .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
 
-      console.log('[Pattern Lens] Modified regex pattern:', modifiedQuery);
       // Use 'g' or 'gi' flags based on case-sensitivity (not 's') so that . does not match newlines
       const flags = caseSensitive ? 'g' : 'gi';
       const regex = new RegExp(modifiedQuery, flags);
@@ -411,8 +410,7 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
         const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
 
         if (hasBoundary) {
-          console.log('[Pattern Lens] Filtered match (crosses boundary):',
-            matchedText.replace(/\uE000/g, '[BOUNDARY]'));
+          // Match crosses block boundary, skip it
         } else {
           matches.push({
             start: match.index,
@@ -425,7 +423,7 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
         }
       }
     } catch (error) {
-      console.warn('Invalid regex pattern:', error);
+      // Invalid regex pattern, return empty matches
       return matches;
     }
   } else {
@@ -511,13 +509,13 @@ function createRangeFromVirtualMatch(match: VirtualMatch, charMap: CharMapEntry[
     const endCharInfo = charMap[match.end - 1]; // end is exclusive, so use end-1
 
     if (!startCharInfo || !endCharInfo) {
-      console.warn('Character mapping not found for match:', match);
+      // Character mapping not found for match
       return null;
     }
 
     // Skip block boundary markers (auto-inserted markers between block elements)
     if (!startCharInfo.node || !endCharInfo.node) {
-      console.warn('Match includes block boundary marker, skipping');
+      // Match includes block boundary marker, skipping
       return null;
     }
 
@@ -531,7 +529,7 @@ function createRangeFromVirtualMatch(match: VirtualMatch, charMap: CharMapEntry[
 
     return range;
   } catch (error) {
-    console.warn('Failed to create range:', error);
+    // Failed to create range
     return null;
   }
 }
@@ -546,15 +544,8 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
 
-  // Debug: log virtual text to console (with visible boundary markers)
-  const visibleVirtualText = virtualText.replace(/\uE000/g, '[BOUNDARY]');
-  console.log('[Pattern Lens] Virtual text:', visibleVirtualText);
-  console.log('[Pattern Lens] Virtual text length:', virtualText.length);
-  console.log('[Pattern Lens] Query:', query);
-
   // Step 2: Search in virtual text
   const matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
-  console.log('[Pattern Lens] Matches found:', matches.length);
 
   // Step 3: Convert virtual matches to DOM ranges and create overlays
   matches.forEach((match) => {
@@ -580,7 +571,7 @@ function searchText(query: string, useRegex: boolean, caseSensitive: boolean): S
       highlightData.ranges.push(range);
       count++;
     } catch (error) {
-      console.warn('Failed to create overlay for range:', error);
+      // Failed to create overlay for range, silently ignore
     }
   });
 
