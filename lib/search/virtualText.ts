@@ -129,7 +129,12 @@ function insertBoundaryMarker(
 
   const newVirtualText = virtualText + BLOCK_BOUNDARY_MARKER;
   // Mark this as block boundary (not from original DOM)
-  const newCharMap = [...charMap, { node: null, offset: -1, type: 'block-boundary' }];
+  const boundaryEntry: CharMapEntry = {
+    node: null,
+    offset: -1,
+    type: 'block-boundary',
+  };
+  const newCharMap: CharMapEntry[] = [...charMap, boundaryEntry];
 
   return { virtualText: newVirtualText, charMap: newCharMap };
 }
