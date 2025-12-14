@@ -16,7 +16,7 @@ import {
  * Overlay management for highlighting search results
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
-import { getElementById } from '~/lib/utils/domUtils';
+import { getElementById, getScrollPosition } from '~/lib/utils/domUtils';
 import { throttleAnimationFrame } from '~/lib/utils/throttle';
 
 /**
@@ -150,8 +150,7 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
   container.innerHTML = '';
   stateManager.clearOverlays();
 
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
+  const { scrollX, scrollY } = getScrollPosition();
 
   // Recreate overlays from stored ranges and elements
   stateManager.forEachRange((range, index) => {

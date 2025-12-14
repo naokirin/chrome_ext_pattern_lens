@@ -307,17 +307,34 @@ const borderWidth = 1;
 
 ---
 
-## 9. テストしにくい設計
+## 9. テストしにくい設計 ✅ 完了
 
 ### 問題点
 - グローバル状態に依存
 - 関数が密結合
 - DOM操作が直接実装されている
 
-### 推奨改善
-- 依存性注入の導入
-- インターフェースの定義
-- モック可能な設計
+#### 該当箇所
+- `window.scrollX`, `window.scrollY`, `window.pageXOffset`, `window.pageYOffset`への直接依存
+- 複数のファイルで同じパターンが繰り返されている
+
+### 実施した改善
+- ✅ `lib/utils/domUtils.ts`に`getScrollPosition()`関数を追加
+  - スクロール位置取得を関数化してモック可能に
+  - テスト時に`vi.spyOn()`でモック可能
+- ✅ すべての`window.scrollX/scrollY`直接参照を`getScrollPosition()`に置き換え
+  - `lib/search/textSearch.ts`: `createOverlaysFromRanges()`
+  - `lib/search/elementSearch.ts`: `createOverlaysFromElements()`
+  - `lib/highlight/overlay.ts`: `updateOverlayPositions()`
+  - `lib/highlight/minimap.ts`: `updateMinimap()`
+- ✅ グローバル依存を関数化することで、テスト容易性を向上
+
+### 変更ファイル
+- `lib/utils/domUtils.ts` (新規関数追加)
+- `lib/search/textSearch.ts` (リファクタリング)
+- `lib/search/elementSearch.ts` (リファクタリング)
+- `lib/highlight/overlay.ts` (リファクタリング)
+- `lib/highlight/minimap.ts` (リファクタリング)
 
 ---
 

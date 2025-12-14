@@ -12,7 +12,7 @@ import {
  * Minimap management for showing search result positions
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
-import { getElementById } from '~/lib/utils/domUtils';
+import { getElementById, getScrollPosition } from '~/lib/utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 
 /**
@@ -67,7 +67,8 @@ export function updateMinimap(stateManager: SearchStateManager): void {
 
     try {
       const rect = range.getBoundingClientRect();
-      const absoluteTop = rect.top + window.scrollY;
+      const { scrollY } = getScrollPosition();
+      const absoluteTop = rect.top + scrollY;
       const relativeTop = (absoluteTop / pageHeight) * 100;
 
       const isActive = index === stateManager.currentIndex;

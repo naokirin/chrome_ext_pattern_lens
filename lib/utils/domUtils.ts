@@ -27,3 +27,15 @@ export function getRequiredElementById<T extends HTMLElement>(id: string): T {
   }
   return element as T;
 }
+
+/**
+ * Get current scroll position
+ * This function is extracted to make it mockable in tests
+ * @returns Object with scrollX and scrollY
+ */
+export function getScrollPosition(): { scrollX: number; scrollY: number } {
+  return {
+    scrollX: window.scrollX || window.pageXOffset || 0,
+    scrollY: window.scrollY || window.pageYOffset || 0,
+  };
+}

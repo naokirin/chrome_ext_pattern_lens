@@ -11,6 +11,7 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { getScrollPosition } from '../utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
 
@@ -57,8 +58,7 @@ export function createOverlaysFromElements(
   stateManager: SearchStateManager
 ): number {
   const container = initializeOverlayContainer();
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
+  const { scrollX, scrollY } = getScrollPosition();
   let count = 0;
 
   elements.forEach((element) => {
