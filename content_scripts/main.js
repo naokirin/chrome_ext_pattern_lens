@@ -616,11 +616,29 @@ function searchElements(query, mode) {
   }
 }
 
+// Store last search parameters for state restoration
+let lastSearchState = {
+  query: '',
+  useRegex: false,
+  caseSensitive: false,
+  useElementSearch: false,
+  elementSearchMode: 'css'
+};
+
 // Handle messages from popup
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === 'search') {
     try {
       clearHighlights();
+
+      // Save search state
+      lastSearchState = {
+        query: request.query,
+        useRegex: request.useRegex,
+        caseSensitive: request.caseSensitive,
+        useElementSearch: request.useElementSearch,
+        elementSearchMode: request.elementSearchMode
+      };
 
       if (request.useElementSearch) {
         const count = searchElements(request.query, request.elementSearchMode);
@@ -639,6 +657,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     }
   } else if (request.action === 'clear') {
     clearHighlights();
+    // Clear search state
+    lastSearchState = {
+      query: '',
+      useRegex: false,
+      caseSensitive: false,
+      useElementSearch: false,
+      elementSearchMode: 'css'
+    };
     sendResponse({ success: true });
   } else if (request.action === 'navigate-next') {
     const result = navigateToMatch(currentMatchIndex + 1);
@@ -646,6 +672,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   } else if (request.action === 'navigate-prev') {
     const result = navigateToMatch(currentMatchIndex - 1);
     sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches });
+  } else if (request.action === 'get-state') {
+    // Return current search state
+    sendResponse({
+      success: true,
+      state: lastSearchState,
+      currentIndex: currentMatchIndex,
+      totalMatches: highlightData.ranges.length
+    });
   }
 
   return true; // Keep the message channel open for async response

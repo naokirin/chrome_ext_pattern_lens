@@ -279,8 +279,56 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
+// Restore previous search state from content script
+async function restoreSearchState() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    // Check if the page is a special page
+    if (tab.url.startsWith('chrome://') ||
+        tab.url.startsWith('chrome-extension://') ||
+        tab.url.startsWith('https://chrome.google.com/webstore')) {
+      return;
+    }
+
+    chrome.tabs.sendMessage(tab.id, { action: 'get-state' }, (response) => {
+      if (chrome.runtime.lastError) {
+        // Content script not loaded yet, ignore
+        return;
+      }
+
+      if (response && response.success && response.state.query) {
+        // Restore search state
+        const state = response.state;
+        searchInput.value = state.query;
+        regexMode.checked = state.useRegex;
+        caseSensitiveMode.checked = state.caseSensitive;
+        elementMode.checked = state.useElementSearch;
+        searchMode.value = state.elementSearchMode;
+
+        // Update UI visibility
+        updateSearchModeVisibility();
+
+        // Show results and navigation if there are matches
+        if (response.totalMatches > 0) {
+          showResult(`${response.totalMatches} 件の結果が見つかりました`);
+          updateNavigation(response.currentIndex, response.totalMatches);
+        }
+
+        lastSearchQuery = state.query;
+      }
+    });
+  } catch (error) {
+    console.error('Failed to restore search state:', error);
+  }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
-  searchInput.focus();
+  // Restore previous search state after settings are loaded
+  setTimeout(() => {
+    restoreSearchState();
+    searchInput.focus();
+  }, 100);
 });
