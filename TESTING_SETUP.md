@@ -29,22 +29,17 @@
 
 1. **ユニットテスト**
    - 各関数のロジックを個別にテスト
-   - 対象: `content_scripts/main.js`の各関数
-     - `searchText()`: テキスト検索と正規表現検索
-     - `searchElements()`: CSSセレクタとXPath検索
-     - `clearHighlights()`: ハイライトの削除
-     - `initializeStyles()`: スタイルの初期化
+   - DOM操作から独立した純粋な関数を優先的にテスト
+   - 対象: `content_scripts/main.js`の各関数（詳細は後述）
 
 2. **統合テスト**
-   - Chrome APIとの連携をテスト
-   - 対象: `popup/popup.js`, `options/options.js`
-     - `chrome.storage.sync`の読み書き
-     - `chrome.tabs`との通信
-     - `chrome.runtime.onMessage`のメッセージ処理
+   - 複数のコンポーネント（Popup, Content Script）やChrome APIが連携するユーザー操作フローをテスト
+   - 対象: `popup/popup.js`, `options/options.js`との連携（詳細は後述）
 
 3. **E2Eテスト（将来の拡張）**
    - 実際のブラウザ環境での動作確認
    - Puppeteer/Playwrightを使用
+   - `test-cross-element.html`を使った視覚的な確認（スクリーンショットテストなど）
 
 ## テストフレームワークの選択
 
@@ -224,36 +219,45 @@ chrome_ext_pattern_lens/
 
 ## テスト対象の優先順位
 
-### 優先度: 高
+### ユニットテスト対象 (content_scripts/main.js)
 
-1. **`searchText()`関数**
-   - 通常検索の動作
-   - 正規表現検索の動作
-   - 大文字小文字の区別
-   - 特殊文字の処理
+| 優先度 | 関数名 | テスト内容 |
+| :--- | :--- | :--- |
+| **高** | `createVirtualTextAndMap` | - 異なるDOM構造（ネスト、インライン、ブロック）から正しい仮想テキストが生成されるか<br>- ブロック要素間に `BLOCK_BOUNDARY_MARKER` (\uE000) が正しく挿入されるか<br>- `charMap` が文字とDOMノードを正確に対応付けできているか<br>- `test-cross-element.html` の各ケースに対応 |
+| **高** | `searchInVirtualText` | - 通常検索、正規表現検索が正しくマッチするか<br>- 大文字/小文字の区別が機能するか<br>- `BLOCK_BOUNDARY_MARKER` をまたぐ検索を正しく除外できるか<br>- 特殊文字の処理が正しいか |
+| **高** | `mergeAdjacentRects` | - 複数行にまたがるテキストの矩形（`ClientRects`）を正しくマージできるか<br>- 隣接していない矩形はマージされないことを確認<br>- tolerance パラメータの動作 |
+| **中** | `createRangeFromVirtualMatch` | - `searchInVirtualText` の結果と `charMap` を使って正しいDOM `Range` オブジェクトを生成できるか<br>- ブロック境界マーカーのスキップ処理が正しいか |
+| **中** | `isBlockLevel` | - 様々な要素（`div`, `p`, `span`, `strong`など）がブロックレベルかインラインレベルか正しく判定できるか<br>- CSSの`display`プロパティを考慮した判定 |
+| **中** | `getNearestBlockAncestor` | - 任意のノードから最も近いブロックレベルの祖先要素を正しく取得できるか |
+| **中** | `navigateToMatch` | - テキスト検索と要素検索の両方で正しくナビゲーションできるか<br>- インデックスの正規化（ラップアラウンド）が正しいか<br>- 返り値（currentIndex, totalMatches）が正しいか |
+| **低** | `createOverlay` | - スタイルが正しく適用されるか（スナップショットテスト）<br>- padding と border の計算が正しいか |
+| **低** | `applyMinimapStyles` | - スクロールバー幅を考慮した位置計算が正しいか |
 
-2. **`searchElements()`関数**
-   - CSSセレクタの検索
-   - XPathの検索
-   - エラーハンドリング（不正なセレクタ）
+### 統合テスト対象
 
-3. **`clearHighlights()`関数**
-   - ハイライトの削除
-   - DOMの正規化
+| 優先度 | ワークフロー | テストシナリオ |
+| :--- | :--- | :--- |
+| **高** | **テキスト検索とハイライト表示** | 1. Popupでキーワードを入力し、検索を実行<br>2. `main.js`がメッセージを受け取り、検索とハイライト（オーバーレイ）を行う<br>3. Popupに正しい件数が表示される |
+| **高** | **要素境界をまたぐ検索** | 1. `test-cross-element.html` のようなページで検索を実行<br>2. `<span>`や`<p>`をまたぐキーワード（例: "ipsum dolor", "mkdir-p"）が正しくハイライトされることを確認 |
+| **高** | **検索結果のナビゲーション** | 1. Popupの「次へ」「前へ」ボタン、または `Enter`/`Shift+Enter` を押す<br>2. `navigateToMatch` が呼び出され、ハイライトとページスクロールが正しく連動することを確認<br>3. 現在のマッチがオレンジ色でハイライトされる |
+| **中** | **CSS/XPathセレクタ検索** | 1. Popupで要素検索モードに切り替え、セレクタを入力<br>2. `searchElements` が実行され、一致する要素がハイライトされることを確認<br>3. 不正なセレクタのエラーハンドリング |
+| **中** | **ミニマップとの連携** | 1. 検索実行後、ミニマップにハイライト位置が正しく表示されるか<br>2. ナビゲーション時に、ミニマップ上のアクティブなマーカーが更新されるか<br>3. 検索結果が0件の場合、ミニマップが非表示になるか |
+| **中** | **スクロール/リサイズ時の追従** | 1. ページをスクロールまたはウィンドウサイズを変更<br>2. `updateOverlayPositions` が呼ばれ、オーバーレイの位置が正しく更新されることを確認 |
+| **低** | **設定の永続化** | 1. Optionsページでデフォルト設定を変更し保存<br>2. Popupを開いた際に、変更した設定が反映されていることを確認 |
+| **低** | **検索状態の復元** | 1. 検索を実行後、Popupを閉じる<br>2. Popupを再度開いた際に、前回の検索状態（キーワード、マッチ件数、現在位置）が復元されるか |
 
-### 優先度: 中
+### 新たに追加されたテスト対象（現在の実装に基づく）
 
-4. **`popup.js`のメッセージング**
-   - Chrome APIとの通信
-   - エラーハンドリング
+#### ユニットテスト
+- **`createVirtualTextAndMap`**: 要素境界をまたぐ検索機能の中核となる関数。`test-cross-element.html` の各ケースをDOM入力として与え、期待される仮想テキストが出力されるか検証。
+- **`searchInVirtualText`**: `BLOCK_BOUNDARY_MARKER` を含むテキストで、境界をまたがない検索パターンが正しくマッチすることを確認。
 
-5. **`options.js`の設定保存**
-   - `chrome.storage.sync`の読み書き
+#### 統合テスト
+- **スクロール/リサイズ時の追従**: ページをスクロールまたはウィンドウサイズを変更した際に、`updateOverlayPositions` が呼ばれ、オーバーレイの位置が正しく更新されることをテスト。
+- **ミニマップの表示**: 検索結果に応じてミニマップが表示・非表示され、マーカーの位置が正しいかを確認。
 
-### 優先度: 低
-
-6. **UIの表示/非表示**
-   - モード切り替え時のUI更新
+#### E2Eテスト（将来的に）
+- **`test-cross-element.html` を使ったE2Eテスト**: PuppeteerやPlaywrightを導入し、実際のブラウザで `test-cross-element.html` を開き、各テストケースの検索文字列を入力して、期待通りにハイライトされるかを視覚的に確認（スクリーンショットテストなど）。
 
 ## テスト実行方法
 
