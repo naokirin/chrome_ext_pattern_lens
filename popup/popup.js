@@ -227,8 +227,27 @@ searchInput.addEventListener('input', () => {
   }, 300); // 300ms delay
 });
 
+// Auto-search when checkboxes change
+function handleCheckboxChange() {
+  updateSearchModeVisibility();
+  // Only trigger search if there's a query
+  const query = searchInput.value.trim();
+  if (query) {
+    performSearch();
+  }
+}
+
 // Event listeners
-elementMode.addEventListener('change', updateSearchModeVisibility);
+elementMode.addEventListener('change', handleCheckboxChange);
+regexMode.addEventListener('change', handleCheckboxChange);
+caseSensitiveMode.addEventListener('change', handleCheckboxChange);
+searchMode.addEventListener('change', () => {
+  // Element search mode selector change
+  const query = searchInput.value.trim();
+  if (query && elementMode.checked) {
+    performSearch();
+  }
+});
 searchBtn.addEventListener('click', performSearch);
 clearBtn.addEventListener('click', clearHighlights);
 prevBtn.addEventListener('click', navigatePrev);
