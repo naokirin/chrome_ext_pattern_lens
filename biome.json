@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [".output/**", ".wxt/**", "node_modules/**", "dist/**", "build/**", "coverage/**"]
+    "ignore": [
+      ".output/**",
+      ".wxt/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -47,7 +54,9 @@
   },
   "overrides": [
     {
-      "include": ["tests/**/*"],
+      "include": [
+        "tests/**/*"
+      ],
       "linter": {
         "rules": {
           "correctness": {
