@@ -1,13 +1,8 @@
 // Import shared type definitions
 import type {
   SearchMessage,
-  ClearMessage,
-  NavigateMessage,
-  GetStateMessage,
-  Message,
   SearchResponse,
   StateResponse,
-  Response,
   SearchState,
   HighlightData,
   CharMapEntry,
