@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>要素境界をまたぐ検索テストページ</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #555;
+      margin-top: 30px;
+    }
+    .test-section {
+      background-color: #f9f9f9;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+    }
+    code {
+      background-color: #e8e8e8;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    .info-box {
+      background-color: #e3f2fd;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .example {
+      border: 1px dashed #999;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>要素境界をまたぐ検索テストページ</h1>
+
+  <div class="info-box">
+    <strong>このページの使い方:</strong>
+    <p>Pattern Lens拡張機能の要素境界をまたぐ検索機能をテストするためのページです。</p>
+    <p>以下の各セクションで、HTMLの要素境界をまたいだテキストが正しく検索できることを確認してください。</p>
+  </div>
+
+  <h2>1. インライン要素内の検索（要素境界なし）</h2>
+  <div class="test-section">
+    <h3>テストケース1-1: span要素をまたぐテキスト（空白なし）</h3>
+    <div class="example">
+      <span>mkdir</span><span>-p</span>
+    </div>
+    <p><strong>検索文字列:</strong> <code>mkdir-p</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる（インライン要素間には自動スペース挿入なし）</p>
+
+    <h3>テストケース1-2: 複数のspan要素をまたぐテキスト（明示的な空白あり）</h3>
+    <div class="example">
+      <span>Hello</span><span> </span><span>World</span><span>!</span>
+    </div>
+    <p><strong>検索文字列:</strong> <code>Hello World!</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる（DOMに空白が存在するため）</p>
+
+    <h3>テストケース1-3: 異なるインライン要素の連続</h3>
+    <div class="example">
+      <strong>npm</strong> <em>install</em> <code>react</code>
+    </div>
+    <p><strong>検索文字列:</strong> <code>npm install react</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる（要素間に空白あり）</p>
+  </div>
+
+  <h2>2. ブロック要素をまたぐ検索</h2>
+  <div class="test-section">
+    <h3>テストケース2-1: div要素をまたぐテキスト</h3>
+    <div class="example">
+      <div>Hello</div><div>World</div>
+    </div>
+    <p><strong>検索文字列:</strong> <code>Hello World</code></p>
+    <p><strong>期待結果:</strong> 両方のdivの内容がハイライトされる（ブロック境界にスペースが挿入される）</p>
+
+    <h3>テストケース2-2: p要素をまたぐテキスト</h3>
+    <div class="example">
+      <p>Lorem ipsum</p><p>dolor sit</p>
+    </div>
+    <p><strong>検索文字列:</strong> <code>ipsum dolor</code></p>
+    <p><strong>期待結果:</strong> 両方のp要素にまたがってハイライトされる</p>
+
+    <h3>テストケース2-3: 見出しと段落をまたぐテキスト</h3>
+    <div class="example">
+      <h4>Important Note</h4>
+      <p>This is critical</p>
+    </div>
+    <p><strong>検索文字列:</strong> <code>Note This</code></p>
+    <p><strong>期待結果:</strong> 見出しと段落にまたがってハイライトされる</p>
+  </div>
+
+  <h2>3. 複雑なネストをまたぐ検索</h2>
+  <div class="test-section">
+    <h3>テストケース3-1: ネストしたspan要素</h3>
+    <div class="example">
+      <span>git <span>commit</span> <span>-m</span></span> <span>"message"</span>
+    </div>
+    <p><strong>検索文字列:</strong> <code>git commit -m "message"</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる</p>
+
+    <h3>テストケース3-2: リスト項目をまたぐテキスト</h3>
+    <div class="example">
+      <ul>
+        <li>First</li>
+        <li>Second</li>
+        <li>Third</li>
+      </ul>
+    </div>
+    <p><strong>検索文字列:</strong> <code>First Second</code></p>
+    <p><strong>期待結果:</strong> 最初の2つのリスト項目にまたがってハイライトされる</p>
+
+    <h3>テストケース3-3: テーブルセルをまたぐテキスト</h3>
+    <div class="example">
+      <table border="1">
+        <tr>
+          <td>Cell</td>
+          <td>One</td>
+          <td>Two</td>
+        </tr>
+      </table>
+    </div>
+    <p><strong>検索文字列:</strong> <code>Cell One</code></p>
+    <p><strong>期待結果:</strong> 最初の2つのセルにまたがってハイライトされる</p>
+  </div>
+
+  <h2>4. 正規表現を使った検索</h2>
+  <div class="test-section">
+    <h3>テストケース4-1: 要素をまたぐ正規表現マッチ</h3>
+    <div class="example">
+      <span>test</span><span>123</span>
+    </div>
+    <p><strong>検索文字列（正規表現ON）:</strong> <code>test\s*\d+</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる</p>
+
+    <h3>テストケース4-2: 複数要素にまたがる柔軟なパターン</h3>
+    <div class="example">
+      <span>email:</span> <span>user@example.com</span>
+    </div>
+    <p><strong>検索文字列（正規表現ON）:</strong> <code>email:\s*\w+@\w+\.\w+</code></p>
+    <p><strong>期待結果:</strong> 全体がハイライトされる</p>
+  </div>
+
+  <h2>5. Chrome標準検索との互換性テスト</h2>
+  <div class="test-section">
+    <h3>テストケース5-1: 標準検索との比較</h3>
+    <div class="example">
+      <span>The</span> <span>quick</span> <span>brown</span> <span>fox</span>
+    </div>
+    <p><strong>検索文字列:</strong> <code>quick brown</code></p>
+    <p><strong>期待結果:</strong> Pattern LensもChrome標準検索（Ctrl+F）も同様にマッチする</p>
+
+    <h3>テストケース5-2: 複数のスペース</h3>
+    <div class="example">
+      <span>one</span>  <span>two</span>   <span>three</span>
+    </div>
+    <p><strong>検索文字列:</strong> <code>one two three</code></p>
+    <p><strong>期待結果:</strong> スペースの数に関わらずマッチする</p>
+  </div>
+
+  <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+    <p>Pattern Lens 要素境界をまたぐ検索テストページ</p>
+    <p>Chrome標準検索（Ctrl+F または Cmd+F）と比較して、同じ結果が得られることを確認してください。</p>
+  </footer>
+</body>
+</html>
