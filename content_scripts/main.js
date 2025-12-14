@@ -204,7 +204,8 @@ function removeMinimap() {
 
 // Navigate to a specific match index
 function navigateToMatch(index) {
-  const totalMatches = highlightData.ranges.length;
+  // Support both text search (ranges) and element search (elements)
+  const totalMatches = highlightData.ranges.length || highlightData.elements.length;
 
   if (totalMatches === 0) {
     return { currentIndex: -1, totalMatches: 0 };
@@ -219,23 +220,35 @@ function navigateToMatch(index) {
 
   currentMatchIndex = index;
 
-  // Update overlay colors
-  updateOverlayPositions();
-
-  // Update minimap
-  updateMinimap();
+  // Update overlay colors (for text search)
+  if (highlightData.ranges.length > 0) {
+    updateOverlayPositions();
+    updateMinimap();
+  }
 
   // Scroll to the current match
-  const currentRange = highlightData.ranges[currentMatchIndex];
-  if (currentRange) {
-    try {
-      // Get the parent element to scroll to
-      const element = currentRange.startContainer.parentElement;
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (highlightData.ranges.length > 0) {
+    // Text search: scroll to range
+    const currentRange = highlightData.ranges[currentMatchIndex];
+    if (currentRange) {
+      try {
+        const element = currentRange.startContainer.parentElement;
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } catch (error) {
+        console.warn('[Pattern Lens] Failed to scroll to match:', error);
       }
-    } catch (error) {
-      console.warn('[Pattern Lens] Failed to scroll to match:', error);
+    }
+  } else if (highlightData.elements.length > 0) {
+    // Element search: scroll to element
+    const currentElement = highlightData.elements[currentMatchIndex];
+    if (currentElement) {
+      try {
+        currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (error) {
+        console.warn('[Pattern Lens] Failed to scroll to element:', error);
+      }
     }
   }
 
@@ -608,9 +621,13 @@ function searchElements(query, mode) {
     if (elements.length > 0) {
       window.addEventListener('scroll', updateOverlayPositions, { passive: true });
       window.addEventListener('resize', updateOverlayPositions, { passive: true });
+
+      // Navigate to first element
+      const navResult = navigateToMatch(0);
+      return { count: elements.length, currentIndex: navResult.currentIndex, totalMatches: navResult.totalMatches };
     }
 
-    return elements.length;
+    return { count: 0, currentIndex: -1, totalMatches: 0 };
   } catch (error) {
     throw new Error(`Invalid ${mode === 'css' ? 'CSS selector' : 'XPath'}: ${error.message}`);
   }
