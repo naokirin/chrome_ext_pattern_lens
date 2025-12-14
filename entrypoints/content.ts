@@ -409,9 +409,8 @@ function searchInVirtualText(query: string, virtualText: string, useRegex: boole
         const matchedText = match[0];
         const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
 
-        if (hasBoundary) {
-          // Match crosses block boundary, skip it
-        } else {
+        // Skip matches that cross block boundaries
+        if (!hasBoundary) {
           matches.push({
             start: match.index,
             end: match.index + match[0].length,
