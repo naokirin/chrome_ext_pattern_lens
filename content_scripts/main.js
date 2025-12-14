@@ -185,28 +185,13 @@ function createVirtualTextAndMap() {
       }
     }
 
-    // 2. Process text content with normalization
+    // 2. Process text content WITHOUT normalization for regex support
     const text = currentNode.nodeValue;
-    let lastCharWasSpace = virtualText.endsWith(' ');
 
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
-      const isWhitespace = /\s/.test(char);
-
-      if (isWhitespace) {
-        // Normalize: collapse consecutive whitespace into single space
-        if (!lastCharWasSpace) {
-          virtualText += ' ';
-          charMap.push({ node: currentNode, offset: i });
-          lastCharWasSpace = true;
-        }
-        // Skip additional whitespace characters (they're normalized away)
-      } else {
-        // Regular character
-        virtualText += char;
-        charMap.push({ node: currentNode, offset: i });
-        lastCharWasSpace = false;
-      }
+      virtualText += char;
+      charMap.push({ node: currentNode, offset: i });
     }
 
     lastVisibleNode = currentNode;
@@ -220,9 +205,9 @@ function searchInVirtualText(query, virtualText, useRegex) {
   const matches = [];
 
   if (useRegex) {
-    // Use user's regex pattern directly
+    // Use user's regex pattern directly with dotAll flag for multiline matching
     try {
-      const regex = new RegExp(query, 'gi');
+      const regex = new RegExp(query, 'gis'); // 's' flag makes '.' match newlines too
       let match;
       while ((match = regex.exec(virtualText)) !== null) {
         matches.push({
