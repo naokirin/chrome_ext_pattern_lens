@@ -17,6 +17,7 @@ const nextBtn = document.getElementById('nextBtn');
 
 // Track last search query to detect changes
 let lastSearchQuery = '';
+let searchTimeout = null;
 
 // Load settings from storage
 function loadSettings() {
@@ -205,6 +206,27 @@ async function navigatePrev() {
   }
 }
 
+// Auto-search on input change (debounced)
+searchInput.addEventListener('input', () => {
+  // Clear existing timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  const query = searchInput.value.trim();
+
+  // If empty, clear highlights immediately
+  if (!query) {
+    clearHighlights();
+    return;
+  }
+
+  // Debounce search to avoid too many requests while typing
+  searchTimeout = setTimeout(() => {
+    performSearch();
+  }, 300); // 300ms delay
+});
+
 // Event listeners
 elementMode.addEventListener('change', updateSearchModeVisibility);
 searchBtn.addEventListener('click', performSearch);
@@ -214,24 +236,31 @@ nextBtn.addEventListener('click', navigateNext);
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
-    const currentQuery = searchInput.value.trim();
-    const queryChanged = currentQuery !== lastSearchQuery;
+    // Cancel pending auto-search
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      searchTimeout = null;
+    }
 
     if (e.shiftKey) {
-      // Shift+Enter: Navigate to previous match (only if query hasn't changed)
-      if (!queryChanged && navigation.style.display !== 'none') {
+      // Shift+Enter: Navigate to previous match
+      if (navigation.style.display !== 'none') {
         navigatePrev();
       } else {
         performSearch();
       }
     } else {
-      // Enter: If query changed, perform new search. Otherwise, navigate to next match
-      if (queryChanged || navigation.style.display === 'none') {
-        performSearch();
-      } else {
+      // Enter: Navigate to next match if available, otherwise search
+      if (navigation.style.display !== 'none') {
         navigateNext();
+      } else {
+        performSearch();
       }
     }
+  } else if (e.key === 'Escape') {
+    // Escape: Clear search and highlights
+    searchInput.value = '';
+    clearHighlights();
   }
 });
 
