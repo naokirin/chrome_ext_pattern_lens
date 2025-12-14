@@ -70,8 +70,9 @@ function updateOverlayPositions() {
   // Recreate overlays from stored ranges and elements
   highlightData.ranges.forEach(range => {
     const rects = range.getClientRects();
-    for (let i = 0; i < rects.length; i++) {
-      const overlay = createOverlay(rects[i], scrollX, scrollY);
+    const mergedRects = mergeAdjacentRects(rects);
+    for (let i = 0; i < mergedRects.length; i++) {
+      const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
       container.appendChild(overlay);
       highlightData.overlays.push(overlay);
     }
@@ -79,8 +80,9 @@ function updateOverlayPositions() {
 
   highlightData.elements.forEach(element => {
     const rects = element.getClientRects();
-    for (let i = 0; i < rects.length; i++) {
-      const overlay = createOverlay(rects[i], scrollX, scrollY);
+    const mergedRects = mergeAdjacentRects(rects);
+    for (let i = 0; i < mergedRects.length; i++) {
+      const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
       container.appendChild(overlay);
       highlightData.overlays.push(overlay);
     }
@@ -252,6 +254,59 @@ function searchInVirtualText(query, virtualText, useRegex) {
   return matches;
 }
 
+// Merge adjacent rectangles on the same line
+function mergeAdjacentRects(rectList, tolerance = 1) {
+  if (!rectList || rectList.length === 0) {
+    return [];
+  }
+
+  const rects = Array.from(rectList);
+
+  // 1. Group rectangles by line (using rounded y coordinate)
+  const lines = new Map();
+  rects.forEach(rect => {
+    // Round y coordinate to absorb small pixel differences
+    const lineY = Math.round(rect.y);
+    if (!lines.has(lineY)) {
+      lines.set(lineY, []);
+    }
+    lines.get(lineY).push(rect);
+  });
+
+  const mergedRects = [];
+
+  for (const line of lines.values()) {
+    // 2. Sort rectangles in each line by x coordinate (left to right)
+    line.sort((a, b) => a.left - b.left);
+
+    // 3. Merge adjacent rectangles
+    let currentRect = line[0];
+    for (let i = 1; i < line.length; i++) {
+      const nextRect = line[i];
+      // If the gap between current rect's right edge and next rect's left edge is within tolerance, merge them
+      if (nextRect.left - currentRect.right <= tolerance) {
+        // Create new merged rectangle
+        const top = Math.min(currentRect.top, nextRect.top);
+        const bottom = Math.max(currentRect.bottom, nextRect.bottom);
+        currentRect = new DOMRect(
+          currentRect.left,
+          top,
+          nextRect.right - currentRect.left, // width
+          bottom - top // height
+        );
+      } else {
+        // Not adjacent, add current rect to results and move to next
+        mergedRects.push(currentRect);
+        currentRect = nextRect;
+      }
+    }
+    // Add the last rectangle
+    mergedRects.push(currentRect);
+  }
+
+  return mergedRects;
+}
+
 // Create DOM Range from virtual text match using character-level mapping
 function createRangeFromVirtualMatch(match, charMap) {
   try {
@@ -312,9 +367,12 @@ function searchText(query, useRegex) {
       // Get rectangles for this range
       const rects = range.getClientRects();
 
-      // Create overlay for each rectangle (handles multi-line matches)
-      for (let i = 0; i < rects.length; i++) {
-        const overlay = createOverlay(rects[i], scrollX, scrollY);
+      // Merge adjacent rectangles to avoid overlapping overlays
+      const mergedRects = mergeAdjacentRects(rects);
+
+      // Create overlay for each merged rectangle (handles multi-line matches)
+      for (let i = 0; i < mergedRects.length; i++) {
+        const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
         container.appendChild(overlay);
         highlightData.overlays.push(overlay);
       }
@@ -369,9 +427,10 @@ function searchElements(query, mode) {
     elements.forEach((element) => {
       if (element.nodeType === Node.ELEMENT_NODE) {
         const rects = element.getClientRects();
+        const mergedRects = mergeAdjacentRects(rects);
 
-        for (let i = 0; i < rects.length; i++) {
-          const overlay = createOverlay(rects[i], scrollX, scrollY);
+        for (let i = 0; i < mergedRects.length; i++) {
+          const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
           container.appendChild(overlay);
           highlightData.overlays.push(overlay);
         }
