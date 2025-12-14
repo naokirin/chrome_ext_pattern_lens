@@ -17,8 +17,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      reportsDirectory: './coverage',
       include: ['entrypoints/**/*.ts', 'lib/**/*.ts'],
-      exclude: ['tests/**', 'node_modules/**', '.output/**'],
+      exclude: ['tests/**', 'node_modules/**', '.output/**', '**/*.d.ts'],
+      all: true,
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
     },
   },
 });

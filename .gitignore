@@ -55,6 +55,9 @@ logs/
 # Biome
 .biome/
 
+# Test coverage
+coverage/
+
 # Icon generation script (temporary)
 generate-icons.js
 
