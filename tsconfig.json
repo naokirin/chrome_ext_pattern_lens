@@ -1,10 +1,47 @@
 {
-  "extends": ".wxt/tsconfig.json",
   "compilerOptions": {
-    // Add custom compiler options here if needed
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@": [
+        "./"
+      ],
+      "@/*": [
+        "./*"
+      ],
+      "~": [
+        "./"
+      ],
+      "~/*": [
+        "./*"
+      ],
+      "@@": [
+        "./"
+      ],
+      "@@/*": [
+        "./*"
+      ],
+      "~~": [
+        "./"
+      ],
+      "~~/*": [
+        "./*"
+      ]
+    }
   },
   "include": [
     "entrypoints/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    ".wxt/wxt.d.ts"
+  ],
+  "exclude": [
+    ".output"
   ]
 }
