@@ -218,7 +218,7 @@ function createVirtualTextAndMap() {
 }
 
 // Search for matches in virtual text
-function searchInVirtualText(query, virtualText, useRegex) {
+function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
   const matches = [];
 
   if (useRegex) {
@@ -232,8 +232,9 @@ function searchInVirtualText(query, virtualText, useRegex) {
                                   .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
 
       console.log('[Pattern Lens] Modified regex pattern:', modifiedQuery);
-      // Use 'gi' flags only (not 's') so that . does not match newlines
-      const regex = new RegExp(modifiedQuery, 'gi');
+      // Use 'g' or 'gi' flags based on case-sensitivity (not 's') so that . does not match newlines
+      const flags = caseSensitive ? 'g' : 'gi';
+      const regex = new RegExp(modifiedQuery, flags);
       let match;
       while ((match = regex.exec(virtualText)) !== null) {
         // Filter out matches that cross block boundaries
@@ -261,7 +262,8 @@ function searchInVirtualText(query, virtualText, useRegex) {
   } else {
     // Normal search: convert spaces in query to \s+ for flexible matching
     const normalizedQuery = query.trim().replace(/\s+/g, '\\s+');
-    const regex = new RegExp(normalizedQuery, 'gi');
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(normalizedQuery, flags);
     let match;
     while ((match = regex.exec(virtualText)) !== null) {
       // Filter out matches that cross block boundaries
@@ -365,7 +367,7 @@ function createRangeFromVirtualMatch(match, charMap) {
 }
 
 // Search and highlight text using virtual text layer and overlay
-function searchText(query, useRegex) {
+function searchText(query, useRegex, caseSensitive) {
   let count = 0;
   const container = initializeOverlayContainer();
   const scrollX = window.scrollX || window.pageXOffset;
@@ -381,7 +383,7 @@ function searchText(query, useRegex) {
   console.log('[Pattern Lens] Query:', query);
 
   // Step 2: Search in virtual text
-  const matches = searchInVirtualText(query, virtualText, useRegex);
+  const matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
   console.log('[Pattern Lens] Matches found:', matches.length);
 
   // Step 3: Convert virtual matches to DOM ranges and create overlays
@@ -489,7 +491,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.useElementSearch) {
         count = searchElements(request.query, request.elementSearchMode);
       } else {
-        count = searchText(request.query, request.useRegex);
+        count = searchText(request.query, request.useRegex, request.caseSensitive);
       }
 
       sendResponse({ success: true, count: count });

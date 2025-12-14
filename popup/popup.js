@@ -2,6 +2,8 @@
 const searchInput = document.getElementById('searchInput');
 const regexMode = document.getElementById('regexMode');
 const regexLabel = document.getElementById('regexLabel');
+const caseSensitiveMode = document.getElementById('caseSensitiveMode');
+const caseSensitiveLabel = document.getElementById('caseSensitiveLabel');
 const elementMode = document.getElementById('elementMode');
 const searchModeContainer = document.getElementById('searchModeContainer');
 const searchMode = document.getElementById('searchMode');
@@ -14,10 +16,12 @@ function loadSettings() {
   chrome.storage.sync.get(
     {
       defaultRegex: false,
+      defaultCaseSensitive: false,
       defaultElementSearch: false,
     },
     (items) => {
       regexMode.checked = items.defaultRegex;
+      caseSensitiveMode.checked = items.defaultCaseSensitive;
       elementMode.checked = items.defaultElementSearch;
       updateSearchModeVisibility();
     }
@@ -31,14 +35,19 @@ function updateSearchModeVisibility() {
   // Show/hide element search mode selector
   searchModeContainer.style.display = isElementMode ? 'block' : 'none';
 
-  // Disable regex mode when element search is enabled
+  // Disable regex mode and case-sensitive mode when element search is enabled
   if (isElementMode) {
     regexMode.checked = false;
     regexMode.disabled = true;
     regexLabel.classList.add('disabled');
+    caseSensitiveMode.checked = false;
+    caseSensitiveMode.disabled = true;
+    caseSensitiveLabel.classList.add('disabled');
   } else {
     regexMode.disabled = false;
     regexLabel.classList.remove('disabled');
+    caseSensitiveMode.disabled = false;
+    caseSensitiveLabel.classList.remove('disabled');
   }
 }
 
@@ -78,6 +87,7 @@ async function performSearch() {
       action: 'search',
       query: query,
       useRegex: regexMode.checked,
+      caseSensitive: caseSensitiveMode.checked,
       useElementSearch: elementMode.checked,
       elementSearchMode: searchMode.value,
     };
