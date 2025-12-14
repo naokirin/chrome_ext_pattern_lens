@@ -3,13 +3,10 @@
  * Creates a virtual text layer with character-level mapping (Chrome-like innerText behavior)
  */
 import type { CharMapEntry } from '~/lib/types';
+import { BLOCK_BOUNDARY_MARKER, HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 
-// Constants
-// Use Unicode Private Use Area character as block boundary marker
-// This character won't appear in normal text and won't be matched by user regex accidentally
-export const BLOCK_BOUNDARY_MARKER = '\uE000';
-
-const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
+// Re-export for backward compatibility
+export { BLOCK_BOUNDARY_MARKER };
 
 /**
  * Check if element is block-level

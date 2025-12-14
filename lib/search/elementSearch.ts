@@ -10,11 +10,9 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { HIGHLIGHT_OVERLAY_ID } from '~/lib/constants';
 import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
-
-// Constants
-const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
 
 /**
  * Search elements by CSS selector or XPath using overlay

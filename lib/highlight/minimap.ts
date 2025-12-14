@@ -2,11 +2,18 @@
  * Minimap management for showing search result positions
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
+import {
+  MINIMAP_BG_COLOR,
+  MINIMAP_CONTAINER_ID,
+  MINIMAP_MARKER_BORDER_RADIUS,
+  MINIMAP_MARKER_COLOR_CURRENT,
+  MINIMAP_MARKER_COLOR_NORMAL,
+  MINIMAP_MARKER_HEIGHT,
+  MINIMAP_WIDTH,
+  MINIMAP_Z_INDEX,
+} from '~/lib/constants';
 import { getElementById } from '~/lib/utils/domUtils';
 import { handleError } from '../utils/errorHandler';
-
-// Constants
-const MINIMAP_CONTAINER_ID = 'pattern-lens-minimap-container';
 
 /**
  * Get or create minimap container
@@ -32,11 +39,11 @@ function applyMinimapStyles(container: HTMLDivElement): void {
     position: fixed;
     top: 0;
     right: ${scrollbarWidth}px;
-    width: 12px;
+    width: ${MINIMAP_WIDTH}px;
     height: 100vh;
-    z-index: 2147483646;
+    z-index: ${MINIMAP_Z_INDEX};
     pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: ${MINIMAP_BG_COLOR};
   `;
 }
 
@@ -70,9 +77,9 @@ export function updateMinimap(stateManager: SearchStateManager): void {
         top: ${relativeTop}%;
         left: 0;
         width: 100%;
-        height: 4px;
-        background-color: ${isActive ? 'rgba(255, 87, 34, 0.9)' : 'rgba(255, 193, 7, 0.8)'};
-        border-radius: 1px;
+        height: ${MINIMAP_MARKER_HEIGHT}px;
+        background-color: ${isActive ? MINIMAP_MARKER_COLOR_CURRENT : MINIMAP_MARKER_COLOR_NORMAL};
+        border-radius: ${MINIMAP_MARKER_BORDER_RADIUS}px;
       `;
 
       container.appendChild(marker);

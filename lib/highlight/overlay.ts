@@ -2,12 +2,26 @@
  * Overlay management for highlighting search results
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
+import {
+  CURRENT_MATCH_CLASS,
+  HIGHLIGHT_CLASS,
+  HIGHLIGHT_OVERLAY_ID,
+  OVERLAY_BG_COLOR_CURRENT,
+  OVERLAY_BG_COLOR_NORMAL,
+  OVERLAY_BORDER_COLOR_CURRENT,
+  OVERLAY_BORDER_COLOR_NORMAL,
+  OVERLAY_BORDER_RADIUS,
+  OVERLAY_BORDER_WIDTH,
+  OVERLAY_PADDING,
+  OVERLAY_Z_INDEX,
+  RECT_MERGE_TOLERANCE,
+} from '~/lib/constants';
 import { getElementById } from '~/lib/utils/domUtils';
 
 /**
  * Merge adjacent rectangles on the same line
  */
-function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance = 1): DOMRect[] {
+function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance = RECT_MERGE_TOLERANCE): DOMRect[] {
   if (!rectList || rectList.length === 0) {
     return [];
   }
@@ -59,11 +73,6 @@ function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance = 1): D
   return mergedRects;
 }
 
-// Constants
-const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
-const HIGHLIGHT_CLASS = 'pattern-lens-highlight-overlay';
-const CURRENT_MATCH_CLASS = 'pattern-lens-current-match';
-
 // Track event listener registration state
 let eventListenersAttached = false;
 
@@ -83,7 +92,7 @@ export function initializeOverlayContainer(): HTMLDivElement {
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 2147483647;
+      z-index: ${OVERLAY_Z_INDEX};
     `;
     document.body.appendChild(container);
   }
@@ -103,23 +112,19 @@ export function createOverlay(
   const overlay = document.createElement('div');
   overlay.className = isCurrent ? `${HIGHLIGHT_CLASS} ${CURRENT_MATCH_CLASS}` : HIGHLIGHT_CLASS;
 
-  // Add padding to make the highlight more visible
-  const padding = 2;
-  const borderWidth = 1;
-
   // Different colors for current match
-  const bgColor = isCurrent ? 'rgba(255, 152, 0, 0.5)' : 'rgba(255, 235, 59, 0.4)';
-  const borderColor = isCurrent ? 'rgba(255, 87, 34, 0.9)' : 'rgba(255, 193, 7, 0.8)';
+  const bgColor = isCurrent ? OVERLAY_BG_COLOR_CURRENT : OVERLAY_BG_COLOR_NORMAL;
+  const borderColor = isCurrent ? OVERLAY_BORDER_COLOR_CURRENT : OVERLAY_BORDER_COLOR_NORMAL;
 
   overlay.style.cssText = `
     position: absolute;
-    left: ${rect.left + scrollX - padding}px;
-    top: ${rect.top + scrollY - padding}px;
-    width: ${rect.width + padding * 2}px;
-    height: ${rect.height + padding * 2}px;
+    left: ${rect.left + scrollX - OVERLAY_PADDING}px;
+    top: ${rect.top + scrollY - OVERLAY_PADDING}px;
+    width: ${rect.width + OVERLAY_PADDING * 2}px;
+    height: ${rect.height + OVERLAY_PADDING * 2}px;
     background-color: ${bgColor};
-    border: ${borderWidth}px solid ${borderColor};
-    border-radius: 2px;
+    border: ${OVERLAY_BORDER_WIDTH}px solid ${borderColor};
+    border-radius: ${OVERLAY_BORDER_RADIUS}px;
     pointer-events: none;
     box-sizing: border-box;
   `;

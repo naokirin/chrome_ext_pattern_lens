@@ -11,6 +11,7 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { ESCAPED_DOT_PLACEHOLDER } from '~/lib/constants';
 import { handleError } from '../utils/errorHandler';
 import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 
@@ -86,7 +87,6 @@ export function searchInVirtualText(
     try {
       // Replace . with [^\uE000] to prevent matching across block boundaries
       // Handle escaped dots (\.) separately - they should match literal dots
-      const ESCAPED_DOT_PLACEHOLDER = '\uE001ESCAPED_DOT\uE001';
       const modifiedQuery = query
         .replace(/\\\./g, ESCAPED_DOT_PLACEHOLDER) // Temporarily replace \. (literal dot)
         .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`) // Replace . with [^boundary] (excluding newlines too)

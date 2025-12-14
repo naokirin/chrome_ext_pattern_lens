@@ -229,7 +229,7 @@ catch (error) {
 
 ---
 
-## 7. 定数・マジックナンバーの管理
+## 7. 定数・マジックナンバーの管理 ✅ 完了
 
 ### 問題点
 - マジックナンバーが散在
@@ -245,9 +245,33 @@ const borderWidth = 1;
 }, 300); // 300ms delay
 ```
 
-### 推奨改善
-- 定数を`lib/constants.ts`に集約
-- 意味のある名前を付与
+### 実施した改善
+- ✅ `lib/constants.ts`を新規作成して定数を集約
+  - DOM要素ID: `HIGHLIGHT_OVERLAY_ID`, `MINIMAP_CONTAINER_ID`
+  - CSSクラス: `HIGHLIGHT_CLASS`, `CURRENT_MATCH_CLASS`
+  - Z-index値: `OVERLAY_Z_INDEX`, `MINIMAP_Z_INDEX`
+  - オーバーレイスタイリング: `OVERLAY_PADDING`, `OVERLAY_BORDER_WIDTH`, `OVERLAY_BORDER_RADIUS`
+  - オーバーレイ色: `OVERLAY_BG_COLOR_NORMAL`, `OVERLAY_BG_COLOR_CURRENT`, `OVERLAY_BORDER_COLOR_NORMAL`, `OVERLAY_BORDER_COLOR_CURRENT`
+  - ミニマップスタイリング: `MINIMAP_WIDTH`, `MINIMAP_MARKER_HEIGHT`, `MINIMAP_MARKER_BORDER_RADIUS`, `MINIMAP_BG_COLOR`, `MINIMAP_MARKER_COLOR_NORMAL`, `MINIMAP_MARKER_COLOR_CURRENT`
+  - 仮想テキストマーカー: `BLOCK_BOUNDARY_MARKER`, `ESCAPED_DOT_PLACEHOLDER`
+  - タイミング定数: `SEARCH_DEBOUNCE_DELAY_MS`
+  - 矩形マージ: `RECT_MERGE_TOLERANCE`
+- ✅ 各ファイルで定数をインポートして使用
+  - `lib/highlight/overlay.ts`: オーバーレイ関連の定数を置き換え
+  - `lib/highlight/minimap.ts`: ミニマップ関連の定数を置き換え
+  - `lib/search/textSearch.ts`: `ESCAPED_DOT_PLACEHOLDER`を置き換え
+  - `lib/search/elementSearch.ts`: `HIGHLIGHT_OVERLAY_ID`を置き換え
+  - `lib/search/virtualText.ts`: `BLOCK_BOUNDARY_MARKER`を再エクスポート（後方互換性のため）
+  - `entrypoints/popup/main.ts`: `SEARCH_DEBOUNCE_DELAY_MS`を置き換え
+
+### 変更ファイル
+- `lib/constants.ts` (新規作成)
+- `lib/highlight/overlay.ts` (リファクタリング)
+- `lib/highlight/minimap.ts` (リファクタリング)
+- `lib/search/textSearch.ts` (リファクタリング)
+- `lib/search/elementSearch.ts` (リファクタリング)
+- `lib/search/virtualText.ts` (リファクタリング)
+- `entrypoints/popup/main.ts` (リファクタリング)
 
 ---
 

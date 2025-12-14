@@ -9,6 +9,7 @@ import type {
   Settings,
   StateResponse,
 } from '~/lib/types';
+import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 import { getRequiredElementById } from '~/lib/utils/domUtils';
 import { handleError } from '~/lib/utils/errorHandler';
 import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
@@ -309,7 +310,7 @@ searchInput.addEventListener('input', () => {
       performSearch();
     }
     searchTimeout = null;
-  }, 300); // 300ms delay
+  }, SEARCH_DEBOUNCE_DELAY_MS);
 });
 
 // Auto-search when checkboxes change
