@@ -1,6 +1,7 @@
 // DOM elements
 const searchInput = document.getElementById('searchInput');
 const regexMode = document.getElementById('regexMode');
+const regexLabel = document.getElementById('regexLabel');
 const elementMode = document.getElementById('elementMode');
 const searchModeContainer = document.getElementById('searchModeContainer');
 const searchMode = document.getElementById('searchMode');
@@ -23,9 +24,22 @@ function loadSettings() {
   );
 }
 
-// Update search mode selector visibility
+// Update search mode selector visibility and regex mode state
 function updateSearchModeVisibility() {
-  searchModeContainer.style.display = elementMode.checked ? 'block' : 'none';
+  const isElementMode = elementMode.checked;
+
+  // Show/hide element search mode selector
+  searchModeContainer.style.display = isElementMode ? 'block' : 'none';
+
+  // Disable regex mode when element search is enabled
+  if (isElementMode) {
+    regexMode.checked = false;
+    regexMode.disabled = true;
+    regexLabel.classList.add('disabled');
+  } else {
+    regexMode.disabled = false;
+    regexLabel.classList.remove('disabled');
+  }
 }
 
 // Show result message

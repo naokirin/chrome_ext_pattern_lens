@@ -38,9 +38,16 @@
       cursor: pointer;
       font-size: 14px;
     }
+    label.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     input[type="checkbox"] {
       margin-right: 5px;
       cursor: pointer;
+    }
+    input[type="checkbox"]:disabled {
+      cursor: not-allowed;
     }
     .search-mode {
       margin-bottom: 15px;
@@ -103,11 +110,11 @@
   </div>
 
   <div class="options">
-    <label>
+    <label id="regexLabel">
       <input type="checkbox" id="regexMode">
       正規表現
     </label>
-    <label>
+    <label id="elementLabel">
       <input type="checkbox" id="elementMode">
       要素検索
     </label>
