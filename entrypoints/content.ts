@@ -1,81 +1,20 @@
-// Type definitions
-interface SearchMessage {
-  action: 'search';
-  query: string;
-  useRegex: boolean;
-  caseSensitive: boolean;
-  useElementSearch: boolean;
-  elementSearchMode: 'css' | 'xpath';
-}
-
-interface ClearMessage {
-  action: 'clear';
-}
-
-interface NavigateMessage {
-  action: 'navigate-next' | 'navigate-prev';
-}
-
-interface GetStateMessage {
-  action: 'get-state';
-}
-
-interface SearchResponse {
-  success: boolean;
-  count?: number;
-  totalMatches?: number;
-  currentIndex?: number;
-  error?: string;
-}
-
-interface StateResponse {
-  success: boolean;
-  state?: {
-    query: string;
-    useRegex: boolean;
-    caseSensitive: boolean;
-    useElementSearch: boolean;
-    elementSearchMode: 'css' | 'xpath';
-  };
-  currentIndex?: number;
-  totalMatches?: number;
-}
-
-interface HighlightData {
-  ranges: Range[];
-  elements: Element[];
-  overlays: HTMLDivElement[];
-}
-
-interface CharMapEntry {
-  node: Text | null;
-  offset: number;
-  type?: 'block-boundary';
-}
-
-interface VirtualMatch {
-  start: number;
-  end: number;
-}
-
-interface SearchState {
-  query: string;
-  useRegex: boolean;
-  caseSensitive: boolean;
-  useElementSearch: boolean;
-  elementSearchMode: 'css' | 'xpath';
-}
-
-interface NavigationResult {
-  currentIndex: number;
-  totalMatches: number;
-}
-
-interface SearchResult {
-  count: number;
-  currentIndex: number;
-  totalMatches: number;
-}
+// Import shared type definitions
+import type {
+  SearchMessage,
+  ClearMessage,
+  NavigateMessage,
+  GetStateMessage,
+  Message,
+  SearchResponse,
+  StateResponse,
+  Response,
+  SearchState,
+  HighlightData,
+  CharMapEntry,
+  VirtualMatch,
+  NavigationResult,
+  SearchResult,
+} from '~/lib/types';
 
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
@@ -87,7 +26,7 @@ const MINIMAP_CONTAINER_ID = 'pattern-lens-minimap-container';
 const BLOCK_BOUNDARY_MARKER = '\uE000';
 
 // Store ranges and elements for cleanup
-let highlightData: HighlightData = {
+const highlightData: HighlightData = {
   ranges: [],
   elements: [],
   overlays: []
@@ -203,11 +142,9 @@ function clearHighlights(): void {
   window.removeEventListener('resize', updateOverlayPositions);
 
   // Clear stored data
-  highlightData = {
-    ranges: [],
-    elements: [],
-    overlays: []
-  };
+  highlightData.ranges.length = 0;
+  highlightData.elements.length = 0;
+  highlightData.overlays.length = 0;
   currentMatchIndex = -1;
 
   // Remove minimap

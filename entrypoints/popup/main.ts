@@ -1,51 +1,14 @@
-// Type definitions for messages
-interface SearchMessage {
-  action: 'search';
-  query: string;
-  useRegex: boolean;
-  caseSensitive: boolean;
-  useElementSearch: boolean;
-  elementSearchMode: 'css' | 'xpath';
-}
-
-interface ClearMessage {
-  action: 'clear';
-}
-
-interface NavigateMessage {
-  action: 'navigate-next' | 'navigate-prev';
-}
-
-interface GetStateMessage {
-  action: 'get-state';
-}
-
-interface SearchResponse {
-  success: boolean;
-  count?: number;
-  totalMatches?: number;
-  currentIndex?: number;
-  error?: string;
-}
-
-interface StateResponse {
-  success: boolean;
-  state?: {
-    query: string;
-    useRegex: boolean;
-    caseSensitive: boolean;
-    useElementSearch: boolean;
-    elementSearchMode: 'css' | 'xpath';
-  };
-  totalMatches?: number;
-  currentIndex?: number;
-}
-
-interface Settings {
-  defaultRegex: boolean;
-  defaultCaseSensitive: boolean;
-  defaultElementSearch: boolean;
-}
+// Import shared type definitions
+import type {
+  SearchMessage,
+  ClearMessage,
+  NavigateMessage,
+  GetStateMessage,
+  SearchResponse,
+  StateResponse,
+  Settings,
+  Response,
+} from '~/lib/types';
 
 // DOM elements
 const searchInput = document.getElementById('searchInput') as HTMLInputElement;
@@ -220,7 +183,7 @@ async function clearHighlights(): Promise<void> {
     }
 
     const message: ClearMessage = { action: 'clear' };
-    chrome.tabs.sendMessage(tab.id, message, (response: { success?: boolean } | undefined) => {
+    chrome.tabs.sendMessage(tab.id, message, (response: Response | undefined) => {
       if (chrome.runtime.lastError) {
         showResult('エラー: ページに接続できませんでした', true);
         return;
