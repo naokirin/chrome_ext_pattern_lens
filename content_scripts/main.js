@@ -215,7 +215,12 @@ function searchInVirtualText(query, virtualText, useRegex) {
       while ((match = regex.exec(virtualText)) !== null) {
         // Filter out matches that cross block boundaries
         const matchedText = match[0];
-        if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
+        const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
+
+        if (hasBoundary) {
+          console.log('[Pattern Lens] Filtered match (crosses boundary):',
+            matchedText.replace(/\uE000/g, '[BOUNDARY]'));
+        } else {
           matches.push({
             start: match.index,
             end: match.index + match[0].length,
@@ -346,8 +351,10 @@ function searchText(query, useRegex) {
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
 
-  // Debug: log virtual text to console
-  console.log('[Pattern Lens] Virtual text:', virtualText);
+  // Debug: log virtual text to console (with visible boundary markers)
+  const visibleVirtualText = virtualText.replace(/\uE000/g, '[BOUNDARY]');
+  console.log('[Pattern Lens] Virtual text:', visibleVirtualText);
+  console.log('[Pattern Lens] Virtual text length:', virtualText.length);
   console.log('[Pattern Lens] Query:', query);
 
   // Step 2: Search in virtual text
