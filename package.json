@@ -1,0 +1,18 @@
+{
+  "name": "pattern-lens",
+  "version": "1.0.0",
+  "description": "Chrome extension for enhanced page search with regex and DOM element selector support",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+}
