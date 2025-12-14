@@ -35,14 +35,20 @@ function initializeOverlayContainer() {
 function createOverlay(rect, scrollX, scrollY) {
   const overlay = document.createElement('div');
   overlay.className = HIGHLIGHT_CLASS;
+
+  // Add padding to make the highlight more visible
+  const padding = 2;
+  const borderWidth = 1;
+
   overlay.style.cssText = `
     position: absolute;
-    left: ${rect.left + scrollX}px;
-    top: ${rect.top + scrollY}px;
-    width: ${rect.width}px;
-    height: ${rect.height}px;
+    left: ${rect.left + scrollX - padding}px;
+    top: ${rect.top + scrollY - padding}px;
+    width: ${rect.width + (padding * 2)}px;
+    height: ${rect.height + (padding * 2)}px;
     background-color: rgba(255, 235, 59, 0.4);
-    border: 1px solid rgba(255, 193, 7, 0.8);
+    border: ${borderWidth}px solid rgba(255, 193, 7, 0.8);
+    border-radius: 2px;
     pointer-events: none;
     box-sizing: border-box;
   `;
