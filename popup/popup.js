@@ -12,6 +12,7 @@ const navigation = document.getElementById('navigation');
 const matchCounter = document.getElementById('matchCounter');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
+const clearLink = document.getElementById('clearLink');
 
 // Track last search query to detect changes
 let lastSearchQuery = '';
@@ -248,6 +249,11 @@ searchMode.addEventListener('change', () => {
 });
 prevBtn.addEventListener('click', navigatePrev);
 nextBtn.addEventListener('click', navigateNext);
+clearLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  searchInput.value = '';
+  clearHighlights();
+});
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();

@@ -16,6 +16,28 @@
       margin: 0 0 15px 0;
       color: #333;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .header h1 {
+      margin: 0;
+    }
+    .clear-link {
+      font-size: 13px;
+      color: #2196F3;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+    }
+    .clear-link:hover {
+      background-color: #e3f2fd;
+      text-decoration: underline;
+    }
     .search-container {
       margin-bottom: 15px;
     }
@@ -117,7 +139,10 @@
   </style>
 </head>
 <body>
-  <h1>Pattern Lens</h1>
+  <div class="header">
+    <h1>Pattern Lens</h1>
+    <a href="#" class="clear-link" id="clearLink">検索をクリア</a>
+  </div>
 
   <div class="search-container">
     <input type="text" id="searchInput" placeholder="検索キーワードを入力...">
