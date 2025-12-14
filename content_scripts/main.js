@@ -117,6 +117,13 @@ function isBlockLevel(element) {
   if (!element || element.nodeType !== Node.ELEMENT_NODE) {
     return false;
   }
+
+  // Always treat these as inline elements regardless of CSS
+  const inlineElements = ['SPAN', 'STRONG', 'EM', 'B', 'I', 'CODE', 'KBD', 'SAMP', 'VAR', 'A', 'ABBR', 'CITE', 'Q', 'MARK', 'SMALL', 'SUB', 'SUP'];
+  if (inlineElements.includes(element.tagName)) {
+    return false;
+  }
+
   const style = window.getComputedStyle(element);
   const display = style.display;
   return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
