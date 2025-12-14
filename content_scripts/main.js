@@ -1,6 +1,7 @@
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';
 const HIGHLIGHT_CLASS = 'pattern-lens-highlight-overlay';
+const CURRENT_MATCH_CLASS = 'pattern-lens-current-match';
 // Use Unicode Private Use Area character as block boundary marker
 // This character won't appear in normal text and won't be matched by user regex accidentally
 const BLOCK_BOUNDARY_MARKER = '\uE000';
@@ -11,6 +12,9 @@ let highlightData = {
   elements: [],
   overlays: []
 };
+
+// Current match navigation
+let currentMatchIndex = -1;
 
 // Initialize overlay container
 function initializeOverlayContainer() {
@@ -35,13 +39,17 @@ function initializeOverlayContainer() {
 }
 
 // Create overlay element for a rectangle
-function createOverlay(rect, scrollX, scrollY) {
+function createOverlay(rect, scrollX, scrollY, isCurrent = false) {
   const overlay = document.createElement('div');
-  overlay.className = HIGHLIGHT_CLASS;
+  overlay.className = isCurrent ? `${HIGHLIGHT_CLASS} ${CURRENT_MATCH_CLASS}` : HIGHLIGHT_CLASS;
 
   // Add padding to make the highlight more visible
   const padding = 2;
   const borderWidth = 1;
+
+  // Different colors for current match
+  const bgColor = isCurrent ? 'rgba(255, 152, 0, 0.5)' : 'rgba(255, 235, 59, 0.4)';
+  const borderColor = isCurrent ? 'rgba(255, 87, 34, 0.9)' : 'rgba(255, 193, 7, 0.8)';
 
   overlay.style.cssText = `
     position: absolute;
@@ -49,8 +57,8 @@ function createOverlay(rect, scrollX, scrollY) {
     top: ${rect.top + scrollY - padding}px;
     width: ${rect.width + (padding * 2)}px;
     height: ${rect.height + (padding * 2)}px;
-    background-color: rgba(255, 235, 59, 0.4);
-    border: ${borderWidth}px solid rgba(255, 193, 7, 0.8);
+    background-color: ${bgColor};
+    border: ${borderWidth}px solid ${borderColor};
     border-radius: 2px;
     pointer-events: none;
     box-sizing: border-box;
@@ -71,11 +79,12 @@ function updateOverlayPositions() {
   const scrollY = window.scrollY || window.pageYOffset;
 
   // Recreate overlays from stored ranges and elements
-  highlightData.ranges.forEach(range => {
+  highlightData.ranges.forEach((range, index) => {
     const rects = range.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
+    const isCurrent = (index === currentMatchIndex);
     for (let i = 0; i < mergedRects.length; i++) {
-      const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
+      const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
       container.appendChild(overlay);
       highlightData.overlays.push(overlay);
     }
@@ -110,6 +119,44 @@ function clearHighlights() {
     elements: [],
     overlays: []
   };
+  currentMatchIndex = -1;
+}
+
+// Navigate to a specific match index
+function navigateToMatch(index) {
+  const totalMatches = highlightData.ranges.length;
+
+  if (totalMatches === 0) {
+    return { currentIndex: -1, totalMatches: 0 };
+  }
+
+  // Normalize index (wrap around)
+  if (index < 0) {
+    index = totalMatches - 1;
+  } else if (index >= totalMatches) {
+    index = 0;
+  }
+
+  currentMatchIndex = index;
+
+  // Update overlay colors
+  updateOverlayPositions();
+
+  // Scroll to the current match
+  const currentRange = highlightData.ranges[currentMatchIndex];
+  if (currentRange) {
+    try {
+      // Get the parent element to scroll to
+      const element = currentRange.startContainer.parentElement;
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } catch (error) {
+      console.warn('[Pattern Lens] Failed to scroll to match:', error);
+    }
+  }
+
+  return { currentIndex: currentMatchIndex, totalMatches: totalMatches };
 }
 
 // Helper: Check if element is block-level
@@ -399,8 +446,9 @@ function searchText(query, useRegex, caseSensitive) {
       const mergedRects = mergeAdjacentRects(rects);
 
       // Create overlay for each merged rectangle (handles multi-line matches)
+      const isCurrent = (count === 0); // First match is current
       for (let i = 0; i < mergedRects.length; i++) {
-        const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
+        const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
         container.appendChild(overlay);
         highlightData.overlays.push(overlay);
       }
@@ -417,9 +465,13 @@ function searchText(query, useRegex, caseSensitive) {
   if (count > 0) {
     window.addEventListener('scroll', updateOverlayPositions, { passive: true });
     window.addEventListener('resize', updateOverlayPositions, { passive: true });
+
+    // Navigate to first match
+    const navResult = navigateToMatch(0);
+    return { count: count, currentIndex: navResult.currentIndex, totalMatches: navResult.totalMatches };
   }
 
-  return count;
+  return { count: 0, currentIndex: -1, totalMatches: 0 };
 }
 
 // Search elements by CSS selector or XPath using overlay
@@ -481,26 +533,35 @@ function searchElements(query, mode) {
 }
 
 // Handle messages from popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === 'search') {
     try {
       clearHighlights();
 
-      let count = 0;
-
       if (request.useElementSearch) {
-        count = searchElements(request.query, request.elementSearchMode);
+        const count = searchElements(request.query, request.elementSearchMode);
+        sendResponse({ success: true, count: count, currentIndex: -1, totalMatches: count });
       } else {
-        count = searchText(request.query, request.useRegex, request.caseSensitive);
+        const result = searchText(request.query, request.useRegex, request.caseSensitive);
+        sendResponse({
+          success: true,
+          count: result.count,
+          currentIndex: result.currentIndex,
+          totalMatches: result.totalMatches
+        });
       }
-
-      sendResponse({ success: true, count: count });
     } catch (error) {
       sendResponse({ success: false, error: error.message });
     }
   } else if (request.action === 'clear') {
     clearHighlights();
     sendResponse({ success: true });
+  } else if (request.action === 'navigate-next') {
+    const result = navigateToMatch(currentMatchIndex + 1);
+    sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches });
+  } else if (request.action === 'navigate-prev') {
+    const result = navigateToMatch(currentMatchIndex - 1);
+    sendResponse({ success: true, currentIndex: result.currentIndex, totalMatches: result.totalMatches });
   }
 
   return true; // Keep the message channel open for async response
