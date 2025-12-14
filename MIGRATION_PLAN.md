@@ -220,3 +220,4 @@ chrome.tabs.sendMessage(tabId, message as SearchMessage);
 ## 次のステップ
 
 この計画に基づいて、段階的に移行を進めます。各フェーズの完了後に動作確認を行い、問題がなければ次のフェーズに進みます。
+
