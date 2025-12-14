@@ -367,7 +367,7 @@ if (request.action === 'search') {
 
 ---
 
-## 11. 仮想テキスト生成の複雑さ
+## 11. 仮想テキスト生成の複雑さ ✅ 完了
 
 ### 問題点
 - `createVirtualTextAndMap()`が複雑なロジックを含む
@@ -375,13 +375,26 @@ if (request.action === 'search') {
 - 正規表現での特殊文字処理が複雑
 
 #### 該当箇所
-- `entrypoints/content.ts:348-411` (createVirtualTextAndMap)
-- `entrypoints/content.ts:414-484` (searchInVirtualText)
+- `lib/search/virtualText.ts` (createVirtualTextAndMap)
+- `lib/search/textSearch.ts` (searchInVirtualText)
 
-### 推奨改善
-- 仮想テキスト生成ロジックを別モジュールに分離
-- ブロック境界処理を明確化
-- 正規表現処理のロジックを分離
+### 実施した改善
+- ✅ `lib/search/virtualText.ts`を分割
+  - `createNodeFilter()`: TreeWalker用のノードフィルター関数を作成
+  - `shouldInsertBoundaryMarker()`: ブロック境界マーカーを挿入すべきかどうかを判定
+  - `insertBoundaryMarker()`: ブロック境界マーカーを挿入
+  - `processTextNode()`: テキストノードを処理して仮想テキストとcharMapに追加
+  - `createVirtualTextAndMap()`: 上記を組み合わせてオーケストレーション
+- ✅ `lib/search/textSearch.ts`の`searchInVirtualText()`を分割
+  - `modifyRegexQuery()`: 正規表現クエリを修正（`.`を`[^boundary\n]`に置換）
+  - `normalizePlainTextQuery()`: プレーンテキストクエリを正規表現用に正規化
+  - `matchCrossesBoundary()`: マッチがブロック境界を跨ぐかどうかを判定
+  - `findMatchesWithRegex()`: 正規表現でマッチを検索し、境界を跨ぐマッチをフィルタリング
+  - `searchInVirtualText()`: 上記を組み合わせて検索を実行
+
+### 変更ファイル
+- `lib/search/virtualText.ts` (リファクタリング)
+- `lib/search/textSearch.ts` (リファクタリング)
 
 ---
 

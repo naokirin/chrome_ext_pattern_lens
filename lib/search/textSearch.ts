@@ -71,6 +71,67 @@ export function mergeAdjacentRects(rectList: DOMRectList | DOMRect[], tolerance 
 }
 
 /**
+ * Modify regex query to prevent matching across block boundaries
+ * Replaces '.' with pattern that excludes block boundary marker
+ */
+function modifyRegexQuery(query: string): string {
+  // Replace . with [^\uE000] to prevent matching across block boundaries
+  // Handle escaped dots (\.) separately - they should match literal dots
+  return query
+    .replace(/\\\./g, ESCAPED_DOT_PLACEHOLDER) // Temporarily replace \. (literal dot)
+    .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`) // Replace . with [^boundary] (excluding newlines too)
+    .replace(
+      new RegExp(ESCAPED_DOT_PLACEHOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+      '\\.'
+    ); // Restore \.
+}
+
+/**
+ * Normalize plain text query for regex search
+ * Escapes regex special characters and converts spaces to \s+ for flexible matching
+ */
+function normalizePlainTextQuery(query: string): string {
+  const escapedQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escapedQuery.replace(/\s+/g, '\\s+');
+}
+
+/**
+ * Check if match crosses block boundaries
+ */
+function matchCrossesBoundary(matchedText: string): boolean {
+  return matchedText.includes(BLOCK_BOUNDARY_MARKER);
+}
+
+/**
+ * Find all matches using regex and filter out those crossing boundaries
+ */
+function findMatchesWithRegex(regex: RegExp, virtualText: string): VirtualMatch[] {
+  const matches: VirtualMatch[] = [];
+  let match: RegExpExecArray | null = regex.exec(virtualText);
+
+  while (match !== null) {
+    const matchedText = match[0];
+
+    // Skip matches that cross block boundaries
+    if (!matchCrossesBoundary(matchedText)) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+      });
+    }
+
+    // Prevent infinite loop on zero-length matches
+    if (match[0].length === 0) {
+      regex.lastIndex++;
+    }
+
+    match = regex.exec(virtualText);
+  }
+
+  return matches;
+}
+
+/**
  * Search for matches in virtual text
  */
 export function searchInVirtualText(
@@ -79,70 +140,25 @@ export function searchInVirtualText(
   useRegex: boolean,
   caseSensitive: boolean
 ): VirtualMatch[] {
-  const matches: VirtualMatch[] = [];
+  const flags = caseSensitive ? 'g' : 'gi';
 
   if (useRegex) {
-    // Use user's regex pattern with dotAll flag for multiline matching
-    // Replace '.' with pattern that excludes block boundary marker
+    // Use user's regex pattern with modified query to prevent matching across block boundaries
     try {
-      // Replace . with [^\uE000] to prevent matching across block boundaries
-      // Handle escaped dots (\.) separately - they should match literal dots
-      const modifiedQuery = query
-        .replace(/\\\./g, ESCAPED_DOT_PLACEHOLDER) // Temporarily replace \. (literal dot)
-        .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`) // Replace . with [^boundary] (excluding newlines too)
-        .replace(
-          new RegExp(ESCAPED_DOT_PLACEHOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-          '\\.'
-        ); // Restore \.
-
-      // Use 'g' or 'gi' flags based on case-sensitivity (not 's') so that . does not match newlines
-      const flags = caseSensitive ? 'g' : 'gi';
+      const modifiedQuery = modifyRegexQuery(query);
       const regex = new RegExp(modifiedQuery, flags);
-      let match: RegExpExecArray | null = regex.exec(virtualText);
-      while (match !== null) {
-        // Filter out matches that cross block boundaries
-        const matchedText = match[0];
-        const hasBoundary = matchedText.includes(BLOCK_BOUNDARY_MARKER);
-
-        // Skip matches that cross block boundaries
-        if (!hasBoundary) {
-          matches.push({
-            start: match.index,
-            end: match.index + match[0].length,
-          });
-        }
-        // Prevent infinite loop on zero-length matches
-        if (match[0].length === 0) {
-          regex.lastIndex++;
-        }
-        match = regex.exec(virtualText);
-      }
+      return findMatchesWithRegex(regex, virtualText);
     } catch (error) {
       // Invalid regex pattern, return empty matches
       handleError(error, 'searchInVirtualText: Invalid regex pattern', undefined);
-      return matches;
+      return [];
     }
   } else {
     // Normal search: escape regex special characters, then convert spaces to \s+ for flexible matching
-    const escapedQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const normalizedQuery = escapedQuery.replace(/\s+/g, '\\s+');
-    const flags = caseSensitive ? 'g' : 'gi';
+    const normalizedQuery = normalizePlainTextQuery(query);
     const regex = new RegExp(normalizedQuery, flags);
-    let match: RegExpExecArray | null = regex.exec(virtualText);
-    while (match !== null) {
-      // Filter out matches that cross block boundaries
-      const matchedText = match[0];
-      if (!matchedText.includes(BLOCK_BOUNDARY_MARKER)) {
-        matches.push({
-          start: match.index,
-          end: match.index + match[0].length,
-        });
-      }
-      match = regex.exec(virtualText);
-    }
+    return findMatchesWithRegex(regex, virtualText);
   }
-
-  return matches;
 }
 
 /**

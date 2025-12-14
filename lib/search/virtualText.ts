@@ -78,66 +78,118 @@ function isVisible(element: Element | null): boolean {
 }
 
 /**
+ * Create node filter for TreeWalker
+ * Filters out script, style, overlay container, invisible elements, and empty text nodes
+ */
+function createNodeFilter(): (node: Node) => number {
+  return (node: Node) => {
+    const parent = node.parentElement;
+    // Skip script, style, overlay container
+    if (
+      !parent ||
+      parent.tagName === 'SCRIPT' ||
+      parent.tagName === 'STYLE' ||
+      parent.id === HIGHLIGHT_OVERLAY_ID ||
+      parent.closest(`#${HIGHLIGHT_OVERLAY_ID}`)
+    ) {
+      return NodeFilter.FILTER_REJECT;
+    }
+    // Skip invisible elements
+    if (!isVisible(parent)) {
+      return NodeFilter.FILTER_REJECT;
+    }
+    // Skip completely empty text nodes (but keep whitespace-only nodes)
+    if (!node.nodeValue || node.nodeValue.length === 0) {
+      return NodeFilter.FILTER_REJECT;
+    }
+    return NodeFilter.FILTER_ACCEPT;
+  };
+}
+
+/**
+ * Check if boundary marker should be inserted between two nodes
+ */
+function shouldInsertBoundaryMarker(prevNode: Node, currentNode: Node): boolean {
+  const prevBlock = getNearestBlockAncestor(prevNode);
+  const currentBlock = getNearestBlockAncestor(currentNode);
+  return prevBlock !== currentBlock;
+}
+
+/**
+ * Insert boundary marker into virtual text and charMap
+ */
+function insertBoundaryMarker(
+  virtualText: string,
+  charMap: CharMapEntry[]
+): { virtualText: string; charMap: CharMapEntry[] } {
+  // Avoid duplicate boundary markers
+  if (virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
+    return { virtualText, charMap };
+  }
+
+  const newVirtualText = virtualText + BLOCK_BOUNDARY_MARKER;
+  // Mark this as block boundary (not from original DOM)
+  const newCharMap = [...charMap, { node: null, offset: -1, type: 'block-boundary' }];
+
+  return { virtualText: newVirtualText, charMap: newCharMap };
+}
+
+/**
+ * Process text node and add to virtual text and charMap
+ */
+function processTextNode(
+  node: Text,
+  virtualText: string,
+  charMap: CharMapEntry[]
+): { virtualText: string; charMap: CharMapEntry[] } {
+  const text = node.nodeValue;
+  if (!text) {
+    return { virtualText, charMap };
+  }
+
+  // Process text content WITHOUT normalization for regex support
+  let newVirtualText = virtualText;
+  const newCharMap = [...charMap];
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    newVirtualText += char;
+    newCharMap.push({ node, offset: i });
+  }
+
+  return { virtualText: newVirtualText, charMap: newCharMap };
+}
+
+/**
  * Create virtual text layer with character-level mapping (Chrome-like innerText behavior)
  */
 export function createVirtualTextAndMap(): { virtualText: string; charMap: CharMapEntry[] } {
   let virtualText = '';
-  const charMap: CharMapEntry[] = []; // Array of { node: TextNode, offset: number } for each character in virtualText
+  const charMap: CharMapEntry[] = [];
   let lastVisibleNode: Node | null = null;
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node: Node) => {
-      const parent = node.parentElement;
-      // Skip script, style, overlay container
-      if (
-        !parent ||
-        parent.tagName === 'SCRIPT' ||
-        parent.tagName === 'STYLE' ||
-        parent.id === HIGHLIGHT_OVERLAY_ID ||
-        parent.closest(`#${HIGHLIGHT_OVERLAY_ID}`)
-      ) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      // Skip invisible elements
-      if (!isVisible(parent)) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      // Skip completely empty text nodes (but keep whitespace-only nodes)
-      if (!node.nodeValue || node.nodeValue.length === 0) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    },
+    acceptNode: createNodeFilter(),
   });
 
   while (walker.nextNode()) {
-    const currentNode = walker.currentNode;
+    const currentNode = walker.currentNode as Text;
 
-    // 1. Handle element boundaries (insert marker when crossing block boundaries)
+    // Handle element boundaries (insert marker when crossing block boundaries)
     if (lastVisibleNode) {
-      // Find the nearest block-level ancestor for both nodes
-      const prevBlock = getNearestBlockAncestor(lastVisibleNode);
-      const currentBlock = getNearestBlockAncestor(currentNode);
-
-      // Insert boundary marker if we're moving to a different block element
-      if (prevBlock !== currentBlock) {
-        if (!virtualText.endsWith(BLOCK_BOUNDARY_MARKER)) {
-          virtualText += BLOCK_BOUNDARY_MARKER;
-          // Mark this as block boundary (not from original DOM)
-          charMap.push({ node: null, offset: -1, type: 'block-boundary' });
-        }
+      if (shouldInsertBoundaryMarker(lastVisibleNode, currentNode)) {
+        const result = insertBoundaryMarker(virtualText, charMap);
+        virtualText = result.virtualText;
+        charMap.length = 0;
+        charMap.push(...result.charMap);
       }
     }
 
-    // 2. Process text content WITHOUT normalization for regex support
-    const text = currentNode.nodeValue;
-    if (!text) continue;
-
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      virtualText += char;
-      charMap.push({ node: currentNode as Text, offset: i });
-    }
+    // Process text content
+    const result = processTextNode(currentNode, virtualText, charMap);
+    virtualText = result.virtualText;
+    charMap.length = 0;
+    charMap.push(...result.charMap);
 
     lastVisibleNode = currentNode;
   }
