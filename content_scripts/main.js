@@ -227,8 +227,8 @@ function searchInVirtualText(query, virtualText, useRegex) {
     try {
       // Replace . with [^\uE000] to prevent matching across block boundaries
       // Handle escaped dots (\.) separately - they should match literal dots
-      const modifiedQuery = query.replace(/\\./g, '\x00ESCAPED_DOT\x00')  // Temporarily replace \.
-                                  .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}]`)  // Replace . with [^boundary]
+      const modifiedQuery = query.replace(/\\\./g, '\x00ESCAPED_DOT\x00')  // Temporarily replace \. (literal dot)
+                                  .replace(/\./g, `[^${BLOCK_BOUNDARY_MARKER}\n]`)  // Replace . with [^boundary] (excluding newlines too)
                                   .replace(/\x00ESCAPED_DOT\x00/g, '\\.');  // Restore \.
 
       console.log('[Pattern Lens] Modified regex pattern:', modifiedQuery);
