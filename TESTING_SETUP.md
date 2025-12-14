@@ -4,6 +4,25 @@
 
 このドキュメントでは、Pattern Lens Chrome拡張機能のテスト環境を整備するための方針と手順を説明します。
 
+## 最新の実装: オーバーレイ方式のハイライト
+
+現在の実装では、DOM構造を変更せずにハイライトを実現するオーバーレイ方式を採用しています。
+
+### オーバーレイ方式の特徴
+
+1. **Range API使用**: テキスト検索では`document.createRange()`と`getClientRects()`を使用
+2. **要素の矩形取得**: DOM要素検索では`element.getClientRects()`を使用
+3. **絶対配置のオーバーレイ**: 矩形情報を元に`position: absolute`のdiv要素を配置
+4. **DOMを変更しない**: 元のDOM構造やスタイルを一切変更しない
+5. **スクロール/リサイズ対応**: イベントリスナーで位置を自動更新
+
+### 実装の詳細
+
+- オーバーレイコンテナID: `pattern-lens-overlay-container`
+- オーバーレイクラス: `pattern-lens-highlight-overlay`
+- z-index: 2147483647（最前面に表示）
+- pointer-events: none（クリックを透過）
+
 ## テスト戦略
 
 ### テストの種類
