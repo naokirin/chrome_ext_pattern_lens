@@ -390,8 +390,9 @@ function searchInVirtualText(query, virtualText, useRegex, caseSensitive) {
       return matches;
     }
   } else {
-    // Normal search: convert spaces in query to \s+ for flexible matching
-    const normalizedQuery = query.trim().replace(/\s+/g, '\\s+');
+    // Normal search: escape regex special characters, then convert spaces to \s+ for flexible matching
+    const escapedQuery = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const normalizedQuery = escapedQuery.replace(/\s+/g, '\\s+');
     const flags = caseSensitive ? 'g' : 'gi';
     const regex = new RegExp(normalizedQuery, flags);
     let match;
