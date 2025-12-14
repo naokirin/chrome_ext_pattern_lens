@@ -28,11 +28,34 @@ Chrome拡張機能：正規表現とDOM要素検索に対応した高度なペ�
 
 ## インストール方法
 
+### 開発環境のセットアップ
+
 1. このリポジトリをクローンまたはダウンロード
-2. Chromeで `chrome://extensions/` を開く
-3. 右上の「デベロッパーモード」を有効にする
-4. 「パッケージ化されていない拡張機能を読み込む」をクリック
-5. プロジェクトのルートディレクトリを選択
+2. 依存関係をインストール:
+   ```bash
+   npm install
+   ```
+3. 開発モードで起動:
+   ```bash
+   npm run dev
+   ```
+   これにより、WXTが開発サーバーを起動し、拡張機能を自動的にビルドします。
+
+### 本番ビルド
+
+```bash
+npm run build
+```
+
+ビルドされた拡張機能は `.output/chrome-mv3/` ディレクトリに生成されます。
+
+### Chromeへの読み込み
+
+1. Chromeで `chrome://extensions/` を開く
+2. 右上の「デベロッパーモード」を有効にする
+3. 「パッケージ化されていない拡張機能を読み込む」をクリック
+4. `.output/chrome-mv3/` ディレクトリを選択（本番ビルドの場合）
+   - 開発モードの場合は、WXTが自動的にブラウザを開きます
 
 ## 使い方
 
@@ -83,23 +106,31 @@ Chrome拡張機能：正規表現とDOM要素検索に対応した高度なペ�
 
 ```
 chrome_ext_pattern_lens/
-├── manifest.json              # 拡張機能の設定ファイル
-├── icons/                     # 拡張機能のアイコン
-├── popup/                     # ポップアップUI
-│   ├── popup.html
-│   └── popup.js
-├── options/                   # 設定ページ
-│   ├── options.html
-│   └── options.js
-└── content_scripts/          # コンテンツスクリプト
-    └── main.js
+├── entrypoints/              # WXTエントリーポイント
+│   ├── popup/                # ポップアップUI
+│   │   ├── index.html
+│   │   └── main.ts
+│   ├── options/              # 設定ページ
+│   │   ├── index.html
+│   │   └── main.ts
+│   └── content.ts           # コンテンツスクリプト
+├── lib/                      # 共通ライブラリ
+│   └── types.ts             # 型定義
+├── public/                   # 静的リソース
+│   └── icons/               # 拡張機能のアイコン
+├── tests/                   # テストファイル
+├── wxt.config.ts            # WXT設定ファイル
+├── tsconfig.json            # TypeScript設定
+└── package.json             # 依存関係
 ```
 
 ## 技術スタック
 
-- Manifest V3
-- Vanilla JavaScript (フレームワークなし)
-- Chrome Extension APIs
+- **WXT**: Chrome拡張機能開発フレームワーク
+- **TypeScript**: 型安全な開発
+- **Manifest V3**: 最新のChrome拡張機能仕様
+- **Vitest**: テストフレームワーク
+- **Chrome Extension APIs**
   - `chrome.storage.sync`: 設定の保存
   - `chrome.tabs`: タブとの通信
   - `chrome.runtime`: メッセージング
@@ -145,8 +176,42 @@ DOM構造を一切変更せずにハイライトを実現しています。
 
 ### 必要なツール
 
+- Node.js (v18以上推奨)
+- npm または yarn
 - Google Chrome
 - テキストエディタ（VS Code、Cursor推奨）
+
+### 開発コマンド
+
+```bash
+# 依存関係のインストール
+npm install
+
+# 開発モード（HMR対応）
+npm run dev
+
+# 本番ビルド
+npm run build
+
+# テスト実行
+npm test
+
+# テスト（ウォッチモード）
+npm run test:watch
+
+# テスト（UI）
+npm run test:ui
+
+# カバレッジレポート
+npm run test:coverage
+```
+
+### 開発の流れ
+
+1. `npm run dev`で開発サーバーを起動
+2. WXTが自動的にブラウザを開き、拡張機能を読み込みます
+3. コードを変更すると、HMR（Hot Module Replacement）により自動的にリロードされます
+4. `.output/chrome-mv3/`ディレクトリにビルド結果が生成されます
 
 ### デバッグ
 
@@ -154,10 +219,7 @@ DOM構造を一切変更せずにハイライトを実現しています。
 2. 拡張機能の「エラー」リンクでエラーログを確認
 3. ポップアップを右クリック → 「検証」でDevToolsを開く
 4. コンテンツスクリプトは通常のページDevToolsで確認可能
-
-### リロード
-
-コードを変更した後は、`chrome://extensions/` で拡張機能のリロードボタンをクリックしてください。
+5. 開発モードでは、WXTが自動的にリロードするため手動リロードは不要
 
 ### テスト
 
