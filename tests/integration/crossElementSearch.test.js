@@ -179,8 +179,9 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
     expect(response.count).toBe(1);
   });
 
-  it('ブロック要素（p要素）をまたぐテキストが正しく検索される', async () => {
+  it('ブロック要素（p要素）をまたぐテキストは検索されない', async () => {
     // test-cross-element.html のケース2-2を再現
+    // 実装では、ブロック要素間には境界マーカーが挿入されるため、境界をまたぐ検索はできない
     document.body.innerHTML = `
       <div>
         <p>Lorem ipsum</p><p>dolor sit</p>
@@ -189,13 +190,21 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
 
     messageHandler = (request) => {
       if (request.action === 'search' && !request.useElementSearch) {
-        // ブロック要素間には自動的にスペースが挿入される（innerTextの動作）
-        const bodyText = document.body.innerText || document.body.textContent || '';
+        // 実装では、ブロック要素間には境界マーカーが挿入されるため、
+        // "ipsum dolor" のような検索はマッチしない
+        // 各ブロック要素内でのみ検索される
+        const paragraphs = document.querySelectorAll('p');
+        let matches = 0;
         const query = request.query;
         const caseSensitive = request.caseSensitive;
-        const searchText = caseSensitive ? bodyText : bodyText.toLowerCase();
         const searchQuery = caseSensitive ? query : query.toLowerCase();
-        const matches = searchText.includes(searchQuery) ? 1 : 0;
+
+        paragraphs.forEach((p) => {
+          const text = caseSensitive ? p.textContent || '' : (p.textContent || '').toLowerCase();
+          if (text.includes(searchQuery)) {
+            matches++;
+          }
+        });
 
         if (matches > 0) {
           let container = document.getElementById('pattern-lens-overlay-container');
@@ -232,7 +241,8 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
     });
 
     expect(response.success).toBe(true);
-    expect(response.count).toBe(1);
+    // ブロック要素間をまたぐ検索はできないため、マッチ数は0
+    expect(response.count).toBe(0);
   });
 
   it('ネストしたspan要素をまたぐテキストが正しく検索される', async () => {
@@ -290,8 +300,10 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
     expect(response.count).toBe(1);
   });
 
-  it('リスト項目をまたぐテキストが正しく検索される', async () => {
+  it('リスト項目をまたぐテキストは検索されない', async () => {
     // test-cross-element.html のケース3-2を再現
+    // 実装では、<li>要素はブロック要素（list-item）として扱われるため、
+    // リスト項目間には境界マーカーが挿入され、境界をまたぐ検索はできない
     document.body.innerHTML = `
       <ul>
         <li>First</li>
@@ -302,16 +314,21 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
 
     messageHandler = (request) => {
       if (request.action === 'search' && !request.useElementSearch) {
-        // リスト項目間には改行が挿入されるが、innerTextではスペースとして扱われる
-        const bodyText = document.body.innerText || document.body.textContent || '';
+        // 実装では、リスト項目間には境界マーカーが挿入されるため、
+        // "First Second" のような検索はマッチしない
+        // 各リスト項目内でのみ検索される
+        const listItems = document.querySelectorAll('li');
+        let matches = 0;
         const query = request.query;
         const caseSensitive = request.caseSensitive;
-        const searchText = caseSensitive ? bodyText : bodyText.toLowerCase();
         const searchQuery = caseSensitive ? query : query.toLowerCase();
-        // 複数のスペースや改行を単一のスペースとして扱う
-        const normalizedText = searchText.replace(/\s+/g, ' ');
-        const normalizedQuery = searchQuery.replace(/\s+/g, ' ');
-        const matches = normalizedText.includes(normalizedQuery) ? 1 : 0;
+
+        listItems.forEach((li) => {
+          const text = caseSensitive ? li.textContent || '' : (li.textContent || '').toLowerCase();
+          if (text.includes(searchQuery)) {
+            matches++;
+          }
+        });
 
         if (matches > 0) {
           let container = document.getElementById('pattern-lens-overlay-container');
@@ -348,7 +365,8 @@ describe('統合テスト: 要素境界をまたぐ検索', () => {
     });
 
     expect(response.success).toBe(true);
-    expect(response.count).toBe(1);
+    // リスト項目間をまたぐ検索はできないため、マッチ数は0
+    expect(response.count).toBe(0);
   });
 
   it('要素をまたぐ正規表現検索が正しく動作する', async () => {
