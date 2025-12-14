@@ -8,9 +8,7 @@
  * @param id - The element ID
  * @returns The element if found, or null
  */
-export function getElementById<T extends HTMLElement>(
-  id: string
-): T | null {
+export function getElementById<T extends HTMLElement>(id: string): T | null {
   return document.getElementById(id) as T | null;
 }
 

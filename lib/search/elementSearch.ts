@@ -1,11 +1,16 @@
+import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Element search functionality (CSS selector and XPath)
  */
 import type { SearchResult } from '~/lib/types';
-import type { SearchStateManager } from '~/lib/state/searchState';
-import { createOverlay, initializeOverlayContainer, setupEventListeners, updateOverlayPositions } from '../highlight/overlay';
-import { mergeAdjacentRects } from './textSearch';
+import {
+  createOverlay,
+  initializeOverlayContainer,
+  setupEventListeners,
+  updateOverlayPositions,
+} from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
+import { mergeAdjacentRects } from './textSearch';
 
 // Constants
 const HIGHLIGHT_OVERLAY_ID = 'pattern-lens-overlay-container';

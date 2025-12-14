@@ -1,12 +1,17 @@
+import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Text search functionality using virtual text layer
  */
 import type { CharMapEntry, SearchResult, VirtualMatch } from '~/lib/types';
-import type { SearchStateManager } from '~/lib/state/searchState';
-import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
-import { createOverlay, initializeOverlayContainer, setupEventListeners, updateOverlayPositions } from '../highlight/overlay';
-import { navigateToMatch } from '../navigation/navigator';
 import { updateMinimap } from '../highlight/minimap';
+import {
+  createOverlay,
+  initializeOverlayContainer,
+  setupEventListeners,
+  updateOverlayPositions,
+} from '../highlight/overlay';
+import { navigateToMatch } from '../navigation/navigator';
+import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 
 /**
  * Merge adjacent rectangles on the same line
@@ -141,7 +146,10 @@ export function searchInVirtualText(
 /**
  * Create DOM Range from virtual text match using character-level mapping
  */
-export function createRangeFromVirtualMatch(match: VirtualMatch, charMap: CharMapEntry[]): Range | null {
+export function createRangeFromVirtualMatch(
+  match: VirtualMatch,
+  charMap: CharMapEntry[]
+): Range | null {
   try {
     // Get character mapping for start and end positions
     const startCharInfo = charMap[match.start];

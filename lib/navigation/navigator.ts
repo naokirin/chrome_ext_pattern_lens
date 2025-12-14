@@ -1,10 +1,10 @@
+import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Navigation management for search results
  */
 import type { NavigationResult } from '~/lib/types';
-import type { SearchStateManager } from '~/lib/state/searchState';
-import { updateOverlayPositions } from '../highlight/overlay';
 import { updateMinimap } from '../highlight/minimap';
+import { updateOverlayPositions } from '../highlight/overlay';
 
 /**
  * Navigate to a specific match index

@@ -9,8 +9,8 @@ import type {
   Settings,
   StateResponse,
 } from '~/lib/types';
-import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
 import { getRequiredElementById } from '~/lib/utils/domUtils';
+import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
 
 // DOM elements - these are required elements in popup.html
 const searchInput = getRequiredElementById<HTMLInputElement>('searchInput');

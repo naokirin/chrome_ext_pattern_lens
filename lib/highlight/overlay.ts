@@ -167,7 +167,7 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
  * Setup event listeners for scroll and resize (prevent duplicate registration)
  */
 export function setupEventListeners(
-  stateManager: SearchStateManager,
+  _stateManager: SearchStateManager,
   updateCallback: () => void
 ): void {
   if (eventListenersAttached) {

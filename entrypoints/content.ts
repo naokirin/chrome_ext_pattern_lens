@@ -1,15 +1,15 @@
+import { removeMinimap } from '~/lib/highlight/minimap';
+import {
+  clearHighlights,
+  removeEventListeners,
+  updateOverlayPositions,
+} from '~/lib/highlight/overlay';
+import { navigateToMatch } from '~/lib/navigation/navigator';
+import { searchElements } from '~/lib/search/elementSearch';
+import { searchText } from '~/lib/search/textSearch';
 import { SearchStateManager } from '~/lib/state/searchState';
 // Import shared type definitions
-import type {
-  SearchMessage,
-  SearchResponse,
-  StateResponse,
-} from '~/lib/types';
-import { clearHighlights, removeEventListeners, updateOverlayPositions } from '~/lib/highlight/overlay';
-import { removeMinimap } from '~/lib/highlight/minimap';
-import { searchText } from '~/lib/search/textSearch';
-import { searchElements } from '~/lib/search/elementSearch';
-import { navigateToMatch } from '~/lib/navigation/navigator';
+import type { SearchMessage, SearchResponse, StateResponse } from '~/lib/types';
 
 // State management instance
 const stateManager = new SearchStateManager();
@@ -46,7 +46,11 @@ export default defineContentScript({
           });
 
           if (searchMessage.useElementSearch) {
-            const result = searchElements(searchMessage.query, searchMessage.elementSearchMode, stateManager);
+            const result = searchElements(
+              searchMessage.query,
+              searchMessage.elementSearchMode,
+              stateManager
+            );
             sendResponse({
               success: true,
               count: result.count,

@@ -9,10 +9,11 @@
  */
 export function isSpecialPage(url: string | undefined): boolean {
   return (
-    url?.startsWith('chrome://') ||
-    url?.startsWith('chrome-extension://') ||
-    url?.startsWith('https://chrome.google.com/webstore')
-  ) ?? false;
+    (url?.startsWith('chrome://') ||
+      url?.startsWith('chrome-extension://') ||
+      url?.startsWith('https://chrome.google.com/webstore')) ??
+    false
+  );
 }
 
 /**
