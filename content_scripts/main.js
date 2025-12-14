@@ -107,21 +107,36 @@ function clearHighlights() {
   };
 }
 
-// Search and highlight text using Range and overlay
-function searchText(query, useRegex) {
-  let count = 0;
-  const pattern = useRegex ? new RegExp(query, 'gi') : null;
-  const container = initializeOverlayContainer();
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
+// Helper: Check if element is block-level
+function isBlockLevel(element) {
+  if (!element || element.nodeType !== Node.ELEMENT_NODE) {
+    return false;
+  }
+  const style = window.getComputedStyle(element);
+  const display = style.display;
+  return ['block', 'flex', 'grid', 'list-item', 'table', 'table-row', 'table-cell', 'flow-root'].includes(display);
+}
+
+// Helper: Check if element is visible
+function isVisible(element) {
+  if (!element) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+// Create virtual text layer with character-level mapping (Chrome-like innerText behavior)
+function createVirtualTextAndMap() {
+  let virtualText = '';
+  const charMap = []; // Array of { node: TextNode, offset: number } for each character in virtualText
+  let lastVisibleNode = null;
 
   const walker = document.createTreeWalker(
     document.body,
     NodeFilter.SHOW_TEXT,
     {
       acceptNode: (node) => {
-        // Skip script, style, and overlay container
         const parent = node.parentElement;
+        // Skip script, style, overlay container
         if (
           !parent ||
           parent.tagName === 'SCRIPT' ||
@@ -131,71 +146,185 @@ function searchText(query, useRegex) {
         ) {
           return NodeFilter.FILTER_REJECT;
         }
+        // Skip invisible elements
+        if (!isVisible(parent)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        // Skip completely empty text nodes (but keep whitespace-only nodes)
+        if (!node.nodeValue || node.nodeValue.length === 0) {
+          return NodeFilter.FILTER_REJECT;
+        }
         return NodeFilter.FILTER_ACCEPT;
       },
     }
   );
 
-  const nodesToProcess = [];
-  let currentNode;
+  while (walker.nextNode()) {
+    const currentNode = walker.currentNode;
+    const currentParent = currentNode.parentElement;
 
-  while ((currentNode = walker.nextNode())) {
-    nodesToProcess.push(currentNode);
+    // 1. Handle element boundaries (insert space only at block element boundaries)
+    if (lastVisibleNode) {
+      const prevParent = lastVisibleNode.parentElement;
+
+      // If different parents, determine if space should be inserted
+      if (prevParent !== currentParent) {
+        const prevIsBlock = isBlockLevel(prevParent);
+        const currentIsBlock = isBlockLevel(currentParent);
+
+        // Insert space only if either element is block-level
+        if (prevIsBlock || currentIsBlock) {
+          if (!virtualText.endsWith(' ')) {
+            virtualText += ' ';
+            // Mark this space as synthetic (not from original DOM)
+            charMap.push({ node: null, offset: -1 });
+          }
+        }
+      }
+    }
+
+    // 2. Process text content with normalization
+    const text = currentNode.nodeValue;
+    let lastCharWasSpace = virtualText.endsWith(' ');
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const isWhitespace = /\s/.test(char);
+
+      if (isWhitespace) {
+        // Normalize: collapse consecutive whitespace into single space
+        if (!lastCharWasSpace) {
+          virtualText += ' ';
+          charMap.push({ node: currentNode, offset: i });
+          lastCharWasSpace = true;
+        }
+        // Skip additional whitespace characters (they're normalized away)
+      } else {
+        // Regular character
+        virtualText += char;
+        charMap.push({ node: currentNode, offset: i });
+        lastCharWasSpace = false;
+      }
+    }
+
+    lastVisibleNode = currentNode;
   }
 
-  nodesToProcess.forEach((node) => {
-    const text = node.nodeValue;
-    if (!text || text.trim().length === 0) return;
+  return { virtualText, charMap };
+}
 
-    let matches = [];
+// Search for matches in virtual text
+function searchInVirtualText(query, virtualText, useRegex) {
+  const matches = [];
 
-    if (useRegex && pattern) {
+  if (useRegex) {
+    // Use user's regex pattern directly
+    try {
+      const regex = new RegExp(query, 'gi');
       let match;
-      // Reset regex state
-      pattern.lastIndex = 0;
-      while ((match = pattern.exec(text)) !== null) {
+      while ((match = regex.exec(virtualText)) !== null) {
         matches.push({
           start: match.index,
           end: match.index + match[0].length,
         });
+        // Prevent infinite loop on zero-length matches
+        if (match[0].length === 0) {
+          regex.lastIndex++;
+        }
       }
-    } else {
-      const lowerText = text.toLowerCase();
-      const lowerQuery = query.toLowerCase();
-      let pos = lowerText.indexOf(lowerQuery);
-      while (pos !== -1) {
-        matches.push({
-          start: pos,
-          end: pos + query.length,
-        });
-        pos = lowerText.indexOf(lowerQuery, pos + 1);
-      }
+    } catch (error) {
+      console.warn('Invalid regex pattern:', error);
+      return matches;
+    }
+  } else {
+    // Normal search: convert spaces in query to \s+ for flexible matching
+    const normalizedQuery = query.trim().replace(/\s+/g, '\\s+');
+    const regex = new RegExp(normalizedQuery, 'gi');
+    let match;
+    while ((match = regex.exec(virtualText)) !== null) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+      });
+    }
+  }
+
+  return matches;
+}
+
+// Create DOM Range from virtual text match using character-level mapping
+function createRangeFromVirtualMatch(match, charMap) {
+  try {
+    // Get character mapping for start and end positions
+    const startCharInfo = charMap[match.start];
+    const endCharInfo = charMap[match.end - 1]; // end is exclusive, so use end-1
+
+    if (!startCharInfo || !endCharInfo) {
+      console.warn('Character mapping not found for match:', match);
+      return null;
     }
 
-    // Create ranges and overlays for each match
-    matches.forEach((match) => {
-      try {
-        const range = document.createRange();
-        range.setStart(node, match.start);
-        range.setEnd(node, match.end);
+    // Skip synthetic spaces (auto-inserted spaces between elements)
+    if (!startCharInfo.node || !endCharInfo.node) {
+      console.warn('Match includes synthetic space, skipping');
+      return null;
+    }
 
-        // Get rectangles for this range
-        const rects = range.getClientRects();
+    const range = document.createRange();
 
-        // Create overlay for each rectangle (handles multi-line matches)
-        for (let i = 0; i < rects.length; i++) {
-          const overlay = createOverlay(rects[i], scrollX, scrollY);
-          container.appendChild(overlay);
-          highlightData.overlays.push(overlay);
-        }
+    // Set start position
+    range.setStart(startCharInfo.node, startCharInfo.offset);
 
-        // Store range for position updates
-        highlightData.ranges.push(range);
-        count++;
-      } catch (error) {
-        console.warn('Failed to create range for match:', error);
+    // Set end position (offset + 1 because Range.setEnd is exclusive)
+    range.setEnd(endCharInfo.node, endCharInfo.offset + 1);
+
+    return range;
+  } catch (error) {
+    console.warn('Failed to create range:', error);
+    return null;
+  }
+}
+
+// Search and highlight text using virtual text layer and overlay
+function searchText(query, useRegex) {
+  let count = 0;
+  const container = initializeOverlayContainer();
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+
+  // Step 1: Create virtual text layer with character-level mapping
+  const { virtualText, charMap } = createVirtualTextAndMap();
+
+  // Debug: log virtual text to console
+  console.log('[Pattern Lens] Virtual text:', virtualText);
+  console.log('[Pattern Lens] Query:', query);
+
+  // Step 2: Search in virtual text
+  const matches = searchInVirtualText(query, virtualText, useRegex);
+  console.log('[Pattern Lens] Matches found:', matches.length);
+
+  // Step 3: Convert virtual matches to DOM ranges and create overlays
+  matches.forEach((match) => {
+    const range = createRangeFromVirtualMatch(match, charMap);
+    if (!range) return;
+
+    try {
+      // Get rectangles for this range
+      const rects = range.getClientRects();
+
+      // Create overlay for each rectangle (handles multi-line matches)
+      for (let i = 0; i < rects.length; i++) {
+        const overlay = createOverlay(rects[i], scrollX, scrollY);
+        container.appendChild(overlay);
+        highlightData.overlays.push(overlay);
       }
-    });
+
+      // Store range for position updates
+      highlightData.ranges.push(range);
+      count++;
+    } catch (error) {
+      console.warn('Failed to create overlay for range:', error);
+    }
   });
 
   // Add event listeners for scroll and resize
