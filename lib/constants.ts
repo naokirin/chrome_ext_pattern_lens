@@ -106,6 +106,9 @@ export const ESCAPED_DOT_PLACEHOLDER = '\uE001ESCAPED_DOT\uE001';
 /** Debounce delay for search input in milliseconds */
 export const SEARCH_DEBOUNCE_DELAY_MS = 300;
 
+/** Throttle delay for overlay position updates in milliseconds */
+export const OVERLAY_UPDATE_THROTTLE_MS = 16; // ~60fps
+
 // ============================================================================
 // Rectangle Merging
 // ============================================================================

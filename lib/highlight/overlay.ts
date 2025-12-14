@@ -17,6 +17,7 @@ import {
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
 import { getElementById } from '~/lib/utils/domUtils';
+import { throttleAnimationFrame } from '~/lib/utils/throttle';
 
 /**
  * Merge adjacent rectangles on the same line
@@ -78,6 +79,10 @@ function mergeAdjacentRects(
 
 // Track event listener registration state
 let eventListenersAttached = false;
+
+// Store the actual callback functions for removal
+let scrollCallback: (() => void) | null = null;
+let resizeCallback: (() => void) | null = null;
 
 /**
  * Initialize overlay container
@@ -173,30 +178,48 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
 
 /**
  * Setup event listeners for scroll and resize (prevent duplicate registration)
+ * Uses throttled update with requestAnimationFrame for better performance
  */
 export function setupEventListeners(
-  _stateManager: SearchStateManager,
-  updateCallback: () => void
+  stateManager: SearchStateManager,
+  _updateCallback: () => void
 ): void {
   if (eventListenersAttached) {
     return; // Already attached, skip
   }
 
-  window.addEventListener('scroll', updateCallback, { passive: true });
-  window.addEventListener('resize', updateCallback, { passive: true });
+  // Create throttled version using requestAnimationFrame for smooth updates
+  const throttledUpdate = throttleAnimationFrame(() => {
+    updateOverlayPositions(stateManager);
+  });
+
+  // Store callbacks for removal
+  scrollCallback = throttledUpdate;
+  resizeCallback = throttledUpdate;
+
+  window.addEventListener('scroll', scrollCallback, { passive: true });
+  window.addEventListener('resize', resizeCallback, { passive: true });
   eventListenersAttached = true;
 }
 
 /**
  * Remove event listeners for scroll and resize
  */
-export function removeEventListeners(updateCallback: () => void): void {
+export function removeEventListeners(_updateCallback: () => void): void {
   if (!eventListenersAttached) {
     return; // Not attached, skip
   }
 
-  window.removeEventListener('scroll', updateCallback);
-  window.removeEventListener('resize', updateCallback);
+  if (scrollCallback) {
+    window.removeEventListener('scroll', scrollCallback);
+    scrollCallback = null;
+  }
+
+  if (resizeCallback) {
+    window.removeEventListener('resize', resizeCallback);
+    resizeCallback = null;
+  }
+
   eventListenersAttached = false;
 }
 

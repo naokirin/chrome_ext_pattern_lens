@@ -196,8 +196,13 @@ describe('overlay', () => {
 
       setupEventListeners(stateManager, updateCallback);
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', updateCallback, { passive: true });
-      expect(addEventListenerSpy).toHaveBeenCalledWith('resize', updateCallback, { passive: true });
+      // スロットルされたコールバックが登録される
+      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), {
+        passive: true,
+      });
+      expect(addEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function), {
+        passive: true,
+      });
     });
 
     it('重複登録を防止する', () => {
@@ -226,8 +231,9 @@ describe('overlay', () => {
       setupEventListeners(stateManager, updateCallback);
       removeEventListeners(updateCallback);
 
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', updateCallback);
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', updateCallback);
+      // スロットルされたコールバックが削除される
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     });
 
     it('登録されていない場合、removeEventListenersは何もしない', () => {

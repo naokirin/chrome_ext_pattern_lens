@@ -368,7 +368,7 @@ if (request.action === 'search') {
 
 ---
 
-## 12. オーバーレイ位置更新の非効率性
+## 12. オーバーレイ位置更新の非効率性 ✅ 完了
 
 ### 問題点
 - `updateOverlayPositions()`がすべてのオーバーレイを再作成
@@ -377,10 +377,24 @@ if (request.action === 'search') {
 #### 該当箇所
 - `entrypoints/content.ts:98-130`
 
-### 推奨改善
-- 差分更新の検討
-- デバウンス/スロットルの導入
-- パフォーマンス最適化
+### 実施した改善
+- ✅ `lib/utils/throttle.ts`を新規作成
+  - `throttle()`: 時間ベースのスロットル
+  - `debounce()`: デバウンス
+  - `throttleAnimationFrame()`: requestAnimationFrameを使用したスロットル（滑らかな更新）
+- ✅ `lib/highlight/overlay.ts`にスロットルを適用
+  - `setupEventListeners()`で`throttleAnimationFrame()`を使用
+  - スクロール/リサイズイベントをrequestAnimationFrameでスロットル
+  - 60fps（約16ms間隔）で更新を制限し、パフォーマンスを向上
+- ✅ イベントリスナーのコールバック管理を改善
+  - 登録したコールバックを保存して、削除時に正しく削除できるように改善
+- ✅ `lib/constants.ts`に`OVERLAY_UPDATE_THROTTLE_MS`を追加（将来の拡張用）
+
+### 変更ファイル
+- `lib/utils/throttle.ts` (新規作成)
+- `lib/highlight/overlay.ts` (リファクタリング)
+- `lib/constants.ts` (定数追加)
+- `tests/unit/lib/highlight/overlay.test.js` (テスト更新)
 
 ---
 
