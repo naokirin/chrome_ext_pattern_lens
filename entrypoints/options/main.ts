@@ -1,25 +1,26 @@
-interface Settings {
-  defaultRegex: boolean;
-  defaultElementSearch: boolean;
-}
+// Import shared type definitions
+import type { Settings } from '~/lib/types';
 
 // Load saved settings
 function loadSettings(): void {
   chrome.storage.sync.get(
     {
       defaultRegex: false,
+      defaultCaseSensitive: false,
       defaultElementSearch: false,
-    } as Settings,
-    (items: Settings) => {
+    },
+    (items) => {
+      const settings = items as Settings;
       const defaultRegexEl = document.getElementById('defaultRegex') as HTMLInputElement;
       const defaultElementSearchEl = document.getElementById('defaultElementSearch') as HTMLInputElement;
 
       if (defaultRegexEl) {
-        defaultRegexEl.checked = items.defaultRegex;
+        defaultRegexEl.checked = settings.defaultRegex;
       }
       if (defaultElementSearchEl) {
-        defaultElementSearchEl.checked = items.defaultElementSearch;
+        defaultElementSearchEl.checked = settings.defaultElementSearch;
       }
+      // Note: defaultCaseSensitive is not shown in options page UI
     }
   );
 }
@@ -35,6 +36,7 @@ function saveSettings(): void {
 
   const settings: Settings = {
     defaultRegex: defaultRegexEl.checked,
+    defaultCaseSensitive: false, // Options page doesn't have this setting
     defaultElementSearch: defaultElementSearchEl.checked,
   };
 

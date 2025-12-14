@@ -37,11 +37,12 @@ function loadSettings(): void {
       defaultRegex: false,
       defaultCaseSensitive: false,
       defaultElementSearch: false,
-    } as Settings,
-    (items: Settings) => {
-      regexMode.checked = items.defaultRegex;
-      caseSensitiveMode.checked = items.defaultCaseSensitive;
-      elementMode.checked = items.defaultElementSearch;
+    },
+    (items) => {
+      const settings = items as Settings;
+      regexMode.checked = settings.defaultRegex;
+      caseSensitiveMode.checked = settings.defaultCaseSensitive;
+      elementMode.checked = settings.defaultElementSearch;
       updateSearchModeVisibility();
     }
   );
