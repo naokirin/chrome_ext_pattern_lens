@@ -91,13 +91,21 @@ function hideResult(): void {
 
 // Update navigation UI
 function updateNavigation(currentIndex: number, totalMatches: number): void {
+  // Always show navigation after a search, and indicate status with x/y
+  navigation.style.display = 'flex';
+
   if (totalMatches > 0) {
-    navigation.style.display = 'flex';
-    matchCounter.textContent = `${currentIndex + 1}/${totalMatches}`;
+    // Matches found: show current/total in green and enable navigation
+    matchCounter.textContent = `${currentIndex + 1} / ${totalMatches}`;
+    matchCounter.style.color = '#4CAF50';
     prevBtn.disabled = false;
     nextBtn.disabled = false;
   } else {
-    navigation.style.display = 'none';
+    // No matches: show 0/0 in red and disable navigation buttons
+    matchCounter.textContent = '0 / 0';
+    matchCounter.style.color = '#f44336';
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
   }
 }
 
@@ -161,14 +169,14 @@ async function performSearch(): Promise<void> {
       }
 
       if (response?.success) {
-        showResult(`${response.count} 件の結果が見つかりました`);
+        // 検索成功時は件数メッセージを表示せず、ナビゲーションの x/y 表示で状態を示す
+        hideResult();
         // Update last search query
         _lastSearchQuery = query;
-        if (response.totalMatches && response.totalMatches > 0) {
-          updateNavigation(response.currentIndex ?? 0, response.totalMatches);
-        } else {
-          hideNavigation();
-        }
+        // totalMatches が 0 の場合もナビゲーションに 0/0（赤・矢印 disabled）を表示する
+        const totalMatches = response.totalMatches ?? 0;
+        const currentIndex = response.currentIndex ?? 0;
+        updateNavigation(currentIndex, totalMatches);
       } else if (response?.error) {
         const error = new Error(response.error);
         handleError(error, 'performSearch: Search response error', (err) => {
@@ -421,10 +429,10 @@ async function restoreSearchState(): Promise<void> {
         updateSearchModeVisibility();
 
         // Show results and navigation if there are matches
-        if (response.totalMatches && response.totalMatches > 0) {
-          showResult(`${response.totalMatches} 件の結果が見つかりました`);
-          updateNavigation(response.currentIndex ?? 0, response.totalMatches);
-        }
+        // 検索状態復元時も件数メッセージは表示せず、ナビゲーションのみ更新する
+        const totalMatches = response.totalMatches ?? 0;
+        const currentIndex = response.currentIndex ?? 0;
+        updateNavigation(currentIndex, totalMatches);
 
         _lastSearchQuery = state.query;
       }
