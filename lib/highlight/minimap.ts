@@ -54,7 +54,7 @@ export function updateMinimap(stateManager: SearchStateManager): void {
   const container = getMinimapContainer();
   container.innerHTML = '';
 
-  if (!stateManager.hasTextMatches()) {
+  if (!stateManager.hasMatches()) {
     container.style.display = 'none';
     return;
   }
@@ -62,33 +62,67 @@ export function updateMinimap(stateManager: SearchStateManager): void {
 
   const pageHeight = document.documentElement.scrollHeight;
 
-  stateManager.forEachRange((range, index) => {
-    const marker = document.createElement('div');
+  // Handle text search matches (ranges)
+  if (stateManager.hasTextMatches()) {
+    stateManager.forEachRange((range, index) => {
+      const marker = document.createElement('div');
 
-    try {
-      const rect = range.getBoundingClientRect();
-      const { scrollY } = getScrollPosition();
-      const absoluteTop = rect.top + scrollY;
-      const relativeTop = (absoluteTop / pageHeight) * 100;
+      try {
+        const rect = range.getBoundingClientRect();
+        const { scrollY } = getScrollPosition();
+        const absoluteTop = rect.top + scrollY;
+        const relativeTop = (absoluteTop / pageHeight) * 100;
 
-      const isActive = index === stateManager.currentIndex;
+        const isActive = index === stateManager.currentIndex;
 
-      marker.style.cssText = `
-        position: absolute;
-        top: ${relativeTop}%;
-        left: 0;
-        width: 100%;
-        height: ${MINIMAP_MARKER_HEIGHT}px;
-        background-color: ${isActive ? MINIMAP_MARKER_COLOR_CURRENT : MINIMAP_MARKER_COLOR_NORMAL};
-        border-radius: ${MINIMAP_MARKER_BORDER_RADIUS}px;
-      `;
+        marker.style.cssText = `
+          position: absolute;
+          top: ${relativeTop}%;
+          left: 0;
+          width: 100%;
+          height: ${MINIMAP_MARKER_HEIGHT}px;
+          background-color: ${isActive ? MINIMAP_MARKER_COLOR_CURRENT : MINIMAP_MARKER_COLOR_NORMAL};
+          border-radius: ${MINIMAP_MARKER_BORDER_RADIUS}px;
+        `;
 
-      container.appendChild(marker);
-    } catch (error) {
-      // Failed to create minimap marker
-      handleError(error, 'updateMinimap: Failed to create minimap marker', undefined);
-    }
-  });
+        container.appendChild(marker);
+      } catch (error) {
+        // Failed to create minimap marker
+        handleError(error, 'updateMinimap: Failed to create minimap marker', undefined);
+      }
+    });
+  }
+
+  // Handle element search matches
+  if (stateManager.hasElementMatches()) {
+    stateManager.forEachElement((element, index) => {
+      const marker = document.createElement('div');
+
+      try {
+        const rect = element.getBoundingClientRect();
+        const { scrollY } = getScrollPosition();
+        const absoluteTop = rect.top + scrollY;
+        const relativeTop = (absoluteTop / pageHeight) * 100;
+
+        const isActive = index === stateManager.currentIndex;
+
+        marker.style.cssText = `
+          position: absolute;
+          top: ${relativeTop}%;
+          left: 0;
+          width: 100%;
+          height: ${MINIMAP_MARKER_HEIGHT}px;
+          background-color: ${isActive ? MINIMAP_MARKER_COLOR_CURRENT : MINIMAP_MARKER_COLOR_NORMAL};
+          border-radius: ${MINIMAP_MARKER_BORDER_RADIUS}px;
+        `;
+
+        container.appendChild(marker);
+      } catch (error) {
+        // Failed to create minimap marker
+        handleError(error, 'updateMinimap: Failed to create minimap marker for element', undefined);
+      }
+    });
+  }
 }
 
 /**

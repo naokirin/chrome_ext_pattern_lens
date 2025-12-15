@@ -32,6 +32,9 @@ export function updateMatchHighlight(stateManager: SearchStateManager): void {
   if (stateManager.hasTextMatches()) {
     updateOverlayPositions(stateManager);
     updateMinimap(stateManager);
+  } else if (stateManager.hasElementMatches()) {
+    updateOverlayPositions(stateManager);
+    updateMinimap(stateManager);
   }
 }
 

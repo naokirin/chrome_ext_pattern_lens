@@ -118,8 +118,8 @@ export class SearchStateManager {
     this.highlightData.ranges.forEach(callback);
   }
 
-  // Iterate over elements
-  forEachElement(callback: (element: Element) => void): void {
+  // Iterate over elements with index
+  forEachElement(callback: (element: Element, index: number) => void): void {
     this.highlightData.elements.forEach(callback);
   }
 }
