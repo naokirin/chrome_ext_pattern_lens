@@ -85,6 +85,7 @@ describe('messaging/handlers', () => {
         caseSensitive: false,
         useElementSearch: false,
         elementSearchMode: 'css',
+        useFuzzy: false,
       };
 
       const result = await handleSearch(message, context);
@@ -95,7 +96,8 @@ describe('messaging/handlers', () => {
         'test query',
         false,
         false,
-        stateManager
+        stateManager,
+        false
       );
     });
 
@@ -107,6 +109,7 @@ describe('messaging/handlers', () => {
         caseSensitive: false,
         useElementSearch: false,
         elementSearchMode: 'css',
+        useFuzzy: false,
       };
 
       await handleSearch(message, context);
@@ -126,6 +129,7 @@ describe('messaging/handlers', () => {
         caseSensitive: true,
         useElementSearch: false,
         elementSearchMode: 'css',
+        useFuzzy: false,
       };
 
       await handleSearch(message, context);
@@ -150,6 +154,7 @@ describe('messaging/handlers', () => {
         caseSensitive: false,
         useElementSearch: false,
         elementSearchMode: 'css',
+        useFuzzy: false,
       };
 
       const result = await handleSearch(message, context);

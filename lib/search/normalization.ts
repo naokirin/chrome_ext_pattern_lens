@@ -62,9 +62,10 @@ function combineWithDiacriticalMark(
     return null;
   }
 
-  // 濁点 (U+3099, U+309B) or 半濁点 (U+309A, U+309C)
-  const isDakuten = nextChar === '\u3099' || nextChar === '\u309B';
-  const isHandakuten = nextChar === '\u309A' || nextChar === '\u309C';
+  // 濁点 (U+3099, U+309B, U+FF9E) or 半濁点 (U+309A, U+309C, U+FF9F)
+  // U+FF9E: 半角濁点, U+FF9F: 半角半濁点
+  const isDakuten = nextChar === '\u3099' || nextChar === '\u309B' || nextChar === '\uFF9E';
+  const isHandakuten = nextChar === '\u309A' || nextChar === '\u309C' || nextChar === '\uFF9F';
 
   if (!isDakuten && !isHandakuten) {
     return null;
