@@ -276,6 +276,89 @@ function normalizeFullWidthNumbers(char: string): string | null {
 }
 
 /**
+ * Normalize katakana to hiragana
+ * Converts full-width katakana (U+30A1-U+30F6) to hiragana (U+3041-U+3096)
+ * Also converts half-width katakana (U+FF66-U+FF9F) to hiragana
+ */
+function normalizeKatakanaToHiragana(char: string): string | null {
+  // Full-width katakana range: U+30A1 to U+30F6
+  // Hiragana range: U+3041 to U+3096
+  // Difference: 0x60 (96)
+  if (char >= '\u30A1' && char <= '\u30F6') {
+    const codePoint = char.charCodeAt(0);
+    const hiraganaCodePoint = codePoint - 0x60;
+    return String.fromCharCode(hiraganaCodePoint);
+  }
+
+  // Half-width katakana range: U+FF66 to U+FF9F
+  // Map to corresponding hiragana
+  const halfWidthToHiraganaMap: Record<string, string> = {
+    ｦ: 'を',
+    ｧ: 'ぁ',
+    ｨ: 'ぃ',
+    ｩ: 'ぅ',
+    ｪ: 'ぇ',
+    ｫ: 'ぉ',
+    ｬ: 'ゃ',
+    ｭ: 'ゅ',
+    ｮ: 'ょ',
+    ｯ: 'っ',
+    ｰ: 'ー',
+    ｱ: 'あ',
+    ｲ: 'い',
+    ｳ: 'う',
+    ｴ: 'え',
+    ｵ: 'お',
+    ｶ: 'か',
+    ｷ: 'き',
+    ｸ: 'く',
+    ｹ: 'け',
+    ｺ: 'こ',
+    ｻ: 'さ',
+    ｼ: 'し',
+    ｽ: 'す',
+    ｾ: 'せ',
+    ｿ: 'そ',
+    ﾀ: 'た',
+    ﾁ: 'ち',
+    ﾂ: 'つ',
+    ﾃ: 'て',
+    ﾄ: 'と',
+    ﾅ: 'な',
+    ﾆ: 'に',
+    ﾇ: 'ぬ',
+    ﾈ: 'ね',
+    ﾉ: 'の',
+    ﾊ: 'は',
+    ﾋ: 'ひ',
+    ﾌ: 'ふ',
+    ﾍ: 'へ',
+    ﾎ: 'ほ',
+    ﾏ: 'ま',
+    ﾐ: 'み',
+    ﾑ: 'む',
+    ﾒ: 'め',
+    ﾓ: 'も',
+    ﾔ: 'や',
+    ﾕ: 'ゆ',
+    ﾖ: 'よ',
+    ﾗ: 'ら',
+    ﾘ: 'り',
+    ﾙ: 'る',
+    ﾚ: 'れ',
+    ﾛ: 'ろ',
+    ﾜ: 'わ',
+    ﾝ: 'ん',
+  };
+
+  if (halfWidthToHiraganaMap[char]) {
+    return halfWidthToHiraganaMap[char];
+  }
+
+  return null;
+}
+
+/**
  * Normalize full-width katakana to half-width
  */
 function normalizeFullWidthKatakana(char: string): string | null {
@@ -414,6 +497,13 @@ function normalizeSingleChar(char: string): string {
     return normalizedNumber;
   }
 
+  // Convert katakana to hiragana (for fuzzy matching between hiragana and katakana)
+  const normalizedKatakanaToHiragana = normalizeKatakanaToHiragana(char);
+  if (normalizedKatakanaToHiragana !== null) {
+    return normalizedKatakanaToHiragana;
+  }
+
+  // Fallback: convert full-width katakana to half-width (for backward compatibility)
   const normalizedKatakana = normalizeFullWidthKatakana(char);
   if (normalizedKatakana !== null) {
     return normalizedKatakana;

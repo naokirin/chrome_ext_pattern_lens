@@ -118,6 +118,33 @@ describe('normalization', () => {
       expect(result.normalizedText).toBe('abcが123');
       expect(result.mapping.ranges.length).toBe(7);
     });
+
+    it('カタカナをひらがなに変換（全角カタカナ）', () => {
+      const result = normalizeText('テスト');
+      expect(result.normalizedText).toBe('てすと');
+      expect(result.mapping.ranges.length).toBe(3);
+      expect(result.mapping.ranges[0]).toEqual({ start: 0, end: 1 });
+      expect(result.mapping.ranges[1]).toEqual({ start: 1, end: 2 });
+      expect(result.mapping.ranges[2]).toEqual({ start: 2, end: 3 });
+    });
+
+    it('カタカナをひらがなに変換（半角カタカナ）', () => {
+      const result = normalizeText('ﾃｽﾄ');
+      expect(result.normalizedText).toBe('てすと');
+      expect(result.mapping.ranges.length).toBe(3);
+    });
+
+    it('ひらがなはそのまま保持', () => {
+      const result = normalizeText('てすと');
+      expect(result.normalizedText).toBe('てすと');
+      expect(result.mapping.ranges.length).toBe(3);
+    });
+
+    it('カタカナとひらがなの混在を正規化', () => {
+      const result = normalizeText('テストとテスト');
+      expect(result.normalizedText).toBe('てすととてすと');
+      expect(result.mapping.ranges.length).toBe(7);
+    });
   });
 
   describe('convertNormalizedMatchToOriginal', () => {

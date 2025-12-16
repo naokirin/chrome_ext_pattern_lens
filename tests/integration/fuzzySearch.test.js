@@ -73,6 +73,30 @@ describe('統合テスト: あいまい検索機能', () => {
       const ranges = createTextMatches('abc', false, false, true);
       expect(ranges.length).toBeGreaterThan(0);
     });
+
+    it('ひらがなでカタカナを検索できる', () => {
+      document.body.innerHTML = '<div>テスト</div>';
+      const ranges = createTextMatches('てすと', false, false, true);
+      expect(ranges.length).toBeGreaterThan(0);
+    });
+
+    it('カタカナでひらがなを検索できる', () => {
+      document.body.innerHTML = '<div>てすと</div>';
+      const ranges = createTextMatches('テスト', false, false, true);
+      expect(ranges.length).toBeGreaterThan(0);
+    });
+
+    it('半角カタカナでひらがなを検索できる', () => {
+      document.body.innerHTML = '<div>てすと</div>';
+      const ranges = createTextMatches('ﾃｽﾄ', false, false, true);
+      expect(ranges.length).toBeGreaterThan(0);
+    });
+
+    it('ひらがなとカタカナの混在で検索できる', () => {
+      document.body.innerHTML = '<div>テストとテスト</div>';
+      const ranges = createTextMatches('てすと', false, false, true);
+      expect(ranges.length).toBe(2); // 2箇所マッチする
+    });
   });
 
   describe('複数キーワード検索の統合テスト', () => {
