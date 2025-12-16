@@ -211,7 +211,7 @@ export function createTextMatches(
   query: string,
   useRegex: boolean,
   caseSensitive: boolean,
-  useFuzzy: boolean = false
+  useFuzzy = false
 ): Range[] {
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
@@ -316,7 +316,7 @@ export function searchText(
   useRegex: boolean,
   caseSensitive: boolean,
   stateManager: SearchStateManager,
-  useFuzzy: boolean = false
+  useFuzzy = false
 ): SearchResult {
   // Step 1: Create text matches
   const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);

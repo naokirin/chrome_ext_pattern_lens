@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  convertNormalizedMatchToOriginal,
-  normalizeText,
-} from '~/lib/search/normalization';
+import { convertNormalizedMatchToOriginal, normalizeText } from '~/lib/search/normalization';
 
 describe('normalization', () => {
   describe('normalizeText', () => {

@@ -65,7 +65,9 @@ export function findMultiKeywordMatches(
   }
 
   // Normalize each keyword
-  const normalizedKeywords = keywords.map((keyword) => normalizeText(keyword.trim()).normalizedText);
+  const normalizedKeywords = keywords.map(
+    (keyword) => normalizeText(keyword.trim()).normalizedText
+  );
   const validKeywords = normalizedKeywords.filter((k) => k.length > 0);
 
   if (validKeywords.length === 0) {
@@ -182,7 +184,7 @@ function calculateMinRange(matches: VirtualMatch[]): VirtualMatch | null {
     return null;
   }
 
-  let minStart = Infinity;
+  let minStart = Number.POSITIVE_INFINITY;
   let maxEnd = -1;
 
   for (const match of matches) {
@@ -190,7 +192,7 @@ function calculateMinRange(matches: VirtualMatch[]): VirtualMatch | null {
     maxEnd = Math.max(maxEnd, match.end);
   }
 
-  if (minStart === Infinity || maxEnd === -1) {
+  if (minStart === Number.POSITIVE_INFINITY || maxEnd === -1) {
     return null;
   }
 

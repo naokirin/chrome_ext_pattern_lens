@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  findMultiKeywordMatches,
-  splitQueryIntoKeywords,
-} from '~/lib/search/fuzzySearch';
+import { findMultiKeywordMatches, splitQueryIntoKeywords } from '~/lib/search/fuzzySearch';
 
 describe('fuzzySearch', () => {
   describe('splitQueryIntoKeywords', () => {
@@ -56,7 +53,7 @@ describe('fuzzySearch', () => {
     });
 
     it('キーワードが範囲外にある場合はマッチしない', () => {
-      const text = '東京' + 'あ'.repeat(200) + '2024';
+      const text = `東京${'あ'.repeat(200)}2024`;
       const result = findMultiKeywordMatches(['東京', '2024'], text);
       // 範囲外の場合はマッチしない（または空配列）
       expect(Array.isArray(result)).toBe(true);
