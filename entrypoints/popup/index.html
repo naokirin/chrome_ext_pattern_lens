@@ -60,8 +60,14 @@
 
     .options {
       display: flex;
-      gap: 15px;
+      flex-direction: column;
+      gap: 10px;
       margin-bottom: 15px;
+    }
+
+    .options-row {
+      display: flex;
+      gap: 15px;
     }
 
     label {
@@ -174,22 +180,26 @@
   </div>
 
   <div class="options">
-    <label id="regexLabel">
-      <input type="checkbox" id="regexMode">
-      正規表現
-    </label>
-    <label id="caseSensitiveLabel">
-      <input type="checkbox" id="caseSensitiveMode">
-      大文字小文字を区別
-    </label>
-    <label id="fuzzyLabel">
-      <input type="checkbox" id="fuzzyMode">
-      あいまい検索
-    </label>
-    <label id="elementLabel">
-      <input type="checkbox" id="elementMode">
-      要素検索
-    </label>
+    <div class="options-row">
+      <label id="regexLabel">
+        <input type="checkbox" id="regexMode">
+        正規表現
+      </label>
+      <label id="caseSensitiveLabel">
+        <input type="checkbox" id="caseSensitiveMode">
+        大文字小文字を区別
+      </label>
+    </div>
+    <div class="options-row">
+      <label id="fuzzyLabel">
+        <input type="checkbox" id="fuzzyMode">
+        あいまい検索
+      </label>
+      <label id="elementLabel">
+        <input type="checkbox" id="elementMode">
+        要素検索
+      </label>
+    </div>
   </div>
 
   <div class="search-mode" id="searchModeContainer" style="display: none;">
