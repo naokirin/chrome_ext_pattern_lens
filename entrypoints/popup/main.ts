@@ -59,6 +59,7 @@ function loadSettings(): void {
 // Update search mode selector visibility and regex mode state
 function updateSearchModeVisibility(): void {
   const isElementMode = elementMode.checked;
+  const isFuzzyMode = fuzzyMode.checked && !elementMode.checked;
 
   // Show/hide element search mode selector
   searchModeContainer.style.display = isElementMode ? 'block' : 'none';
@@ -75,10 +76,20 @@ function updateSearchModeVisibility(): void {
     fuzzyMode.disabled = true;
     fuzzyLabel.classList.add('disabled');
   } else {
-    regexMode.disabled = false;
-    regexLabel.classList.remove('disabled');
-    caseSensitiveMode.disabled = false;
-    caseSensitiveLabel.classList.remove('disabled');
+    // Disable regex mode and case-sensitive mode when fuzzy search is enabled
+    if (isFuzzyMode) {
+      regexMode.checked = false;
+      regexMode.disabled = true;
+      regexLabel.classList.add('disabled');
+      caseSensitiveMode.checked = false;
+      caseSensitiveMode.disabled = true;
+      caseSensitiveLabel.classList.add('disabled');
+    } else {
+      regexMode.disabled = false;
+      regexLabel.classList.remove('disabled');
+      caseSensitiveMode.disabled = false;
+      caseSensitiveLabel.classList.remove('disabled');
+    }
     fuzzyMode.disabled = false;
     fuzzyLabel.classList.remove('disabled');
   }
