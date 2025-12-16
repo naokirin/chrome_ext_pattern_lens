@@ -204,6 +204,64 @@ export function createRangeFromVirtualMatch(
 }
 
 /**
+ * Perform single keyword fuzzy search
+ */
+function performSingleKeywordFuzzySearch(
+  query: string,
+  normalizedText: string,
+  textMapping: { ranges: Array<{ start: number; end: number }> }
+): VirtualMatch[] {
+  const normalizedQuery = normalizeText(query).normalizedText;
+  const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+
+  // Convert normalized matches to original virtual text positions
+  const matches: VirtualMatch[] = [];
+  for (const normalizedMatch of normalizedMatches) {
+    const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
+    if (originalMatch) {
+      matches.push(originalMatch);
+    }
+  }
+  return matches;
+}
+
+/**
+ * Perform multi-keyword fuzzy search
+ */
+function performMultiKeywordFuzzySearch(
+  keywords: string[],
+  normalizedText: string,
+  textMapping: { ranges: Array<{ start: number; end: number }> }
+): VirtualMatch[] {
+  const multiKeywordMatches = findMultiKeywordMatches(keywords, normalizedText);
+
+  // Convert normalized matches to original virtual text positions
+  const matches: VirtualMatch[] = [];
+  for (const multiMatch of multiKeywordMatches) {
+    const originalMatch = convertNormalizedMatchToOriginal(multiMatch.minRange, textMapping);
+    if (originalMatch) {
+      matches.push(originalMatch);
+    }
+  }
+  return matches;
+}
+
+/**
+ * Perform fuzzy search (single or multi-keyword)
+ */
+function performFuzzySearch(
+  query: string,
+  normalizedText: string,
+  textMapping: { ranges: Array<{ start: number; end: number }> }
+): VirtualMatch[] {
+  const keywords = splitQueryIntoKeywords(query);
+  if (keywords.length > 1) {
+    return performMultiKeywordFuzzySearch(keywords, normalizedText, textMapping);
+  }
+  return performSingleKeywordFuzzySearch(query, normalizedText, textMapping);
+}
+
+/**
  * Create text matches from query using virtual text layer
  * @returns Array of DOM Ranges representing matches
  */
@@ -222,35 +280,7 @@ export function createTextMatches(
   if (useFuzzy) {
     // Fuzzy search: normalize text and query, then search
     const normalizedResult = normalizeText(virtualText);
-    const normalizedText = normalizedResult.normalizedText;
-    const textMapping = normalizedResult.mapping;
-
-    // Check if query contains multiple keywords
-    const keywords = splitQueryIntoKeywords(query);
-    if (keywords.length > 1) {
-      // Multi-keyword search
-      const multiKeywordMatches = findMultiKeywordMatches(keywords, normalizedText);
-
-      // Convert normalized matches to original virtual text positions
-      for (const multiMatch of multiKeywordMatches) {
-        const originalMatch = convertNormalizedMatchToOriginal(multiMatch.minRange, textMapping);
-        if (originalMatch) {
-          matches.push(originalMatch);
-        }
-      }
-    } else {
-      // Single keyword fuzzy search
-      const normalizedQuery = normalizeText(query).normalizedText;
-      const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
-
-      // Convert normalized matches to original virtual text positions
-      for (const normalizedMatch of normalizedMatches) {
-        const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
-        if (originalMatch) {
-          matches.push(originalMatch);
-        }
-      }
-    }
+    matches = performFuzzySearch(query, normalizedResult.normalizedText, normalizedResult.mapping);
   } else {
     // Normal search
     matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);

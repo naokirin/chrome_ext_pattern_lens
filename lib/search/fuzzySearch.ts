@@ -53,6 +53,77 @@ function hasOverlappingMatches(matches: VirtualMatch[]): boolean {
 }
 
 /**
+ * Normalize and validate keywords
+ */
+function normalizeAndValidateKeywords(keywords: string[]): string[] {
+  if (keywords.length === 0) {
+    return [];
+  }
+
+  const normalizedKeywords = keywords.map(
+    (keyword) => normalizeText(keyword.trim()).normalizedText
+  );
+  return normalizedKeywords.filter((k) => k.length > 0);
+}
+
+/**
+ * Find matches for each keyword
+ */
+function findMatchesForKeywords(
+  keywords: string[],
+  normalizedText: string
+): Array<{ keyword: string; matches: VirtualMatch[] }> {
+  const keywordMatches: Array<{ keyword: string; matches: VirtualMatch[] }> = [];
+  for (const keyword of keywords) {
+    const matches = searchInVirtualText(keyword, normalizedText, false, false);
+    keywordMatches.push({ keyword, matches });
+  }
+  return keywordMatches;
+}
+
+/**
+ * Check if all keywords have at least one match
+ */
+function allKeywordsHaveMatches(
+  keywordMatches: Array<{ keyword: string; matches: VirtualMatch[] }>
+): boolean {
+  return !keywordMatches.some((km) => km.matches.length === 0);
+}
+
+/**
+ * Check if combination is valid (no overlaps, within range, no boundary crossing)
+ */
+function isValidCombination(
+  combination: VirtualMatch[],
+  normalizedText: string,
+  maxDistance: number
+): { isValid: boolean; minRange: VirtualMatch | null } {
+  // Check for overlapping matches
+  if (hasOverlappingMatches(combination)) {
+    return { isValid: false, minRange: null };
+  }
+
+  // Calculate minimum range
+  const minRange = calculateMinRange(combination);
+  if (!minRange) {
+    return { isValid: false, minRange: null };
+  }
+
+  // Check if within maxDistance
+  const rangeSize = minRange.end - minRange.start;
+  if (rangeSize > maxDistance) {
+    return { isValid: false, minRange: null };
+  }
+
+  // Check if crosses block boundaries
+  if (matchCrossesBoundary(normalizedText, minRange)) {
+    return { isValid: false, minRange: null };
+  }
+
+  return { isValid: true, minRange };
+}
+
+/**
  * Find multi-keyword matches in normalized text
  * Returns matches where all keywords are found within dynamically calculated maxDistance
  */
@@ -64,68 +135,37 @@ export function findMultiKeywordMatches(
     return [];
   }
 
-  // Normalize each keyword
-  const normalizedKeywords = keywords.map(
-    (keyword) => normalizeText(keyword.trim()).normalizedText
-  );
-  const validKeywords = normalizedKeywords.filter((k) => k.length > 0);
-
+  // Normalize and validate keywords
+  const validKeywords = normalizeAndValidateKeywords(keywords);
   if (validKeywords.length === 0) {
     return [];
   }
 
-  // Calculate total keyword length for dynamic range calculation
+  // Calculate maximum distance based on total keyword length
   const totalKeywordLength = validKeywords.reduce((sum, keyword) => sum + keyword.length, 0);
   const maxDistance = calculateMaxKeywordDistance(totalKeywordLength);
 
   // Find matches for each keyword
-  const keywordMatches: Array<{ keyword: string; matches: VirtualMatch[] }> = [];
-  for (const keyword of validKeywords) {
-    const matches = searchInVirtualText(keyword, normalizedText, false, false);
-    keywordMatches.push({ keyword, matches });
-  }
+  const keywordMatches = findMatchesForKeywords(validKeywords, normalizedText);
 
   // Check if all keywords have matches
-  if (keywordMatches.some((km) => km.matches.length === 0)) {
+  if (!allKeywordsHaveMatches(keywordMatches)) {
     return [];
   }
 
-  // Find combinations where all keywords are within maxDistance
+  // Generate all combinations and filter valid ones
   const results: MultiKeywordMatch[] = [];
-
-  // Generate all combinations of matches
   const combinations = generateMatchCombinations(keywordMatches);
 
   for (const combination of combinations) {
-    // Check if any keyword match is completely contained within another keyword match
-    // (e.g., "スト" within "テスト" should be excluded)
-    if (hasOverlappingMatches(combination)) {
-      continue;
+    const { isValid, minRange } = isValidCombination(combination, normalizedText, maxDistance);
+    if (isValid && minRange) {
+      results.push({
+        keywords: validKeywords,
+        matches: combination,
+        minRange,
+      });
     }
-
-    // Calculate minimum range that includes all matches
-    const minRange = calculateMinRange(combination);
-
-    if (!minRange) {
-      continue;
-    }
-
-    // Check if all matches are within maxDistance
-    const rangeSize = minRange.end - minRange.start;
-    if (rangeSize > maxDistance) {
-      continue;
-    }
-
-    // Check if range crosses block boundaries
-    if (matchCrossesBoundary(normalizedText, minRange)) {
-      continue;
-    }
-
-    results.push({
-      keywords: validKeywords,
-      matches: combination,
-      minRange,
-    });
   }
 
   return results;

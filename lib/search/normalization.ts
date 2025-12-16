@@ -2,6 +2,48 @@ import { BLOCK_BOUNDARY_MARKER } from '~/lib/constants';
 import type { NormalizationMapping, NormalizationResult } from '~/lib/types';
 
 /**
+ * Process block boundary marker (keep as-is)
+ */
+function processBlockBoundaryMarker(
+  originalIndex: number,
+  normalizedText: string[],
+  ranges: Array<{ start: number; end: number }>
+): number {
+  normalizedText.push(BLOCK_BOUNDARY_MARKER);
+  ranges.push({ start: originalIndex, end: originalIndex + 1 });
+  return originalIndex + 1;
+}
+
+/**
+ * Process combined character (e.g., "か゛" → "が")
+ */
+function processCombinedCharacter(
+  combined: string,
+  originalIndex: number,
+  normalizedText: string[],
+  ranges: Array<{ start: number; end: number }>
+): number {
+  normalizedText.push(combined);
+  ranges.push({ start: originalIndex, end: originalIndex + 2 });
+  return originalIndex + 2;
+}
+
+/**
+ * Process single character
+ */
+function processSingleCharacter(
+  char: string,
+  originalIndex: number,
+  normalizedText: string[],
+  ranges: Array<{ start: number; end: number }>
+): number {
+  const normalized = normalizeSingleChar(char);
+  normalizedText.push(normalized);
+  ranges.push({ start: originalIndex, end: originalIndex + 1 });
+  return originalIndex + 1;
+}
+
+/**
  * Normalize text for fuzzy search
  * Handles:
  * - Full-width to half-width conversion (alphabet, numbers, katakana)
@@ -19,9 +61,7 @@ export function normalizeText(originalText: string): NormalizationResult {
 
     // Skip block boundary markers (keep as-is)
     if (char === BLOCK_BOUNDARY_MARKER) {
-      normalizedText.push(char);
-      ranges.push({ start: originalIndex, end: originalIndex + 1 });
-      originalIndex++;
+      originalIndex = processBlockBoundaryMarker(originalIndex, normalizedText, ranges);
       continue;
     }
 
@@ -31,16 +71,9 @@ export function normalizeText(originalText: string): NormalizationResult {
     const combined = combineWithDiacriticalMark(char, nextChar);
 
     if (combined) {
-      // Combined character (e.g., "か゛" → "が")
-      normalizedText.push(combined);
-      ranges.push({ start: originalIndex, end: originalIndex + 2 });
-      originalIndex += 2;
+      originalIndex = processCombinedCharacter(combined, originalIndex, normalizedText, ranges);
     } else {
-      // Single character normalization
-      const normalized = normalizeSingleChar(char);
-      normalizedText.push(normalized);
-      ranges.push({ start: originalIndex, end: originalIndex + 1 });
-      originalIndex++;
+      originalIndex = processSingleCharacter(char, originalIndex, normalizedText, ranges);
     }
   }
 
@@ -51,25 +84,21 @@ export function normalizeText(originalText: string): NormalizationResult {
 }
 
 /**
- * Combine base character with following diacritical mark
- * Returns combined character if applicable, null otherwise
+ * Check if character is a diacritical mark (濁点 or 半濁点)
  */
-function combineWithDiacriticalMark(baseChar: string, nextChar: string | null): string | null {
-  if (!nextChar) {
-    return null;
-  }
-
+function isDiacriticalMark(char: string): { isDakuten: boolean; isHandakuten: boolean } {
   // 濁点 (U+3099, U+309B, U+FF9E) or 半濁点 (U+309A, U+309C, U+FF9F)
   // U+FF9E: 半角濁点, U+FF9F: 半角半濁点
-  const isDakuten = nextChar === '\u3099' || nextChar === '\u309B' || nextChar === '\uFF9E';
-  const isHandakuten = nextChar === '\u309A' || nextChar === '\u309C' || nextChar === '\uFF9F';
+  const isDakuten = char === '\u3099' || char === '\u309B' || char === '\uFF9E';
+  const isHandakuten = char === '\u309A' || char === '\u309C' || char === '\uFF9F';
+  return { isDakuten, isHandakuten };
+}
 
-  if (!isDakuten && !isHandakuten) {
-    return null;
-  }
-
-  // Map base characters to their combined forms
-  const dakutenMap: Record<string, string> = {
+/**
+ * Get dakuten (濁点) mapping
+ */
+function getDakutenMap(): Record<string, string> {
+  return {
     // 基本のひらがな
     か: 'が',
     き: 'ぎ',
@@ -163,8 +192,13 @@ function combineWithDiacriticalMark(baseChar: string, nextChar: string | null): 
     ﾎ: 'ボ',
     ｳ: 'ヴ', // 半角ウ + 濁点 → ヴ
   };
+}
 
-  const handakutenMap: Record<string, string> = {
+/**
+ * Get handakuten (半濁点) mapping
+ */
+function getHandakutenMap(): Record<string, string> {
+  return {
     は: 'ぱ',
     ひ: 'ぴ',
     ふ: 'ぷ',
@@ -181,41 +215,71 @@ function combineWithDiacriticalMark(baseChar: string, nextChar: string | null): 
     ﾍ: 'ペ',
     ﾎ: 'ポ',
   };
+}
 
-  if (isDakuten && dakutenMap[baseChar]) {
-    return dakutenMap[baseChar];
+/**
+ * Combine base character with following diacritical mark
+ * Returns combined character if applicable, null otherwise
+ */
+function combineWithDiacriticalMark(baseChar: string, nextChar: string | null): string | null {
+  if (!nextChar) {
+    return null;
   }
 
-  if (isHandakuten && handakutenMap[baseChar]) {
-    return handakutenMap[baseChar];
+  const { isDakuten, isHandakuten } = isDiacriticalMark(nextChar);
+  if (!isDakuten && !isHandakuten) {
+    return null;
+  }
+
+  // Try dakuten mapping
+  if (isDakuten) {
+    const dakutenMap = getDakutenMap();
+    if (dakutenMap[baseChar]) {
+      return dakutenMap[baseChar];
+    }
+  }
+
+  // Try handakuten mapping
+  if (isHandakuten) {
+    const handakutenMap = getHandakutenMap();
+    if (handakutenMap[baseChar]) {
+      return handakutenMap[baseChar];
+    }
   }
 
   return null;
 }
 
 /**
- * Normalize single character
+ * Normalize full-width alphabet to half-width lowercase
  */
-function normalizeSingleChar(char: string): string {
-  // Full-width to half-width alphabet
+function normalizeFullWidthAlphabet(char: string): string | null {
+  // Full-width A-Z → a-z
   if (char >= '\uFF21' && char <= '\uFF3A') {
-    // Full-width A-Z → a-z
     return String.fromCharCode(char.charCodeAt(0) - 0xff21 + 0x61);
   }
+  // Full-width a-z → a-z
   if (char >= '\uFF41' && char <= '\uFF5A') {
-    // Full-width a-z → a-z
     return String.fromCharCode(char.charCodeAt(0) - 0xff41 + 0x61);
   }
+  return null;
+}
 
-  // Full-width to half-width numbers
+/**
+ * Normalize full-width numbers to half-width
+ */
+function normalizeFullWidthNumbers(char: string): string | null {
   if (char >= '\uFF10' && char <= '\uFF19') {
-    // Full-width 0-9 → 0-9
     return String.fromCharCode(char.charCodeAt(0) - 0xff10 + 0x30);
   }
+  return null;
+}
 
-  // Full-width to half-width katakana
+/**
+ * Normalize full-width katakana to half-width
+ */
+function normalizeFullWidthKatakana(char: string): string | null {
   if (char >= '\u30A1' && char <= '\u30F6') {
-    // Full-width katakana → half-width katakana
     const halfWidthKatakanaMap: Record<string, string> = {
       ァ: 'ｧ',
       ア: 'ｱ',
@@ -305,8 +369,13 @@ function normalizeSingleChar(char: string): string {
     };
     return halfWidthKatakanaMap[char] || char;
   }
+  return null;
+}
 
-  // Symbol normalization
+/**
+ * Normalize symbols
+ */
+function normalizeSymbols(char: string): string | null {
   const symbolMap: Record<string, string> = {
     ー: '-', // Long vowel mark → hyphen
     '－': '-', // Full-width hyphen → hyphen
@@ -317,14 +386,47 @@ function normalizeSingleChar(char: string): string {
     '。': '.', // Full-width period → period
     '　': ' ', // Full-width space → space
   };
+  return symbolMap[char] || null;
+}
 
-  if (symbolMap[char]) {
-    return symbolMap[char];
-  }
-
-  // Case-insensitive: convert to lowercase
+/**
+ * Normalize case (convert to lowercase)
+ */
+function normalizeCase(char: string): string | null {
   if (char >= 'A' && char <= 'Z') {
     return char.toLowerCase();
+  }
+  return null;
+}
+
+/**
+ * Normalize single character
+ */
+function normalizeSingleChar(char: string): string {
+  // Try each normalization type in order
+  const normalized = normalizeFullWidthAlphabet(char);
+  if (normalized !== null) {
+    return normalized;
+  }
+
+  const normalizedNumber = normalizeFullWidthNumbers(char);
+  if (normalizedNumber !== null) {
+    return normalizedNumber;
+  }
+
+  const normalizedKatakana = normalizeFullWidthKatakana(char);
+  if (normalizedKatakana !== null) {
+    return normalizedKatakana;
+  }
+
+  const normalizedSymbol = normalizeSymbols(char);
+  if (normalizedSymbol !== null) {
+    return normalizedSymbol;
+  }
+
+  const normalizedCase = normalizeCase(char);
+  if (normalizedCase !== null) {
+    return normalizedCase;
   }
 
   // Keep as-is if no normalization needed
