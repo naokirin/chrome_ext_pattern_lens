@@ -29,8 +29,8 @@ describe('messaging/handlers', () => {
     };
 
     // Mock dependencies
-    vi.spyOn(overlayModule, 'clearHighlights').mockImplementation(() => {});
-    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => {});
+    vi.spyOn(overlayModule, 'clearHighlights').mockImplementation(() => { });
+    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => { });
     vi.spyOn(navigatorModule, 'navigateToMatch').mockReturnValue({
       currentIndex: 0,
       totalMatches: 1,
