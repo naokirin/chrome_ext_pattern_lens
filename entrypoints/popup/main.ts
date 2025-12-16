@@ -20,6 +20,8 @@ const regexMode = getRequiredElementById<HTMLInputElement>('regexMode');
 const regexLabel = getRequiredElementById<HTMLLabelElement>('regexLabel');
 const caseSensitiveMode = getRequiredElementById<HTMLInputElement>('caseSensitiveMode');
 const caseSensitiveLabel = getRequiredElementById<HTMLLabelElement>('caseSensitiveLabel');
+const fuzzyMode = getRequiredElementById<HTMLInputElement>('fuzzyMode');
+const fuzzyLabel = getRequiredElementById<HTMLLabelElement>('fuzzyLabel');
 const elementMode = getRequiredElementById<HTMLInputElement>('elementMode');
 const searchModeContainer = getRequiredElementById<HTMLDivElement>('searchModeContainer');
 const searchMode = getRequiredElementById<HTMLSelectElement>('searchMode');
@@ -61,7 +63,7 @@ function updateSearchModeVisibility(): void {
   // Show/hide element search mode selector
   searchModeContainer.style.display = isElementMode ? 'block' : 'none';
 
-  // Disable regex mode and case-sensitive mode when element search is enabled
+  // Disable regex mode, case-sensitive mode, and fuzzy mode when element search is enabled
   if (isElementMode) {
     regexMode.checked = false;
     regexMode.disabled = true;
@@ -69,11 +71,16 @@ function updateSearchModeVisibility(): void {
     caseSensitiveMode.checked = false;
     caseSensitiveMode.disabled = true;
     caseSensitiveLabel.classList.add('disabled');
+    fuzzyMode.checked = false;
+    fuzzyMode.disabled = true;
+    fuzzyLabel.classList.add('disabled');
   } else {
     regexMode.disabled = false;
     regexLabel.classList.remove('disabled');
     caseSensitiveMode.disabled = false;
     caseSensitiveLabel.classList.remove('disabled');
+    fuzzyMode.disabled = false;
+    fuzzyLabel.classList.remove('disabled');
   }
 }
 
@@ -147,6 +154,7 @@ async function performSearch(): Promise<void> {
       caseSensitive: caseSensitiveMode.checked,
       useElementSearch: elementMode.checked,
       elementSearchMode: searchMode.value as 'css' | 'xpath',
+      useFuzzy: fuzzyMode.checked && !elementMode.checked,
     };
 
     // Send message to content script
@@ -335,6 +343,7 @@ function handleCheckboxChange(): void {
 elementMode.addEventListener('change', handleCheckboxChange);
 regexMode.addEventListener('change', handleCheckboxChange);
 caseSensitiveMode.addEventListener('change', handleCheckboxChange);
+fuzzyMode.addEventListener('change', handleCheckboxChange);
 searchMode.addEventListener('change', () => {
   // Element search mode selector change
   const query = searchInput.value.trim();
@@ -422,6 +431,7 @@ async function restoreSearchState(): Promise<void> {
         searchInput.value = state.query;
         regexMode.checked = state.useRegex;
         caseSensitiveMode.checked = state.caseSensitive;
+        fuzzyMode.checked = state.useFuzzy ?? false;
         elementMode.checked = state.useElementSearch;
         searchMode.value = state.elementSearchMode;
 

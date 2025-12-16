@@ -14,6 +14,8 @@ import {
 import { navigateToMatch } from '../navigation/navigator';
 import { getScrollPosition } from '../utils/domUtils';
 import { handleError } from '../utils/errorHandler';
+import { findMultiKeywordMatches, splitQueryIntoKeywords } from './fuzzySearch';
+import { convertNormalizedMatchToOriginal, normalizeText } from './normalization';
 import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 
 /**
@@ -208,13 +210,51 @@ export function createRangeFromVirtualMatch(
 export function createTextMatches(
   query: string,
   useRegex: boolean,
-  caseSensitive: boolean
+  caseSensitive: boolean,
+  useFuzzy: boolean = false
 ): Range[] {
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
 
   // Step 2: Search in virtual text
-  const matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
+  let matches: VirtualMatch[] = [];
+
+  if (useFuzzy) {
+    // Fuzzy search: normalize text and query, then search
+    const normalizedResult = normalizeText(virtualText);
+    const normalizedText = normalizedResult.normalizedText;
+    const textMapping = normalizedResult.mapping;
+
+    // Check if query contains multiple keywords
+    const keywords = splitQueryIntoKeywords(query);
+    if (keywords.length > 1) {
+      // Multi-keyword search
+      const multiKeywordMatches = findMultiKeywordMatches(keywords, normalizedText);
+
+      // Convert normalized matches to original virtual text positions
+      for (const multiMatch of multiKeywordMatches) {
+        const originalMatch = convertNormalizedMatchToOriginal(multiMatch.minRange, textMapping);
+        if (originalMatch) {
+          matches.push(originalMatch);
+        }
+      }
+    } else {
+      // Single keyword fuzzy search
+      const normalizedQuery = normalizeText(query).normalizedText;
+      const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+
+      // Convert normalized matches to original virtual text positions
+      for (const normalizedMatch of normalizedMatches) {
+        const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
+        if (originalMatch) {
+          matches.push(originalMatch);
+        }
+      }
+    }
+  } else {
+    // Normal search
+    matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
+  }
 
   // Step 3: Convert virtual matches to DOM ranges
   const ranges: Range[] = [];
@@ -275,10 +315,11 @@ export function searchText(
   query: string,
   useRegex: boolean,
   caseSensitive: boolean,
-  stateManager: SearchStateManager
+  stateManager: SearchStateManager,
+  useFuzzy: boolean = false
 ): SearchResult {
   // Step 1: Create text matches
-  const ranges = createTextMatches(query, useRegex, caseSensitive);
+  const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);
 
   // Step 2: Create overlays from ranges
   const count = createOverlaysFromRanges(ranges, stateManager);

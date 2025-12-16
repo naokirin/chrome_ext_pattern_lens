@@ -115,3 +115,29 @@ export const OVERLAY_UPDATE_THROTTLE_MS = 16; // ~60fps
 
 /** Default tolerance for merging adjacent rectangles in pixels */
 export const RECT_MERGE_TOLERANCE = 1;
+
+// ============================================================================
+// Fuzzy Search Constants
+// ============================================================================
+
+/**
+ * Multiplier for calculating maximum keyword distance based on total keyword length
+ * Range = totalKeywordLength × FUZZY_SEARCH_BASE_MULTIPLIER
+ * Examples:
+ * - 5 characters → 30 characters range
+ * - 10 characters → 60 characters range
+ * - 20 characters → 120 characters range
+ */
+export const FUZZY_SEARCH_BASE_MULTIPLIER = 6;
+
+/**
+ * Minimum range for fuzzy search multi-keyword matching (in characters)
+ * Even for very short keywords, this minimum range is applied
+ */
+export const FUZZY_SEARCH_MIN_DISTANCE = 20;
+
+/**
+ * Maximum range for fuzzy search multi-keyword matching (in characters)
+ * Prevents excessive matches for very long keywords
+ */
+export const FUZZY_SEARCH_MAX_DISTANCE = 200;

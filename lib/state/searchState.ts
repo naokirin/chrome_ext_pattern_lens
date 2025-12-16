@@ -19,6 +19,7 @@ export class SearchStateManager {
     caseSensitive: false,
     useElementSearch: false,
     elementSearchMode: 'css',
+    useFuzzy: false,
   };
 
   // Getters for highlight data

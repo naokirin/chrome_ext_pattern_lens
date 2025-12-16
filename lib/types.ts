@@ -8,6 +8,7 @@ export interface SearchMessage {
   caseSensitive: boolean;
   useElementSearch: boolean;
   elementSearchMode: 'css' | 'xpath';
+  useFuzzy: boolean;
 }
 
 export interface ClearMessage {
@@ -55,6 +56,7 @@ export interface SearchState {
   caseSensitive: boolean;
   useElementSearch: boolean;
   elementSearchMode: 'css' | 'xpath';
+  useFuzzy: boolean;
 }
 
 // Content script types
@@ -84,4 +86,21 @@ export interface SearchResult {
   count: number;
   currentIndex: number;
   totalMatches: number;
+}
+
+// Fuzzy search types
+export interface NormalizationMapping {
+  // 正規化後のインデックス i が元の仮想テキストの [ranges[i].start, ranges[i].end) に対応
+  ranges: Array<{ start: number; end: number }>;
+}
+
+export interface NormalizationResult {
+  normalizedText: string; // 正規化後のテキスト
+  mapping: NormalizationMapping; // 位置マッピング
+}
+
+export interface MultiKeywordMatch {
+  keywords: string[]; // 検索キーワードの配列
+  matches: VirtualMatch[]; // 各キーワードのマッチ位置（正規化後）
+  minRange: VirtualMatch; // 全キーワードを含む最小範囲（正規化後）
 }

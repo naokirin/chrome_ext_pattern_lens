@@ -45,6 +45,7 @@ export async function handleSearch(
       caseSensitive: message.caseSensitive,
       useElementSearch: message.useElementSearch,
       elementSearchMode: message.elementSearchMode,
+      useFuzzy: message.useFuzzy,
     });
 
     if (message.useElementSearch) {
@@ -60,7 +61,8 @@ export async function handleSearch(
       message.query,
       message.useRegex,
       message.caseSensitive,
-      context.stateManager
+      context.stateManager,
+      message.useFuzzy
     );
     return {
       success: true,
@@ -92,6 +94,7 @@ export function handleClear(
     caseSensitive: false,
     useElementSearch: false,
     elementSearchMode: 'css',
+    useFuzzy: false,
   });
   return { success: true };
 }
