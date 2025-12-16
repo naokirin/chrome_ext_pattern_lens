@@ -23,6 +23,36 @@ function calculateMaxKeywordDistance(totalKeywordLength: number): number {
 }
 
 /**
+ * Check if any match is completely contained within another match
+ * Returns true if any match overlaps with another (one is contained in the other)
+ * This prevents matches like "スト" being counted when it's part of "テスト"
+ */
+function hasOverlappingMatches(matches: VirtualMatch[]): boolean {
+  if (matches.length < 2) {
+    return false;
+  }
+
+  for (let i = 0; i < matches.length; i++) {
+    const match1 = matches[i];
+    for (let j = i + 1; j < matches.length; j++) {
+      const match2 = matches[j];
+
+      // Check if match1 is completely contained within match2
+      if (match1.start >= match2.start && match1.end <= match2.end) {
+        return true;
+      }
+
+      // Check if match2 is completely contained within match1
+      if (match2.start >= match1.start && match2.end <= match1.end) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Find multi-keyword matches in normalized text
  * Returns matches where all keywords are found within dynamically calculated maxDistance
  */
@@ -65,6 +95,12 @@ export function findMultiKeywordMatches(
   const combinations = generateMatchCombinations(keywordMatches);
 
   for (const combination of combinations) {
+    // Check if any keyword match is completely contained within another keyword match
+    // (e.g., "スト" within "テスト" should be excluded)
+    if (hasOverlappingMatches(combination)) {
+      continue;
+    }
+
     // Calculate minimum range that includes all matches
     const minRange = calculateMinRange(combination);
 
