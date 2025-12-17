@@ -1,0 +1,180 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  collectElementSearchResults,
+  collectTextSearchResults,
+} from '~/lib/search/resultsCollector';
+import { cleanupDOM } from '../../../helpers/dom-helpers.js';
+
+describe('lib/search/resultsCollector', () => {
+  beforeEach(() => {
+    cleanupDOM();
+  });
+
+  afterEach(() => {
+    cleanupDOM();
+  });
+
+  describe('collectTextSearchResults', () => {
+    it('空のranges配列に対して空の配列を返す', () => {
+      const ranges = [];
+      const result = collectTextSearchResults(ranges);
+
+      expect(result).toEqual([]);
+    });
+
+    it('単一のRangeから検索結果を収集できる', () => {
+      document.body.innerHTML = '<div>This is a test sentence with some text.</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 10);
+      range.setEnd(textNode, 14); // "test"
+
+      const result = collectTextSearchResults([range], 10);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].index).toBe(0);
+      expect(result[0].matchedText).toBe('test');
+      expect(result[0].contextBefore.length).toBeLessThanOrEqual(10);
+      expect(result[0].contextAfter.length).toBeLessThanOrEqual(10);
+      expect(result[0].fullText).toContain('test');
+    });
+
+    it('複数のRangeから検索結果を収集できる', () => {
+      document.body.innerHTML = '<div>This is a test. This is another test.</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range1 = document.createRange();
+      range1.setStart(textNode, 10);
+      range1.setEnd(textNode, 14); // first "test"
+
+      const range2 = document.createRange();
+      range2.setStart(textNode, 32);
+      range2.setEnd(textNode, 36); // second "test"
+
+      const result = collectTextSearchResults([range1, range2], 5);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].index).toBe(0);
+      expect(result[0].matchedText).toBe('test');
+      expect(result[1].index).toBe(1);
+      expect(result[1].matchedText).toBe('test');
+    });
+
+    it('カスタムのcontextLengthを使用できる', () => {
+      document.body.innerHTML = '<div>This is a test sentence with some text.</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 10);
+      range.setEnd(textNode, 14); // "test"
+
+      const result = collectTextSearchResults([range], 5);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].contextBefore.length).toBeLessThanOrEqual(5);
+      expect(result[0].contextAfter.length).toBeLessThanOrEqual(5);
+    });
+
+    it('デフォルトのcontextLengthを使用する', () => {
+      document.body.innerHTML = '<div>This is a test sentence.</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 10);
+      range.setEnd(textNode, 14); // "test"
+
+      const result = collectTextSearchResults([range]);
+
+      expect(result).toHaveLength(1);
+      // デフォルトは30文字
+      expect(result[0].contextBefore.length).toBeLessThanOrEqual(30);
+      expect(result[0].contextAfter.length).toBeLessThanOrEqual(30);
+    });
+
+    it('前後文脈を含むfullTextを生成する', () => {
+      document.body.innerHTML = '<div>This is a test sentence with some text.</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 10);
+      range.setEnd(textNode, 14); // "test"
+
+      const result = collectTextSearchResults([range], 5);
+
+      expect(result[0].fullText).toContain(result[0].contextBefore);
+      expect(result[0].fullText).toContain(result[0].matchedText);
+      expect(result[0].fullText).toContain(result[0].contextAfter);
+    });
+  });
+
+  describe('collectElementSearchResults', () => {
+    it('空のelements配列に対して空の配列を返す', () => {
+      const elements = [];
+      const result = collectElementSearchResults(elements);
+
+      expect(result).toEqual([]);
+    });
+
+    it('単一のElementから検索結果を収集できる', () => {
+      document.body.innerHTML = '<div class="test">Test content</div>';
+      const element = document.body.querySelector('.test');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      const result = collectElementSearchResults([element]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].index).toBe(0);
+      expect(result[0].matchedText).toContain('Test content');
+      expect(result[0].contextBefore).toBe('');
+      expect(result[0].contextAfter).toBe('');
+      expect(result[0].fullText).toBe(result[0].matchedText);
+    });
+
+    it('複数のElementから検索結果を収集できる', () => {
+      document.body.innerHTML = `
+        <div class="test">First content</div>
+        <div class="test">Second content</div>
+      `;
+      const elements = Array.from(document.body.querySelectorAll('.test'));
+
+      const result = collectElementSearchResults(elements);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].index).toBe(0);
+      expect(result[0].matchedText).toContain('First');
+      expect(result[1].index).toBe(1);
+      expect(result[1].matchedText).toContain('Second');
+    });
+
+    it('テキストコンテンツがないElementを処理できる', () => {
+      document.body.innerHTML = '<div class="test"></div>';
+      const element = document.body.querySelector('.test');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      const result = collectElementSearchResults([element]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].matchedText).toBeTruthy();
+    });
+  });
+});

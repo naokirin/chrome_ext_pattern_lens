@@ -120,6 +120,39 @@ describe('messaging/router', () => {
       expect(result?.state).toBeDefined();
     });
 
+    it('get-results-listアクションをhandleGetResultsListにルーティングする', async () => {
+      const handleGetResultsListSpy = vi
+        .spyOn(handlersModule, 'handleGetResultsList')
+        .mockReturnValue({
+          success: true,
+          items: [],
+          totalMatches: 0,
+        });
+
+      const message = { action: 'get-results-list', contextLength: 30 };
+
+      const result = await routeMessage(message, context);
+
+      expect(handleGetResultsListSpy).toHaveBeenCalledWith(message, context);
+      expect(result?.success).toBe(true);
+    });
+
+    it('jump-to-matchアクションをhandleJumpToMatchにルーティングする', async () => {
+      const handleJumpToMatchSpy = vi.spyOn(handlersModule, 'handleJumpToMatch').mockReturnValue({
+        success: true,
+        currentIndex: 1,
+        totalMatches: 2,
+      });
+
+      const message = { action: 'jump-to-match', index: 1 };
+
+      const result = await routeMessage(message, context);
+
+      expect(handleJumpToMatchSpy).toHaveBeenCalledWith(message, context);
+      expect(result?.success).toBe(true);
+      expect(result?.currentIndex).toBe(1);
+    });
+
     it('ハンドラーでエラーが発生した場合、エラーレスポンスを返す', async () => {
       const error = new Error('Handler error');
       vi.spyOn(handlersModule, 'handleSearch').mockRejectedValue(error);

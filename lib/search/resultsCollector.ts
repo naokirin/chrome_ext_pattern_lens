@@ -15,18 +15,16 @@ import { handleError } from '~/lib/utils/errorHandler';
  */
 function getContextBefore(range: Range, contextLength: number): string {
   try {
-    // Create a range that extends backward from the start of the match
-    const contextRange = range.cloneRange();
     const startContainer = range.startContainer;
     const startOffset = range.startOffset;
 
-    // Try to extend backward
+    // Try to extend backward from text node
     if (startContainer.nodeType === Node.TEXT_NODE) {
       const textNode = startContainer as Text;
       const text = textNode.nodeValue || '';
       const beforeText = text.substring(Math.max(0, startOffset - contextLength), startOffset);
 
-      // If we got enough text, return it
+      // If we got enough text, return it (trimmed to exact length)
       if (beforeText.length >= contextLength) {
         return beforeText;
       }
@@ -44,10 +42,15 @@ function getContextBefore(range: Range, contextLength: number): string {
         current = current.previousSibling;
       }
 
+      // Ensure we don't exceed contextLength (take last contextLength characters)
+      if (collectedText.length > contextLength) {
+        return collectedText.substring(collectedText.length - contextLength);
+      }
       return collectedText;
     }
 
     // For non-text nodes, get text from parent
+    // This is a fallback and may not be accurate if the same text appears multiple times
     const parent = startContainer.parentElement;
     if (parent) {
       const parentText = parent.textContent || '';
@@ -55,7 +58,12 @@ function getContextBefore(range: Range, contextLength: number): string {
       const matchIndex = parentText.indexOf(rangeText);
       if (matchIndex >= 0) {
         const start = Math.max(0, matchIndex - contextLength);
-        return parentText.substring(start, matchIndex);
+        let contextText = parentText.substring(start, matchIndex);
+        // Ensure we don't exceed contextLength
+        if (contextText.length > contextLength) {
+          contextText = contextText.substring(contextText.length - contextLength);
+        }
+        return contextText;
       }
     }
 
@@ -72,17 +80,16 @@ function getContextBefore(range: Range, contextLength: number): string {
  */
 function getContextAfter(range: Range, contextLength: number): string {
   try {
-    // Create a range that extends forward from the end of the match
     const endContainer = range.endContainer;
     const endOffset = range.endOffset;
 
-    // Try to extend forward
+    // Try to extend forward from text node
     if (endContainer.nodeType === Node.TEXT_NODE) {
       const textNode = endContainer as Text;
       const text = textNode.nodeValue || '';
       const afterText = text.substring(endOffset, endOffset + contextLength);
 
-      // If we got enough text, return it
+      // If we got enough text, return it (trimmed to exact length)
       if (afterText.length >= contextLength) {
         return afterText;
       }
@@ -100,10 +107,15 @@ function getContextAfter(range: Range, contextLength: number): string {
         current = current.nextSibling;
       }
 
+      // Ensure we don't exceed contextLength (take first contextLength characters)
+      if (collectedText.length > contextLength) {
+        return collectedText.substring(0, contextLength);
+      }
       return collectedText;
     }
 
     // For non-text nodes, get text from parent
+    // This is a fallback and may not be accurate if the same text appears multiple times
     const parent = endContainer.parentElement;
     if (parent) {
       const parentText = parent.textContent || '';
@@ -112,7 +124,12 @@ function getContextAfter(range: Range, contextLength: number): string {
       if (matchIndex >= 0) {
         const end = matchIndex + rangeText.length;
         const afterEnd = Math.min(parentText.length, end + contextLength);
-        return parentText.substring(end, afterEnd);
+        let contextText = parentText.substring(end, afterEnd);
+        // Ensure we don't exceed contextLength
+        if (contextText.length > contextLength) {
+          contextText = contextText.substring(0, contextLength);
+        }
+        return contextText;
       }
     }
 
@@ -125,18 +142,23 @@ function getContextAfter(range: Range, contextLength: number): string {
 
 /**
  * Normalize context length to valid range
+ * Note: This function is used for user settings validation.
+ * For internal use, we allow any positive number (no minimum restriction).
  */
 function normalizeContextLength(contextLength: number | undefined): number {
   if (contextLength === undefined) {
     return DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
   }
 
-  if (contextLength < MIN_RESULTS_LIST_CONTEXT_LENGTH) {
-    return MIN_RESULTS_LIST_CONTEXT_LENGTH;
-  }
-
+  // Allow any positive number for internal use (test cases, etc.)
+  // Only enforce maximum limit
   if (contextLength > MAX_RESULTS_LIST_CONTEXT_LENGTH) {
     return MAX_RESULTS_LIST_CONTEXT_LENGTH;
+  }
+
+  // Allow 0 or negative values to be treated as 0 (no context)
+  if (contextLength <= 0) {
+    return 0;
   }
 
   return contextLength;
@@ -161,8 +183,7 @@ export function collectTextSearchResults(
       // Build full text with ellipsis if context is truncated
       const beforeEllipsis = contextBefore.length >= normalizedContextLength ? '...' : '';
       const afterEllipsis = contextAfter.length >= normalizedContextLength ? '...' : '';
-      const fullText =
-        beforeEllipsis + contextBefore + matchedText + contextAfter + afterEllipsis;
+      const fullText = beforeEllipsis + contextBefore + matchedText + contextAfter + afterEllipsis;
 
       items.push({
         index,
@@ -188,7 +209,7 @@ export function collectTextSearchResults(
  */
 export function collectElementSearchResults(
   elements: Element[],
-  contextLength?: number
+  _contextLength?: number
 ): SearchResultItem[] {
   const items: SearchResultItem[] = [];
 

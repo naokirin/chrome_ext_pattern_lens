@@ -3,13 +3,16 @@ import * as minimapModule from '~/lib/highlight/minimap';
 import * as overlayModule from '~/lib/highlight/overlay';
 import {
   handleClear,
+  handleGetResultsList,
   handleGetState,
+  handleJumpToMatch,
   handleNavigateNext,
   handleNavigatePrev,
   handleSearch,
 } from '~/lib/messaging/handlers';
 import * as navigatorModule from '~/lib/navigation/navigator';
 import * as elementSearchModule from '~/lib/search/elementSearch';
+import * as resultsCollectorModule from '~/lib/search/resultsCollector';
 import * as textSearchModule from '~/lib/search/textSearch';
 import { SearchStateManager } from '~/lib/state/searchState';
 import { cleanupDOM } from '../../../helpers/dom-helpers.js';
@@ -311,6 +314,133 @@ describe('messaging/handlers', () => {
       const result = handleGetState(message, context);
 
       expect(result.totalMatches).toBe(2);
+    });
+  });
+
+  describe('handleGetResultsList', () => {
+    it('テキスト検索結果がある場合、結果一覧を返す', () => {
+      document.body.innerHTML = '<div>Test content</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.querySelector('div')?.firstChild || document.body);
+      stateManager.addRange(range);
+
+      vi.spyOn(resultsCollectorModule, 'collectTextSearchResults').mockReturnValue([
+        {
+          index: 0,
+          matchedText: 'Test',
+          contextBefore: ' ',
+          contextAfter: ' content',
+          fullText: ' Test content',
+        },
+      ]);
+
+      const message = { action: 'get-results-list', contextLength: 10 };
+      const result = handleGetResultsList(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+      expect(result.totalMatches).toBe(1);
+      expect(resultsCollectorModule.collectTextSearchResults).toHaveBeenCalledWith(
+        stateManager.ranges,
+        10
+      );
+    });
+
+    it('要素検索結果がある場合、結果一覧を返す', () => {
+      document.body.innerHTML = '<div class="test">Content</div>';
+      const element = document.body.querySelector('.test');
+      if (element) {
+        stateManager.addElement(element);
+      }
+
+      vi.spyOn(resultsCollectorModule, 'collectElementSearchResults').mockReturnValue([
+        {
+          index: 0,
+          matchedText: 'Content',
+          contextBefore: '',
+          contextAfter: '',
+          fullText: 'Content',
+        },
+      ]);
+
+      const message = { action: 'get-results-list', contextLength: 10 };
+      const result = handleGetResultsList(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+      expect(result.totalMatches).toBe(1);
+      expect(resultsCollectorModule.collectElementSearchResults).toHaveBeenCalledWith(
+        stateManager.elements,
+        10
+      );
+    });
+
+    it('検索結果がない場合、空の配列を返す', () => {
+      const message = { action: 'get-results-list' };
+      const result = handleGetResultsList(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.items).toEqual([]);
+      expect(result.totalMatches).toBe(0);
+    });
+
+    it('contextLengthが指定されていない場合、デフォルト値を使用する', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.querySelector('div')?.firstChild || document.body);
+      stateManager.addRange(range);
+
+      vi.spyOn(resultsCollectorModule, 'collectTextSearchResults').mockReturnValue([]);
+
+      const message = { action: 'get-results-list' };
+      handleGetResultsList(message, context);
+
+      expect(resultsCollectorModule.collectTextSearchResults).toHaveBeenCalledWith(
+        stateManager.ranges,
+        undefined
+      );
+    });
+  });
+
+  describe('handleJumpToMatch', () => {
+    it('指定されたインデックスのマッチにジャンプする', () => {
+      const range1 = document.createRange();
+      const range2 = document.createRange();
+      range1.selectNodeContents(document.body);
+      range2.selectNodeContents(document.body);
+      stateManager.addRange(range1);
+      stateManager.addRange(range2);
+
+      const navigateSpy = vi.spyOn(navigatorModule, 'navigateToMatch').mockReturnValue({
+        currentIndex: 1,
+        totalMatches: 2,
+      });
+
+      const message = { action: 'jump-to-match', index: 1 };
+      const result = handleJumpToMatch(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.currentIndex).toBe(1);
+      expect(result.totalMatches).toBe(2);
+      expect(navigateSpy).toHaveBeenCalledWith(1, stateManager);
+    });
+
+    it('インデックス0にジャンプできる', () => {
+      const range = document.createRange();
+      range.selectNodeContents(document.body);
+      stateManager.addRange(range);
+
+      const navigateSpy = vi.spyOn(navigatorModule, 'navigateToMatch').mockReturnValue({
+        currentIndex: 0,
+        totalMatches: 1,
+      });
+
+      const message = { action: 'jump-to-match', index: 0 };
+      const result = handleJumpToMatch(message, context);
+
+      expect(result.success).toBe(true);
+      expect(result.currentIndex).toBe(0);
+      expect(navigateSpy).toHaveBeenCalledWith(0, stateManager);
     });
   });
 });

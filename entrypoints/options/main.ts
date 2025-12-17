@@ -40,19 +40,15 @@ function loadSettings(): void {
 function saveSettings(): void {
   const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
   const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
-  const resultsListContextLengthEl = getElementById<HTMLInputElement>(
-    'resultsListContextLength'
-  );
+  const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
 
   if (!defaultRegexEl || !defaultElementSearchEl || !resultsListContextLengthEl) {
     return;
   }
 
-  const contextLength = parseInt(resultsListContextLengthEl.value, 10);
+  const contextLength = Number.parseInt(resultsListContextLengthEl.value, 10);
   const validContextLength =
-    !isNaN(contextLength) &&
-      contextLength >= 10 &&
-      contextLength <= 100
+    !Number.isNaN(contextLength) && contextLength >= 10 && contextLength <= 100
       ? contextLength
       : DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
 

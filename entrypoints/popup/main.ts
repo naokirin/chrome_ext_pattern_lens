@@ -69,7 +69,8 @@ function loadSettings(): void {
       elementMode.checked = settings.defaultElementSearch;
 
       // Load context length and validate
-      const savedContextLength = settings.resultsListContextLength ?? DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
+      const savedContextLength =
+        settings.resultsListContextLength ?? DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
       if (
         savedContextLength >= MIN_RESULTS_LIST_CONTEXT_LENGTH &&
         savedContextLength <= MAX_RESULTS_LIST_CONTEXT_LENGTH
@@ -489,17 +490,13 @@ async function fetchAndDisplayResultsList(): Promise<void> {
       contextLength: contextLength,
     };
 
-    chrome.tabs.sendMessage(
-      tab.id,
-      message,
-      (response: SearchResultsListResponse | undefined) => {
-        if (chrome.runtime.lastError || !response?.success) {
-          return;
-        }
-
-        displayResultsList(response.items || [], response.totalMatches || 0);
+    chrome.tabs.sendMessage(tab.id, message, (response: SearchResultsListResponse | undefined) => {
+      if (chrome.runtime.lastError || !response?.success) {
+        return;
       }
-    );
+
+      displayResultsList(response.items || [], response.totalMatches || 0);
+    });
   } catch (error) {
     handleError(error, 'fetchAndDisplayResultsList: Exception', undefined);
   }
@@ -588,20 +585,16 @@ async function jumpToMatch(index: number): Promise<void> {
       index,
     };
 
-    chrome.tabs.sendMessage(
-      tab.id,
-      message,
-      (response: SearchResponse | undefined) => {
-        if (response?.success) {
-          // ナビゲーションUIを更新
-          if (response.totalMatches !== undefined && response.currentIndex !== undefined) {
-            updateNavigation(response.currentIndex, response.totalMatches);
-          }
-          // 一覧の現在のマッチをハイライト
-          updateResultsListHighlight(response.currentIndex ?? -1);
+    chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
+      if (response?.success) {
+        // ナビゲーションUIを更新
+        if (response.totalMatches !== undefined && response.currentIndex !== undefined) {
+          updateNavigation(response.currentIndex, response.totalMatches);
         }
+        // 一覧の現在のマッチをハイライト
+        updateResultsListHighlight(response.currentIndex ?? -1);
       }
-    );
+    });
   } catch (error) {
     handleError(error, 'jumpToMatch: Exception', undefined);
   }

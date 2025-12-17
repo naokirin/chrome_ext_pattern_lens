@@ -123,31 +123,33 @@ Gemini MCPの助言に基づき、**テキストノード置換方式**を採用
 
 ### chrome.storage.sync
 
-- [options/options.js](options/options.js): 設定の保存/読み込み
-- [popup/popup.js](popup/popup.js): デフォルト設定の読み込み
+- [entrypoints/options/main.ts](entrypoints/options/main.ts): 設定の保存/読み込み（正規表現、要素検索、前後文脈文字数など）
+- [entrypoints/popup/main.ts](entrypoints/popup/main.ts): デフォルト設定の読み込み、設定変更の監視
 
 ### chrome.tabs
 
-- [popup/popup.js:53](popup/popup.js#L53): アクティブタブの取得
-- [popup/popup.js:63](popup/popup.js#L63): content scriptへのメッセージ送信
+- [entrypoints/popup/main.ts](entrypoints/popup/main.ts): アクティブタブの取得、content scriptへのメッセージ送信
 
 ### chrome.runtime
 
-- [content_scripts/main.js:134](content_scripts/main.js#L134): popupからのメッセージ受信
-- [popup/popup.js:66](popup/popup.js#L66): エラーハンドリング
+- [entrypoints/content.ts](entrypoints/content.ts): popupからのメッセージ受信
+- [entrypoints/popup/main.ts](entrypoints/popup/main.ts): エラーハンドリング、設定変更の監視（chrome.storage.onChanged）
 
-## 実装予定の機能
+## 実装済みの機能
 
-1. **あいまい検索**
+1. **あいまい検索** ✅
    - 表記ゆれやフォーマットの差異を吸収した検索
    - 複数キーワードの範囲検索
    - 要素検索時は強制OFF
+   - 実装: [lib/search/fuzzySearch.ts](lib/search/fuzzySearch.ts), [lib/search/normalization.ts](lib/search/normalization.ts)
 
-2. **検索結果一覧**
+2. **検索結果一覧** ✅
    - 検索結果の一覧表示
-   - 前後文脈の表示
+   - 前後文脈の表示（設定可能な文字数、デフォルト30文字）
    - 一覧からのジャンプ機能
    - 要素検索時は強制OFF
+   - ポップアップサイズの自動調整
+   - 実装: [lib/search/resultsCollector.ts](lib/search/resultsCollector.ts), [lib/messaging/handlers.ts](lib/messaging/handlers.ts), [entrypoints/popup/](entrypoints/popup/)
 
 ## 拡張予定の機能
 

@@ -4,11 +4,11 @@
 import { removeMinimap } from '~/lib/highlight/minimap';
 import { clearHighlights } from '~/lib/highlight/overlay';
 import { navigateToMatch } from '~/lib/navigation/navigator';
+import { searchElements } from '~/lib/search/elementSearch';
 import {
   collectElementSearchResults,
   collectTextSearchResults,
 } from '~/lib/search/resultsCollector';
-import { searchElements } from '~/lib/search/elementSearch';
 import { searchText } from '~/lib/search/textSearch';
 import type { SearchStateManager } from '~/lib/state/searchState';
 import type {
@@ -160,16 +160,14 @@ export function handleGetResultsList(
 ): SearchResultsListResponse {
   try {
     if (context.stateManager.hasTextMatches()) {
-      const items = collectTextSearchResults(
-        context.stateManager.ranges,
-        message.contextLength
-      );
+      const items = collectTextSearchResults(context.stateManager.ranges, message.contextLength);
       return {
         success: true,
         items,
         totalMatches: context.stateManager.totalMatches,
       };
-    } else if (context.stateManager.hasElementMatches()) {
+    }
+    if (context.stateManager.hasElementMatches()) {
       const items = collectElementSearchResults(
         context.stateManager.elements,
         message.contextLength
