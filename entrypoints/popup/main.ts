@@ -312,6 +312,15 @@ async function navigateNext(): Promise<void> {
 
     const message: NavigateMessage = { action: 'navigate-next' };
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
+      if (chrome.runtime.lastError) {
+        // Navigation errors are non-critical, just log
+        handleError(
+          new Error(chrome.runtime.lastError.message),
+          'navigateNext: Chrome runtime error',
+          undefined
+        );
+        return;
+      }
       if (
         response?.success &&
         response.totalMatches !== undefined &&
@@ -337,6 +346,15 @@ async function navigatePrev(): Promise<void> {
 
     const message: NavigateMessage = { action: 'navigate-prev' };
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
+      if (chrome.runtime.lastError) {
+        // Navigation errors are non-critical, just log
+        handleError(
+          new Error(chrome.runtime.lastError.message),
+          'navigatePrev: Chrome runtime error',
+          undefined
+        );
+        return;
+      }
       if (
         response?.success &&
         response.totalMatches !== undefined &&

@@ -34,15 +34,11 @@ lint、TypeScript型チェック、テストはすべてパス。重大な問題
 
 ---
 
-### 4. エラーハンドリングの不足 [優先度: 低]
+### 4. ~~エラーハンドリングの不足~~ [修正済み]
 
-**ファイル**: `entrypoints/popup/main.ts` 315行目、340行目
+**ファイル**: `entrypoints/popup/main.ts`
 
-`navigateNext` / `navigatePrev` のコールバックで `chrome.runtime.lastError` をチェックしていない。
-
-**影響**: ナビゲーションエラーがサイレントに失敗する可能性。
-
-**修正方法**: lastError チェックを追加（ただし非重要な操作のため優先度低）。
+~~`navigateNext` / `navigatePrev` に `chrome.runtime.lastError` チェックを追加。~~
 
 ---
 
@@ -88,13 +84,11 @@ lint、TypeScript型チェック、テストはすべてパス。重大な問題
 
 ---
 
-### T3. テストヘルパーの活用不足 [優先度: 低]
+### T3. ~~テストヘルパーの活用不足~~ [問題なし]
 
 **ファイル**: `tests/helpers/dom-helpers.js`
 
-`visualizeBoundaries` 関数が定義されているが、テスト内で使用されていない。
-
-**影響**: 軽微。デバッグ用と思われる。
+~~`visualizeBoundaries` は `virtualText.test.js` で使用されていた。問題なし。~~
 
 ---
 
