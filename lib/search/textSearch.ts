@@ -361,6 +361,10 @@ export function searchText(
   useFuzzy = false,
   skipNavigation = false
 ): SearchResult {
+  // Save previous index before re-search
+  const previousIndex = stateManager.currentIndex;
+  const previousTotal = stateManager.totalMatches;
+
   // Step 1: Create text matches
   const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);
 
@@ -381,10 +385,20 @@ export function searchText(
       };
     }
 
-    // For re-search, find the closest match to current scroll position
-    const closestIndex = findClosestMatchIndex(stateManager.overlays);
-    stateManager.setCurrentIndex(closestIndex);
-    return { count: count, currentIndex: closestIndex, totalMatches: count };
+    // For re-search, preserve the previous index if valid, otherwise find closest
+    let newIndex: number;
+    if (previousIndex >= 0 && previousIndex < count) {
+      // Previous index is still valid
+      newIndex = previousIndex;
+    } else if (previousIndex >= count) {
+      // Previous index is out of range (items removed), use last valid index
+      newIndex = count - 1;
+    } else {
+      // No previous index, find closest to viewport center
+      newIndex = findClosestMatchIndex(stateManager.overlays);
+    }
+    stateManager.setCurrentIndex(newIndex);
+    return { count: count, currentIndex: newIndex, totalMatches: count };
   }
 
   return { count: 0, currentIndex: -1, totalMatches: 0 };

@@ -103,6 +103,9 @@ export function searchElements(
   skipNavigation = false
 ): SearchResult {
   try {
+    // Save previous index before re-search
+    const previousIndex = stateManager.currentIndex;
+
     // Step 1: Find elements
     const elements = findElements(query, mode);
 
@@ -123,10 +126,17 @@ export function searchElements(
         };
       }
 
-      // For re-search, find the closest match to current scroll position
-      const closestIndex = findClosestMatchIndex(stateManager.overlays);
-      stateManager.setCurrentIndex(closestIndex);
-      return { count: count, currentIndex: closestIndex, totalMatches: count };
+      // For re-search, preserve the previous index if valid
+      let newIndex: number;
+      if (previousIndex >= 0 && previousIndex < count) {
+        newIndex = previousIndex;
+      } else if (previousIndex >= count) {
+        newIndex = count - 1;
+      } else {
+        newIndex = findClosestMatchIndex(stateManager.overlays);
+      }
+      stateManager.setCurrentIndex(newIndex);
+      return { count: count, currentIndex: newIndex, totalMatches: count };
     }
 
     return { count: 0, currentIndex: -1, totalMatches: 0 };
