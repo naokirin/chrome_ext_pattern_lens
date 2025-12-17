@@ -690,6 +690,21 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
+// Listen for search updates from content script (e.g., after dynamic DOM changes)
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === 'searchUpdated') {
+    const totalMatches = message.totalMatches ?? 0;
+    const currentIndex = message.currentIndex ?? 0;
+    updateNavigation(currentIndex, totalMatches);
+    // Refresh results list if displayed
+    if (resultsListMode.checked) {
+      fetchAndDisplayResultsList();
+    }
+    sendResponse({ success: true });
+  }
+  return true;
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();

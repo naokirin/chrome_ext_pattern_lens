@@ -236,10 +236,28 @@ export class DOMSearchObserver {
         this.updateCallback,
         true // skipNavigation
       );
+
+      // ポップアップに検索結果の更新を通知
+      this.notifyPopup();
     } catch (error) {
       handleError(error, 'DOMSearchObserver: Search failed', undefined);
     } finally {
       this.isSearching = false;
+    }
+  }
+
+  /**
+   * ポップアップに検索結果の更新を通知
+   */
+  private notifyPopup(): void {
+    try {
+      chrome.runtime.sendMessage({
+        action: 'searchUpdated',
+        totalMatches: this.stateManager.totalMatches,
+        currentIndex: this.stateManager.currentIndex,
+      });
+    } catch {
+      // ポップアップが閉じている場合は無視
     }
   }
 
