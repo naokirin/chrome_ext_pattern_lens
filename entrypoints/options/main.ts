@@ -1,4 +1,5 @@
 // Import shared type definitions
+import { DEFAULT_RESULTS_LIST_CONTEXT_LENGTH } from '~/lib/constants';
 import type { Settings } from '~/lib/types';
 import { getElementById } from '~/lib/utils/domUtils';
 
@@ -9,17 +10,26 @@ function loadSettings(): void {
       defaultRegex: false,
       defaultCaseSensitive: false,
       defaultElementSearch: false,
+      resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
     },
     (items) => {
       const settings = items as Settings;
       const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
       const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
+      const resultsListContextLengthEl = getElementById<HTMLInputElement>(
+        'resultsListContextLength'
+      );
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
       }
       if (defaultElementSearchEl) {
         defaultElementSearchEl.checked = settings.defaultElementSearch;
+      }
+      if (resultsListContextLengthEl) {
+        resultsListContextLengthEl.value = String(
+          settings.resultsListContextLength ?? DEFAULT_RESULTS_LIST_CONTEXT_LENGTH
+        );
       }
       // Note: defaultCaseSensitive is not shown in options page UI
     }
@@ -30,15 +40,27 @@ function loadSettings(): void {
 function saveSettings(): void {
   const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
   const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
+  const resultsListContextLengthEl = getElementById<HTMLInputElement>(
+    'resultsListContextLength'
+  );
 
-  if (!defaultRegexEl || !defaultElementSearchEl) {
+  if (!defaultRegexEl || !defaultElementSearchEl || !resultsListContextLengthEl) {
     return;
   }
+
+  const contextLength = parseInt(resultsListContextLengthEl.value, 10);
+  const validContextLength =
+    !isNaN(contextLength) &&
+      contextLength >= 10 &&
+      contextLength <= 100
+      ? contextLength
+      : DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
 
   const settings: Settings = {
     defaultRegex: defaultRegexEl.checked,
     defaultCaseSensitive: false, // Options page doesn't have this setting
     defaultElementSearch: defaultElementSearchEl.checked,
+    resultsListContextLength: validContextLength,
   };
 
   chrome.storage.sync.set(settings, () => {
@@ -60,10 +82,15 @@ document.addEventListener('DOMContentLoaded', loadSettings);
 // Auto-save on change
 const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
 const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
+const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
 
 if (defaultRegexEl) {
   defaultRegexEl.addEventListener('change', saveSettings);
 }
 if (defaultElementSearchEl) {
   defaultElementSearchEl.addEventListener('change', saveSettings);
+}
+if (resultsListContextLengthEl) {
+  resultsListContextLengthEl.addEventListener('change', saveSettings);
+  resultsListContextLengthEl.addEventListener('blur', saveSettings);
 }

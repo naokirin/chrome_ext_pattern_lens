@@ -48,6 +48,25 @@
       margin-top: -5px;
     }
 
+    input[type="number"] {
+      width: 80px;
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .setting-row label {
+      margin-bottom: 0;
+    }
+
     .save-status {
       margin-top: 20px;
       padding: 10px;
@@ -82,6 +101,17 @@
       <span>要素検索をデフォルトで有効にする</span>
     </label>
     <p class="description">CSSセレクタやXPathによる要素検索をデフォルトで有効にします</p>
+  </div>
+
+  <div class="setting-group">
+    <h2>検索結果一覧オプション</h2>
+    <div class="setting-row">
+      <label>
+        <span>前後文脈の文字数:</span>
+        <input type="number" id="resultsListContextLength" min="10" max="100" value="30">
+      </label>
+    </div>
+    <p class="description">検索結果一覧に表示する前後の文脈の文字数（10〜100文字）</p>
   </div>
 
   <div class="save-status" id="saveStatus">

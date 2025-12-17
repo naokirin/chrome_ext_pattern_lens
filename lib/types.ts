@@ -83,6 +83,7 @@ export interface Settings {
   defaultRegex: boolean;
   defaultCaseSensitive: boolean;
   defaultElementSearch: boolean;
+  resultsListContextLength?: number;
 }
 
 export interface SearchState {

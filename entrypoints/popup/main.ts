@@ -1,6 +1,10 @@
 import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 // Import shared type definitions
-import { DEFAULT_RESULTS_LIST_CONTEXT_LENGTH } from '~/lib/constants';
+import {
+  DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+  MAX_RESULTS_LIST_CONTEXT_LENGTH,
+  MIN_RESULTS_LIST_CONTEXT_LENGTH,
+} from '~/lib/constants';
 import type {
   ClearMessage,
   GetResultsListMessage,
@@ -46,6 +50,8 @@ let _lastSearchQuery = '';
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 // Track the query that initiated the current search to detect if it's stale
 let currentSearchQuery = '';
+// Context length for results list (loaded from settings)
+let contextLength = DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
 
 // Load settings from storage
 function loadSettings(): void {
@@ -54,12 +60,25 @@ function loadSettings(): void {
       defaultRegex: false,
       defaultCaseSensitive: false,
       defaultElementSearch: false,
+      resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
     },
     (items) => {
       const settings = items as Settings;
       regexMode.checked = settings.defaultRegex;
       caseSensitiveMode.checked = settings.defaultCaseSensitive;
       elementMode.checked = settings.defaultElementSearch;
+
+      // Load context length and validate
+      const savedContextLength = settings.resultsListContextLength ?? DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
+      if (
+        savedContextLength >= MIN_RESULTS_LIST_CONTEXT_LENGTH &&
+        savedContextLength <= MAX_RESULTS_LIST_CONTEXT_LENGTH
+      ) {
+        contextLength = savedContextLength;
+      } else {
+        contextLength = DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
+      }
+
       updateSearchModeVisibility();
     }
   );
@@ -467,7 +486,7 @@ async function fetchAndDisplayResultsList(): Promise<void> {
 
     const message: GetResultsListMessage = {
       action: 'get-results-list',
-      contextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+      contextLength: contextLength,
     };
 
     chrome.tabs.sendMessage(
@@ -659,6 +678,24 @@ async function restoreSearchState(): Promise<void> {
     handleError(error, 'restoreSearchState: Exception', undefined);
   }
 }
+
+// Listen for storage changes to update context length
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'sync' && changes.resultsListContextLength) {
+    const newContextLength = changes.resultsListContextLength.newValue;
+    if (
+      typeof newContextLength === 'number' &&
+      newContextLength >= MIN_RESULTS_LIST_CONTEXT_LENGTH &&
+      newContextLength <= MAX_RESULTS_LIST_CONTEXT_LENGTH
+    ) {
+      contextLength = newContextLength;
+      // If results list is currently displayed, refresh it with new context length
+      if (resultsListMode.checked) {
+        fetchAndDisplayResultsList();
+      }
+    }
+  }
+});
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
