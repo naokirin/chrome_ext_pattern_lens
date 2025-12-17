@@ -4,7 +4,6 @@
 import {
   DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
   MAX_RESULTS_LIST_CONTEXT_LENGTH,
-  MIN_RESULTS_LIST_CONTEXT_LENGTH,
 } from '~/lib/constants';
 import type { SearchResultItem } from '~/lib/types';
 import { handleError } from '~/lib/utils/errorHandler';

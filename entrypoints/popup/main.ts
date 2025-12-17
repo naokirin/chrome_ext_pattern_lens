@@ -110,7 +110,6 @@ function updateSearchModeVisibility(): void {
     resultsList.style.display = 'none';
     resultsList.classList.remove('visible');
     document.body.classList.remove('has-results-list');
-    document.body.classList.remove('has-results-list');
   } else {
     // Disable regex mode and case-sensitive mode when fuzzy search is enabled
     if (isFuzzyMode) {

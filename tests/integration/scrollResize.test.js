@@ -290,11 +290,9 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       );
     });
 
-    // 最初のオーバーレイの位置を記録
+    // 最初のオーバーレイを記録
     const firstOverlay = highlightData.overlays[0];
     expect(firstOverlay).toBeTruthy();
-    const _initialTop = Number.parseInt(firstOverlay.style.top) || 0;
-    const _initialScrollY = window.scrollY || window.pageYOffset;
 
     // rangesが正しく設定されていることを確認
     expect(highlightData.ranges.length).toBeGreaterThan(0);
@@ -313,7 +311,6 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
     expect(highlightData.overlays.length).toBeGreaterThan(0);
     const newOverlay = highlightData.overlays[0];
     expect(newOverlay).toBeTruthy();
-    const _newTop = Number.parseInt(newOverlay.style.top) || 0;
 
     // getClientRects()はビューポート座標を返すため、スクロール位置を加算すると位置が変わる
     // スクロール位置が変更された場合、位置が更新されることを確認
@@ -408,10 +405,9 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       );
     });
 
-    // 最初のオーバーレイの位置を記録
+    // 最初のオーバーレイを確認
     const firstOverlay = highlightData.overlays[0];
     expect(firstOverlay).toBeTruthy();
-    const _initialLeft = Number.parseInt(firstOverlay.style.left) || 0;
 
     // ウィンドウサイズを変更（これにより要素の位置が変わる可能性がある）
     Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true });

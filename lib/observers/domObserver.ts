@@ -188,11 +188,8 @@ export class DOMSearchObserver {
       }
     });
 
-    // 無効な範囲を削除
-    if (invalidRanges.length > 0) {
-      // 範囲を再作成する必要があるため、再検索を実行
-      // ここではフラグを設定するだけ
-    }
+    // 無効な範囲がある場合、再検索が必要（debouncedReSearchで処理される）
+    // invalidRanges の情報はここでは使用しない（再検索時に全て再構築されるため）
   }
 
   /**

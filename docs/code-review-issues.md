@@ -10,50 +10,27 @@ lint、TypeScript型チェック、テストはすべてパス。重大な問題
 
 ## 問題一覧
 
-### 1. 重複したコード [優先度: 低]
+### 1. ~~重複したコード~~ [修正済み]
 
 **ファイル**: `entrypoints/popup/main.ts` 112-113行目
 
-```typescript
-document.body.classList.remove('has-results-list');
-document.body.classList.remove('has-results-list'); // 重複
-```
-
-**影響**: 動作に影響なし。コードの冗長性のみ。
-
-**修正方法**: 重複行を削除。
+~~重複行を削除。~~
 
 ---
 
-### 2. 未使用のインポート [優先度: 低]
+### 2. ~~未使用のインポート~~ [修正済み]
 
 **ファイル**: `lib/search/resultsCollector.ts`
 
-`MIN_RESULTS_LIST_CONTEXT_LENGTH` がインポートされているが、関数内で使用されていない。
-
-**影響**: バンドルサイズへの微小な影響のみ。
-
-**修正方法**: 未使用インポートを削除するか、バリデーションに使用する。
+~~`MIN_RESULTS_LIST_CONTEXT_LENGTH` を削除。~~
 
 ---
 
-### 3. 未実装のロジック [優先度: 中]
+### 3. ~~未実装のロジック~~ [修正済み]
 
 **ファイル**: `lib/observers/domObserver.ts` 174-196行目 `invalidateRangesInNode`
 
-```typescript
-// 無効な範囲を削除
-if (invalidRanges.length > 0) {
-  // 範囲を再作成する必要があるため、再検索を実行
-  // ここではフラグを設定するだけ
-}
-```
-
-無効な範囲を検出しても実際には何も処理していない。コメントではフラグ設定と書かれているが未実装。
-
-**影響**: DOM要素削除時に古い範囲が残る可能性があるが、再検索で上書きされるため実害は少ない。
-
-**修正方法**: コメントを削除するか、実際にフラグを実装する。
+~~コメントを明確化（再検索で全て再構築されるため、ここでは何もしない旨を記載）。~~
 
 ---
 
@@ -103,22 +80,11 @@ if (invalidRanges.length > 0) {
 
 ---
 
-### T2. 未使用変数の存在 [優先度: 低]
+### T2. ~~未使用変数の存在~~ [修正済み]
 
 **ファイル**: `tests/integration/scrollResize.test.js`
 
-```javascript
-const _initialTop = Number.parseInt(firstOverlay.style.top) || 0;
-const _initialScrollY = window.scrollY || window.pageYOffset;
-const _newTop = Number.parseInt(newOverlay.style.top) || 0;
-const _initialLeft = Number.parseInt(firstOverlay.style.left) || 0;
-```
-
-`_` プレフィックスで未使用変数を示しているが、実際にアサーションで使用されていない。
-
-**影響**: テストの意図が不明確。
-
-**修正方法**: 不要な変数を削除するか、実際にアサーションに使用する。
+~~未使用変数を削除。~~
 
 ---
 
