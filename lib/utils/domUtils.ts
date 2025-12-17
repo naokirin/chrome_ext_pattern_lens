@@ -165,20 +165,22 @@ export function isRectVisibleInScrollableParent(
 }
 
 /**
- * Find the index of the match closest to current scroll position
+ * Find the index of the match closest to current viewport center
  * @param overlays - Array of overlay elements
  * @returns Index of closest match, or 0 if none found
  */
 export function findClosestMatchIndex(overlays: HTMLDivElement[]): number {
   if (overlays.length === 0) return 0;
 
-  const viewportCenterY = window.scrollY + window.innerHeight / 2;
+  // Viewport center in viewport coordinates
+  const viewportCenterY = window.innerHeight / 2;
   let closestIndex = 0;
   let closestDistance = Infinity;
 
   overlays.forEach((overlay, index) => {
     const rect = overlay.getBoundingClientRect();
-    const elementCenterY = window.scrollY + rect.top + rect.height / 2;
+    // rect.top is already in viewport coordinates
+    const elementCenterY = rect.top + rect.height / 2;
     const distance = Math.abs(elementCenterY - viewportCenterY);
 
     if (distance < closestDistance) {
