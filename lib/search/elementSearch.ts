@@ -12,6 +12,7 @@ import {
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
 import {
+  findClosestMatchIndex,
   getScrollPosition,
   isRectVisibleInScrollableParent,
   isRectVisibleInViewport,
@@ -122,7 +123,10 @@ export function searchElements(
         };
       }
 
-      return { count: count, currentIndex: 0, totalMatches: count };
+      // For re-search, find the closest match to current scroll position
+      const closestIndex = findClosestMatchIndex(stateManager.overlays);
+      stateManager.setCurrentIndex(closestIndex);
+      return { count: count, currentIndex: closestIndex, totalMatches: count };
     }
 
     return { count: 0, currentIndex: -1, totalMatches: 0 };

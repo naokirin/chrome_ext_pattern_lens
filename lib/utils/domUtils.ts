@@ -163,3 +163,29 @@ export function isRectVisibleInScrollableParent(
 
   return true; // No scrollable parent found, or rectangle is within all parents
 }
+
+/**
+ * Find the index of the match closest to current scroll position
+ * @param overlays - Array of overlay elements
+ * @returns Index of closest match, or 0 if none found
+ */
+export function findClosestMatchIndex(overlays: HTMLDivElement[]): number {
+  if (overlays.length === 0) return 0;
+
+  const viewportCenterY = window.scrollY + window.innerHeight / 2;
+  let closestIndex = 0;
+  let closestDistance = Infinity;
+
+  overlays.forEach((overlay, index) => {
+    const rect = overlay.getBoundingClientRect();
+    const elementCenterY = window.scrollY + rect.top + rect.height / 2;
+    const distance = Math.abs(elementCenterY - viewportCenterY);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  return closestIndex;
+}
