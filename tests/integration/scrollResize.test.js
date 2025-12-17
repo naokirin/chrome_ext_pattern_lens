@@ -10,6 +10,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 import { createChromeMock } from '../helpers/chrome-mock.js';
 
+// テスト用定数
+const TEST_VIEWPORT = {
+  WIDTH: 1024,
+  HEIGHT: 768,
+};
+const OVERLAY_PADDING = 2; // オーバーレイの余白（px）
+const FALLBACK_RECT_OFFSET = 100; // フォールバック時の初期オフセット
+const FALLBACK_RECT_SPACING = 200; // フォールバック時の要素間隔
+
 describe('統合テスト: スクロール/リサイズ時の追従', () => {
   let messageHandler;
   let highlightData = {
@@ -39,12 +48,12 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
       configurable: true,
-      value: 1024,
+      value: TEST_VIEWPORT.WIDTH,
     });
     Object.defineProperty(window, 'innerHeight', {
       writable: true,
       configurable: true,
-      value: 768,
+      value: TEST_VIEWPORT.HEIGHT,
     });
     Object.defineProperty(window, 'scrollX', {
       writable: true,
@@ -138,10 +147,10 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
         overlay.className = 'pattern-lens-highlight-overlay';
         overlay.style.cssText = `
           position: absolute;
-          left: ${rect.left - 2}px;
-          top: ${rect.top - 2}px;
-          width: ${rect.width + 4}px;
-          height: ${rect.height + 4}px;
+          left: ${rect.left - OVERLAY_PADDING}px;
+          top: ${rect.top - OVERLAY_PADDING}px;
+          width: ${rect.width + OVERLAY_PADDING * 2}px;
+          height: ${rect.height + OVERLAY_PADDING * 2}px;
           background-color: rgba(255, 235, 59, 0.4);
           border: 1px solid rgba(255, 193, 7, 0.8);
           pointer-events: none;
@@ -151,15 +160,15 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       } catch (_error) {
         // Failed to update overlay position, silently ignore
         // テスト環境では、エラーが発生してもオーバーレイを作成する
-        const fallbackRect = new DOMRect(0, index * 200 + 100, 100, 20);
+        const fallbackRect = new DOMRect(0, index * FALLBACK_RECT_SPACING + FALLBACK_RECT_OFFSET, 100, 20);
         const overlay = document.createElement('div');
         overlay.className = 'pattern-lens-highlight-overlay';
         overlay.style.cssText = `
           position: absolute;
-          left: ${fallbackRect.left - 2}px;
-          top: ${fallbackRect.top - 2}px;
-          width: ${fallbackRect.width + 4}px;
-          height: ${fallbackRect.height + 4}px;
+          left: ${fallbackRect.left - OVERLAY_PADDING}px;
+          top: ${fallbackRect.top - OVERLAY_PADDING}px;
+          width: ${fallbackRect.width + OVERLAY_PADDING * 2}px;
+          height: ${fallbackRect.height + OVERLAY_PADDING * 2}px;
           background-color: rgba(255, 235, 59, 0.4);
           border: 1px solid rgba(255, 193, 7, 0.8);
           pointer-events: none;
