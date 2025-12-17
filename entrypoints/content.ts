@@ -12,19 +12,14 @@ const stateManager = new SearchStateManager();
 let updateCallback: (() => void) | null = null;
 
 // DOM observer for automatic search updates
-let domObserver: DOMSearchObserver | null = null;
+let domObserver: DOMSearchObserver = new DOMSearchObserver(stateManager, { enabled: true });
 
-// Load settings and initialize DOM observer
+// Load settings and update DOM observer
 function initializeDOMObserver(): void {
   chrome.storage.sync.get({ autoUpdateSearch: true }, (items) => {
     const settings = items as Settings;
     const enabled = settings.autoUpdateSearch ?? true;
-
-    if (enabled) {
-      domObserver = new DOMSearchObserver(stateManager, { enabled: true });
-    } else {
-      domObserver = new DOMSearchObserver(stateManager, { enabled: false });
-    }
+    domObserver.updateOptions({ enabled });
   });
 }
 
@@ -42,11 +37,9 @@ export default defineContentScript({
     // Listen for settings changes
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync' && changes.autoUpdateSearch) {
-        // Settings changed, reinitialize observer
-        if (domObserver) {
-          domObserver.stopObserving();
-        }
-        initializeDOMObserver();
+        // Settings changed, update observer options
+        const enabled = changes.autoUpdateSearch.newValue ?? true;
+        domObserver.updateOptions({ enabled });
       }
     });
 
@@ -56,7 +49,7 @@ export default defineContentScript({
       routeMessage(request as Message, {
         stateManager,
         updateCallback,
-        domObserver: domObserver || undefined,
+        domObserver,
       }).then((response) => {
         if (response) {
           sendResponse(response);

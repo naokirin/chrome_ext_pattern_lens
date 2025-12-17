@@ -63,17 +63,21 @@ export class DOMSearchObserver {
     searchFunction: SearchFunction,
     updateCallback?: (() => void) | null
   ): void {
-    if (!this.options.enabled) {
-      return;
+    // 既存の監視を停止
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
     }
 
+    // 検索情報を保存（enabled が false でも保存しておく）
     this.currentSearchQuery = query;
     this.searchOptions = searchOptions;
     this.searchFunction = searchFunction;
     this.updateCallback = updateCallback || null;
 
-    // 既存の監視を停止
-    this.stopObserving();
+    if (!this.options.enabled) {
+      return;
+    }
 
     // MutationObserver を設定
     this.observer = new MutationObserver((mutations) => {
@@ -281,7 +285,26 @@ export class DOMSearchObserver {
    * オプションを更新
    */
   updateOptions(options: Partial<ObserverOptions>): void {
+    const wasEnabled = this.options.enabled;
     this.options = { ...this.options, ...options };
+
+    // enabled が true に変わり、検索情報がある場合は監視を開始
+    if (!wasEnabled && this.options.enabled && this.currentSearchQuery && this.searchFunction) {
+      this.observer = new MutationObserver((mutations) => {
+        this.handleMutations(mutations);
+      });
+      this.observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: false,
+      });
+    }
+    // enabled が false に変わった場合は監視を停止（検索情報は保持）
+    else if (wasEnabled && !this.options.enabled && this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
   }
 
   /**
