@@ -3,7 +3,7 @@ import { updateOverlayPositions } from '~/lib/highlight/overlay';
 import { routeMessage } from '~/lib/messaging/router';
 import { SearchStateManager } from '~/lib/state/searchState';
 // Import shared type definitions
-import type { Message } from '~/lib/types';
+import type { Message, Settings } from '~/lib/types';
 
 // State management instance
 const stateManager = new SearchStateManager();
@@ -12,7 +12,21 @@ const stateManager = new SearchStateManager();
 let updateCallback: (() => void) | null = null;
 
 // DOM observer for automatic search updates
-const domObserver = new DOMSearchObserver(stateManager);
+let domObserver: DOMSearchObserver | null = null;
+
+// Load settings and initialize DOM observer
+function initializeDOMObserver(): void {
+  chrome.storage.sync.get({ autoUpdateSearch: true }, (items) => {
+    const settings = items as Settings;
+    const enabled = settings.autoUpdateSearch ?? true;
+    
+    if (enabled) {
+      domObserver = new DOMSearchObserver(stateManager, { enabled: true });
+    } else {
+      domObserver = new DOMSearchObserver(stateManager, { enabled: false });
+    }
+  });
+}
 
 // WXT Content Script
 export default defineContentScript({
@@ -22,13 +36,27 @@ export default defineContentScript({
     // Create update callback that will be used by event listeners
     updateCallback = () => updateOverlayPositions(stateManager);
 
+    // Initialize DOM observer with settings
+    initializeDOMObserver();
+
+    // Listen for settings changes
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.autoUpdateSearch) {
+        // Settings changed, reinitialize observer
+        if (domObserver) {
+          domObserver.stopObserving();
+        }
+        initializeDOMObserver();
+      }
+    });
+
     // Handle messages from popup
     chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       // Route message to appropriate handler
       routeMessage(request as Message, {
         stateManager,
         updateCallback,
-        domObserver,
+        domObserver: domObserver || undefined,
       }).then((response) => {
         if (response) {
           sendResponse(response);

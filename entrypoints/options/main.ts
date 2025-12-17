@@ -11,6 +11,7 @@ function loadSettings(): void {
       defaultCaseSensitive: false,
       defaultElementSearch: false,
       resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+      autoUpdateSearch: true, // デフォルトで有効
     },
     (items) => {
       const settings = items as Settings;
@@ -19,6 +20,7 @@ function loadSettings(): void {
       const resultsListContextLengthEl = getElementById<HTMLInputElement>(
         'resultsListContextLength'
       );
+      const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
@@ -31,6 +33,9 @@ function loadSettings(): void {
           settings.resultsListContextLength ?? DEFAULT_RESULTS_LIST_CONTEXT_LENGTH
         );
       }
+      if (autoUpdateSearchEl) {
+        autoUpdateSearchEl.checked = settings.autoUpdateSearch ?? true;
+      }
       // Note: defaultCaseSensitive is not shown in options page UI
     }
   );
@@ -41,8 +46,9 @@ function saveSettings(): void {
   const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
   const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
   const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
+  const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
 
-  if (!defaultRegexEl || !defaultElementSearchEl || !resultsListContextLengthEl) {
+  if (!defaultRegexEl || !defaultElementSearchEl || !resultsListContextLengthEl || !autoUpdateSearchEl) {
     return;
   }
 
@@ -57,6 +63,7 @@ function saveSettings(): void {
     defaultCaseSensitive: false, // Options page doesn't have this setting
     defaultElementSearch: defaultElementSearchEl.checked,
     resultsListContextLength: validContextLength,
+    autoUpdateSearch: autoUpdateSearchEl.checked,
   };
 
   chrome.storage.sync.set(settings, () => {
@@ -79,6 +86,7 @@ document.addEventListener('DOMContentLoaded', loadSettings);
 const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
 const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
 const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
+const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
 
 if (defaultRegexEl) {
   defaultRegexEl.addEventListener('change', saveSettings);
@@ -89,4 +97,7 @@ if (defaultElementSearchEl) {
 if (resultsListContextLengthEl) {
   resultsListContextLengthEl.addEventListener('change', saveSettings);
   resultsListContextLengthEl.addEventListener('blur', saveSettings);
+}
+if (autoUpdateSearchEl) {
+  autoUpdateSearchEl.addEventListener('change', saveSettings);
 }

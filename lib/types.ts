@@ -84,6 +84,7 @@ export interface Settings {
   defaultCaseSensitive: boolean;
   defaultElementSearch: boolean;
   resultsListContextLength?: number;
+  autoUpdateSearch?: boolean; // 動的要素の自動検索更新を有効化
 }
 
 export interface SearchState {
