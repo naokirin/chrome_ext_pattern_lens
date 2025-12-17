@@ -8,10 +8,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
+import { createChromeMock } from '../helpers/chrome-mock.js';
 
 describe('統合テスト: スクロール/リサイズ時の追従', () => {
-  let mockSendMessage;
-  let mockTabsQuery;
   let messageHandler;
   let highlightData = {
     ranges: [],
@@ -68,50 +67,17 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       value: 0,
     });
 
-    mockSendMessage = vi.fn((_tabId, message, callback) => {
-      if (messageHandler) {
-        const response = messageHandler(message);
-        if (callback) {
-          callback(response);
+    // Chrome API モックを設定
+    // このテストではメッセージハンドラを動的に設定するため、
+    // sendMessage のカスタムハンドラでテストスコープの messageHandler を呼び出す
+    global.chrome = createChromeMock({
+      onSendMessage: (_tabId, message) => {
+        if (messageHandler) {
+          return messageHandler(message);
         }
-      }
+        return { success: true, count: 0 };
+      },
     });
-
-    mockTabsQuery = vi.fn((_queryInfo, callback) => {
-      callback([{ id: 1, url: 'https://example.com' }]);
-    });
-
-    global.chrome = {
-      storage: {
-        sync: {
-          get: vi.fn((_keys, callback) => {
-            callback({
-              defaultRegex: false,
-              defaultCaseSensitive: false,
-              defaultElementSearch: false,
-            });
-          }),
-          set: vi.fn((_items, callback) => {
-            if (callback) callback();
-          }),
-        },
-      },
-      tabs: {
-        query: mockTabsQuery,
-        sendMessage: mockSendMessage,
-      },
-      runtime: {
-        onMessage: {
-          addListener: vi.fn((handler) => {
-            messageHandler = handler;
-          }),
-        },
-        lastError: null,
-      },
-      scripting: {
-        executeScript: vi.fn(() => Promise.resolve()),
-      },
-    };
   });
 
   afterEach(() => {
