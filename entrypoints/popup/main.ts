@@ -88,6 +88,9 @@ function updateSearchModeVisibility(): void {
     resultsListMode.disabled = true;
     resultsListLabel.classList.add('disabled');
     resultsList.style.display = 'none';
+    resultsList.classList.remove('visible');
+    document.body.classList.remove('has-results-list');
+    document.body.classList.remove('has-results-list');
   } else {
     // Disable regex mode and case-sensitive mode when fuzzy search is enabled
     if (isFuzzyMode) {
@@ -266,6 +269,8 @@ async function clearHighlights(): Promise<void> {
         hideResult();
         hideNavigation();
         resultsList.style.display = 'none';
+        resultsList.classList.remove('visible');
+        document.body.classList.remove('has-results-list');
         searchInput.value = '';
         _lastSearchQuery = '';
       }
@@ -381,6 +386,8 @@ resultsListMode.addEventListener('change', () => {
     fetchAndDisplayResultsList();
   } else {
     resultsList.style.display = 'none';
+    resultsList.classList.remove('visible');
+    document.body.classList.remove('has-results-list');
   }
 });
 searchMode.addEventListener('change', () => {
@@ -447,6 +454,8 @@ searchInput.addEventListener('keydown', (e) => {
 async function fetchAndDisplayResultsList(): Promise<void> {
   if (!resultsListMode.checked) {
     resultsList.style.display = 'none';
+    resultsList.classList.remove('visible');
+    document.body.classList.remove('has-results-list');
     return;
   }
 
@@ -495,10 +504,14 @@ function displayResultsList(
 
   if (items.length === 0) {
     resultsList.style.display = 'none';
+    resultsList.classList.remove('visible');
+    document.body.classList.remove('has-results-list');
     return;
   }
 
   resultsList.style.display = 'flex';
+  resultsList.classList.add('visible');
+  document.body.classList.add('has-results-list');
 
   items.forEach((item) => {
     const itemElement = document.createElement('div');
