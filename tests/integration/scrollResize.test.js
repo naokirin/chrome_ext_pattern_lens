@@ -128,9 +128,6 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
     container.innerHTML = '';
     highlightData.overlays = [];
 
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-
     highlightData.ranges.forEach((range, index) => {
       try {
         const rects = range.getClientRects();
