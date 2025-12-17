@@ -48,7 +48,12 @@ function saveSettings(): void {
   const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
   const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
 
-  if (!defaultRegexEl || !defaultElementSearchEl || !resultsListContextLengthEl || !autoUpdateSearchEl) {
+  if (
+    !defaultRegexEl ||
+    !defaultElementSearchEl ||
+    !resultsListContextLengthEl ||
+    !autoUpdateSearchEl
+  ) {
     return;
   }
 

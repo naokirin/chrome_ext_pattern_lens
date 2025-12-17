@@ -179,13 +179,10 @@ export class DOMSearchObserver {
     ranges.forEach((range) => {
       try {
         // 範囲の開始/終了ノードが削除されたノードの子孫かチェック
-        if (
-          node.contains(range.startContainer) ||
-          node.contains(range.endContainer)
-        ) {
+        if (node.contains(range.startContainer) || node.contains(range.endContainer)) {
           invalidRanges.push(range);
         }
-      } catch (error) {
+      } catch {
         // 範囲が無効になった場合（ノードが削除されたなど）
         invalidRanges.push(range);
       }

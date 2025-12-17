@@ -362,7 +362,6 @@ export function searchText(
   skipNavigation = false,
   previousIndex = -1
 ): SearchResult {
-
   // Step 1: Create text matches
   const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);
 

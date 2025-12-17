@@ -17,7 +17,7 @@ describe('overlay', () => {
   beforeEach(() => {
     cleanupDOM();
     stateManager = new SearchStateManager();
-    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => { });
+    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => {});
   });
 
   afterEach(() => {

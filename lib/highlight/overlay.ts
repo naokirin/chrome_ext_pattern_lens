@@ -191,10 +191,7 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
     for (let i = 0; i < mergedRects.length; i++) {
       const rect = mergedRects[i];
       // Only create overlay if rectangle is visible in viewport and within scrollable parents
-      if (
-        isRectVisibleInViewport(rect) &&
-        isRectVisibleInScrollableParent(rect, element)
-      ) {
+      if (isRectVisibleInViewport(rect) && isRectVisibleInScrollableParent(rect, element)) {
         const overlay = createOverlay(rect, scrollX, scrollY);
         container.appendChild(overlay);
         stateManager.addOverlay(overlay);

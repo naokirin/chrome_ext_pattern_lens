@@ -1,10 +1,10 @@
-/**
- * Message handlers for content script
- */
-import { DOMSearchObserver, type SearchFunction } from '~/lib/observers/domObserver';
 import { removeMinimap } from '~/lib/highlight/minimap';
 import { clearHighlights } from '~/lib/highlight/overlay';
 import { navigateToMatch } from '~/lib/navigation/navigator';
+/**
+ * Message handlers for content script
+ */
+import type { DOMSearchObserver, SearchFunction } from '~/lib/observers/domObserver';
 import { searchElements } from '~/lib/search/elementSearch';
 import {
   collectElementSearchResults,
@@ -20,6 +20,7 @@ import type {
   NavigateMessage,
   SearchMessage,
   SearchResponse,
+  SearchResult,
   SearchResultsListResponse,
   StateResponse,
 } from '~/lib/types';
@@ -64,7 +65,7 @@ export async function handleSearch(
     context.stateManager.updateSearchState(searchState);
 
     // Perform search
-    let result;
+    let result: SearchResult;
     let searchFunction: SearchFunction;
 
     if (message.useElementSearch) {
@@ -76,7 +77,13 @@ export async function handleSearch(
         if (updateCallback) {
           clearHighlights(stateManager, removeMinimap, updateCallback);
         }
-        searchElements(query, options.elementSearchMode, stateManager, skipNavigation, previousIndex);
+        searchElements(
+          query,
+          options.elementSearchMode,
+          stateManager,
+          skipNavigation,
+          previousIndex
+        );
       };
     } else {
       result = searchText(

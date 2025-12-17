@@ -37,28 +37,36 @@ describe('DOMSearchObserver', () => {
   describe('startObserving / stopObserving', () => {
     it('監視を開始できる', () => {
       const searchFunction = vi.fn();
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       expect(observer.isObserving).toBe(true);
     });
 
     it('監視を停止できる', () => {
       const searchFunction = vi.fn();
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       observer.stopObserving();
       expect(observer.isObserving).toBe(false);
@@ -69,14 +77,18 @@ describe('DOMSearchObserver', () => {
         enabled: false,
       });
       const searchFunction = vi.fn();
-      disabledObserver.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      disabledObserver.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       expect(disabledObserver.isObserving).toBe(false);
       disabledObserver.stopObserving();
@@ -91,14 +103,18 @@ describe('DOMSearchObserver', () => {
         done();
       });
 
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       // 要素を追加
       const div = document.createElement('div');
@@ -124,14 +140,18 @@ describe('DOMSearchObserver', () => {
       div.textContent = 'test content';
       document.body.appendChild(div);
 
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       // 要素を削除
       div.remove();
@@ -153,14 +173,18 @@ describe('DOMSearchObserver', () => {
       div.textContent = 'initial';
       document.body.appendChild(div);
 
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       // テキストを変更
       div.textContent = 'updated';
@@ -180,14 +204,18 @@ describe('DOMSearchObserver', () => {
         callCount++;
       });
 
-      observer.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       // 複数の要素を短時間で追加
       for (let i = 0; i < 5; i++) {
@@ -217,14 +245,18 @@ describe('DOMSearchObserver', () => {
         debounceMs: 100,
       });
 
-      limitedObserver.startObserving('test', {
-        query: 'test',
-        useRegex: false,
-        caseSensitive: false,
-        useElementSearch: false,
-        elementSearchMode: 'css',
-        useFuzzy: false,
-      }, searchFunction);
+      limitedObserver.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
 
       // レート制限を超える数の変更を短時間で発生させる
       for (let i = 0; i < 10; i++) {

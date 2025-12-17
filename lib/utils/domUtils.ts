@@ -61,9 +61,12 @@ export function findScrollableElements(): Element[] {
 
     // Check if element is scrollable
     const isScrollable =
-      (overflow === 'scroll' || overflow === 'auto') ||
-      (overflowX === 'scroll' || overflowX === 'auto') ||
-      (overflowY === 'scroll' || overflowY === 'auto');
+      overflow === 'scroll' ||
+      overflow === 'auto' ||
+      overflowX === 'scroll' ||
+      overflowX === 'auto' ||
+      overflowY === 'scroll' ||
+      overflowY === 'auto';
 
     if (isScrollable) {
       // Force layout calculation to get accurate scroll dimensions
@@ -72,8 +75,7 @@ export function findScrollableElements(): Element[] {
 
       // Check if element actually has scrollable content
       const hasScrollableContent =
-        element.scrollHeight > element.clientHeight ||
-        element.scrollWidth > element.clientWidth;
+        element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
 
       if (hasScrollableContent) {
         scrollableElements.push(element);
@@ -111,10 +113,7 @@ export function isRectVisibleInViewport(rect: DOMRect): boolean {
  * @param element - The element that contains the rectangle
  * @returns true if rectangle is visible within scrollable parent
  */
-export function isRectVisibleInScrollableParent(
-  rect: DOMRect,
-  element: Element | Node
-): boolean {
+export function isRectVisibleInScrollableParent(rect: DOMRect, element: Element | Node): boolean {
   let current: Element | null = null;
 
   // Get the element from node if needed
@@ -137,9 +136,12 @@ export function isRectVisibleInScrollableParent(
 
     // Check if this element is scrollable
     const isScrollable =
-      (overflow === 'scroll' || overflow === 'auto') ||
-      (overflowX === 'scroll' || overflowX === 'auto') ||
-      (overflowY === 'scroll' || overflowY === 'auto');
+      overflow === 'scroll' ||
+      overflow === 'auto' ||
+      overflowX === 'scroll' ||
+      overflowX === 'auto' ||
+      overflowY === 'scroll' ||
+      overflowY === 'auto';
 
     if (isScrollable) {
       // Get the scrollable element's bounding rect
@@ -175,7 +177,7 @@ export function findClosestMatchIndex(overlays: HTMLDivElement[]): number {
   // Viewport center in viewport coordinates
   const viewportCenterY = window.innerHeight / 2;
   let closestIndex = 0;
-  let closestDistance = Infinity;
+  let closestDistance = Number.POSITIVE_INFINITY;
 
   overlays.forEach((overlay, index) => {
     const rect = overlay.getBoundingClientRect();

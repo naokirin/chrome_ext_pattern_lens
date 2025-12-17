@@ -1,6 +1,6 @@
-import { DOMSearchObserver } from '~/lib/observers/domObserver';
 import { updateOverlayPositions } from '~/lib/highlight/overlay';
 import { routeMessage } from '~/lib/messaging/router';
+import { DOMSearchObserver } from '~/lib/observers/domObserver';
 import { SearchStateManager } from '~/lib/state/searchState';
 // Import shared type definitions
 import type { Message, Settings } from '~/lib/types';
@@ -12,7 +12,7 @@ const stateManager = new SearchStateManager();
 let updateCallback: (() => void) | null = null;
 
 // DOM observer for automatic search updates
-let domObserver: DOMSearchObserver = new DOMSearchObserver(stateManager, { enabled: true });
+const domObserver: DOMSearchObserver = new DOMSearchObserver(stateManager, { enabled: true });
 
 // Load settings and update DOM observer
 function initializeDOMObserver(): void {
