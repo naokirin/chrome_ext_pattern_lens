@@ -19,8 +19,8 @@ export interface ObserverOptions {
  */
 const DEFAULT_OPTIONS: ObserverOptions = {
   enabled: true,
-  debounceMs: 500,
-  maxMutationsPerSecond: 10,
+  debounceMs: 100,
+  maxMutationsPerSecond: 30,
 };
 
 /**
@@ -30,7 +30,8 @@ export type SearchFunction = (
   query: string,
   options: SearchState,
   stateManager: SearchStateManager,
-  updateCallback?: (() => void) | null
+  updateCallback?: (() => void) | null,
+  skipNavigation?: boolean
 ) => void;
 
 /**
@@ -244,12 +245,13 @@ export class DOMSearchObserver {
     try {
       this.isSearching = true;
 
-      // 既存の検索ロジックを呼び出し
+      // 既存の検索ロジックを呼び出し（スクロール位置を変えないため skipNavigation=true）
       this.searchFunction(
         this.currentSearchQuery,
         this.searchOptions,
         this.stateManager,
-        this.updateCallback
+        this.updateCallback,
+        true // skipNavigation
       );
     } catch (error) {
       handleError(error, 'DOMSearchObserver: Search failed', undefined);

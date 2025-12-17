@@ -357,7 +357,8 @@ export function searchText(
   useRegex: boolean,
   caseSensitive: boolean,
   stateManager: SearchStateManager,
-  useFuzzy = false
+  useFuzzy = false,
+  skipNavigation = false
 ): SearchResult {
   // Step 1: Create text matches
   const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);
@@ -369,13 +370,17 @@ export function searchText(
   if (count > 0) {
     setupEventListeners(stateManager, () => updateOverlayPositions(stateManager));
 
-    // Navigate to first match
-    const navResult = navigateToMatch(0, stateManager);
-    return {
-      count: count,
-      currentIndex: navResult.currentIndex,
-      totalMatches: navResult.totalMatches,
-    };
+    // Navigate to first match (skip if this is a re-search from DOM observer)
+    if (!skipNavigation) {
+      const navResult = navigateToMatch(0, stateManager);
+      return {
+        count: count,
+        currentIndex: navResult.currentIndex,
+        totalMatches: navResult.totalMatches,
+      };
+    }
+
+    return { count: count, currentIndex: 0, totalMatches: count };
   }
 
   return { count: 0, currentIndex: -1, totalMatches: 0 };

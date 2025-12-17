@@ -98,7 +98,8 @@ export function createOverlaysFromElements(
 export function searchElements(
   query: string,
   mode: 'css' | 'xpath',
-  stateManager: SearchStateManager
+  stateManager: SearchStateManager,
+  skipNavigation = false
 ): SearchResult {
   try {
     // Step 1: Find elements
@@ -111,13 +112,17 @@ export function searchElements(
     if (count > 0) {
       setupEventListeners(stateManager, () => updateOverlayPositions(stateManager));
 
-      // Navigate to first element
-      const navResult = navigateToMatch(0, stateManager);
-      return {
-        count: count,
-        currentIndex: navResult.currentIndex,
-        totalMatches: navResult.totalMatches,
-      };
+      // Navigate to first element (skip if this is a re-search from DOM observer)
+      if (!skipNavigation) {
+        const navResult = navigateToMatch(0, stateManager);
+        return {
+          count: count,
+          currentIndex: navResult.currentIndex,
+          totalMatches: navResult.totalMatches,
+        };
+      }
+
+      return { count: count, currentIndex: 0, totalMatches: count };
     }
 
     return { count: 0, currentIndex: -1, totalMatches: 0 };

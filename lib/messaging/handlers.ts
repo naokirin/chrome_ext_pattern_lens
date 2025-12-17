@@ -69,12 +69,12 @@ export async function handleSearch(
 
     if (message.useElementSearch) {
       result = searchElements(message.query, message.elementSearchMode, context.stateManager);
-      searchFunction = (query: string, options, stateManager, updateCallback) => {
+      searchFunction = (query, options, stateManager, updateCallback, skipNavigation) => {
         // Clear highlights before re-searching
         if (updateCallback) {
           clearHighlights(stateManager, removeMinimap, updateCallback);
         }
-        searchElements(query, options.elementSearchMode, stateManager);
+        searchElements(query, options.elementSearchMode, stateManager, skipNavigation);
       };
     } else {
       result = searchText(
@@ -84,7 +84,7 @@ export async function handleSearch(
         context.stateManager,
         message.useFuzzy
       );
-      searchFunction = (query: string, options, stateManager, updateCallback) => {
+      searchFunction = (query, options, stateManager, updateCallback, skipNavigation) => {
         // Clear highlights before re-searching
         if (updateCallback) {
           clearHighlights(stateManager, removeMinimap, updateCallback);
@@ -94,7 +94,8 @@ export async function handleSearch(
           options.useRegex,
           options.caseSensitive,
           stateManager,
-          options.useFuzzy
+          options.useFuzzy,
+          skipNavigation
         );
       };
     }
