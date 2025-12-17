@@ -282,5 +282,57 @@ describe('DOMSearchObserver', () => {
       // オプションが更新されたことを確認（内部状態なので直接確認は難しいが、エラーが発生しないことを確認）
       expect(observer).toBeDefined();
     });
+
+    it('enabled を false に変更すると監視が停止する', () => {
+      const searchFunction = vi.fn();
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      expect(observer.isObserving).toBe(true);
+
+      observer.updateOptions({ enabled: false });
+
+      expect(observer.isObserving).toBe(false);
+    });
+
+    it('enabled を true に変更すると監視が再開する', () => {
+      const disabledObserver = new DOMSearchObserver(stateManager, {
+        enabled: false,
+      });
+      const searchFunction = vi.fn();
+
+      // 検索情報を設定（enabled=false でも保存される）
+      disabledObserver.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      expect(disabledObserver.isObserving).toBe(false);
+
+      // enabled を true に変更
+      disabledObserver.updateOptions({ enabled: true });
+
+      expect(disabledObserver.isObserving).toBe(true);
+
+      disabledObserver.stopObserving();
+    });
   });
 });
