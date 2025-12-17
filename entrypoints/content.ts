@@ -19,7 +19,7 @@ function initializeDOMObserver(): void {
   chrome.storage.sync.get({ autoUpdateSearch: true }, (items) => {
     const settings = items as Settings;
     const enabled = settings.autoUpdateSearch ?? true;
-    
+
     if (enabled) {
       domObserver = new DOMSearchObserver(stateManager, { enabled: true });
     } else {
