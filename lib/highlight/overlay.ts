@@ -16,7 +16,13 @@ import {
  * Overlay management for highlighting search results
  */
 import type { SearchStateManager } from '~/lib/state/searchState';
-import { getElementById, getScrollPosition } from '~/lib/utils/domUtils';
+import {
+  findScrollableElements,
+  getElementById,
+  getScrollPosition,
+  isRectVisibleInScrollableParent,
+  isRectVisibleInViewport,
+} from '~/lib/utils/domUtils';
 import { throttleAnimationFrame } from '~/lib/utils/throttle';
 
 /**
@@ -84,6 +90,9 @@ let eventListenersAttached = false;
 let scrollCallback: (() => void) | null = null;
 let resizeCallback: (() => void) | null = null;
 
+// Store scrollable element listeners
+const scrollableElementListeners = new Map<Element, () => void>();
+
 /**
  * Initialize overlay container
  */
@@ -94,7 +103,7 @@ export function initializeOverlayContainer(): HTMLDivElement {
     container = document.createElement('div');
     container.id = HIGHLIGHT_OVERLAY_ID;
     container.style.cssText = `
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
@@ -110,11 +119,13 @@ export function initializeOverlayContainer(): HTMLDivElement {
 
 /**
  * Create overlay element for a rectangle
+ * Note: rect should be from getClientRects() which returns viewport coordinates
+ * Since overlay container uses position: fixed, we don't need to add scroll position
  */
 export function createOverlay(
   rect: DOMRect,
-  scrollX: number,
-  scrollY: number,
+  _scrollX: number,
+  _scrollY: number,
   isCurrent = false
 ): HTMLDivElement {
   const overlay = document.createElement('div');
@@ -126,8 +137,8 @@ export function createOverlay(
 
   overlay.style.cssText = `
     position: absolute;
-    left: ${rect.left + scrollX - OVERLAY_PADDING}px;
-    top: ${rect.top + scrollY - OVERLAY_PADDING}px;
+    left: ${rect.left - OVERLAY_PADDING}px;
+    top: ${rect.top - OVERLAY_PADDING}px;
     width: ${rect.width + OVERLAY_PADDING * 2}px;
     height: ${rect.height + OVERLAY_PADDING * 2}px;
     background-color: ${bgColor};
@@ -141,6 +152,8 @@ export function createOverlay(
 
 /**
  * Update overlay positions (for scroll/resize events)
+ * Since overlay container uses position: fixed, getClientRects() viewport coordinates
+ * can be used directly without adding scroll position
  */
 export function updateOverlayPositions(stateManager: SearchStateManager): void {
   const container = getElementById<HTMLDivElement>(HIGHLIGHT_OVERLAY_ID);
@@ -150,6 +163,7 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
   container.innerHTML = '';
   stateManager.clearOverlays();
 
+  // Get scroll position for compatibility (though not needed with fixed positioning)
   const { scrollX, scrollY } = getScrollPosition();
 
   // Recreate overlays from stored ranges and elements
@@ -158,9 +172,16 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
     const mergedRects = mergeAdjacentRects(rects);
     const isCurrent = index === stateManager.currentIndex;
     for (let i = 0; i < mergedRects.length; i++) {
-      const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
-      container.appendChild(overlay);
-      stateManager.addOverlay(overlay);
+      const rect = mergedRects[i];
+      // Only create overlay if rectangle is visible in viewport and within scrollable parents
+      if (
+        isRectVisibleInViewport(rect) &&
+        isRectVisibleInScrollableParent(rect, range.startContainer)
+      ) {
+        const overlay = createOverlay(rect, scrollX, scrollY, isCurrent);
+        container.appendChild(overlay);
+        stateManager.addOverlay(overlay);
+      }
     }
   });
 
@@ -168,9 +189,16 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
     const rects = element.getClientRects();
     const mergedRects = mergeAdjacentRects(rects);
     for (let i = 0; i < mergedRects.length; i++) {
-      const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
-      container.appendChild(overlay);
-      stateManager.addOverlay(overlay);
+      const rect = mergedRects[i];
+      // Only create overlay if rectangle is visible in viewport and within scrollable parents
+      if (
+        isRectVisibleInViewport(rect) &&
+        isRectVisibleInScrollableParent(rect, element)
+      ) {
+        const overlay = createOverlay(rect, scrollX, scrollY);
+        container.appendChild(overlay);
+        stateManager.addOverlay(overlay);
+      }
     }
   });
 }
@@ -178,6 +206,7 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
 /**
  * Setup event listeners for scroll and resize (prevent duplicate registration)
  * Uses throttled update with requestAnimationFrame for better performance
+ * Also listens to scroll events on scrollable elements (overflow: scroll/auto)
  */
 export function setupEventListeners(
   stateManager: SearchStateManager,
@@ -196,8 +225,18 @@ export function setupEventListeners(
   scrollCallback = throttledUpdate;
   resizeCallback = throttledUpdate;
 
+  // Listen to window scroll and resize
   window.addEventListener('scroll', scrollCallback, { passive: true });
   window.addEventListener('resize', resizeCallback, { passive: true });
+
+  // Listen to scroll events on all scrollable elements (overflow: scroll/auto)
+  const scrollableElements = findScrollableElements();
+  for (const element of scrollableElements) {
+    const listener = throttledUpdate;
+    element.addEventListener('scroll', listener, { passive: true });
+    scrollableElementListeners.set(element, listener);
+  }
+
   eventListenersAttached = true;
 }
 
@@ -218,6 +257,12 @@ export function removeEventListeners(_updateCallback: () => void): void {
     window.removeEventListener('resize', resizeCallback);
     resizeCallback = null;
   }
+
+  // Remove listeners from scrollable elements
+  for (const [element, listener] of scrollableElementListeners.entries()) {
+    element.removeEventListener('scroll', listener);
+  }
+  scrollableElementListeners.clear();
 
   eventListenersAttached = false;
 }

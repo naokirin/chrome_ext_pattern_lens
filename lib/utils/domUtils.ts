@@ -39,3 +39,127 @@ export function getScrollPosition(): { scrollX: number; scrollY: number } {
     scrollY: window.scrollY || window.pageYOffset || 0,
   };
 }
+
+/**
+ * Find all scrollable elements in the document
+ * Elements with overflow: scroll, overflow: auto, or overflow-y/overflow-x scroll/auto
+ * @returns Array of scrollable elements
+ */
+export function findScrollableElements(): Element[] {
+  const scrollableElements: Element[] = [];
+  const allElements = document.querySelectorAll('*');
+
+  for (const element of allElements) {
+    if (element === document.body || element === document.documentElement) {
+      continue; // Skip body and html
+    }
+
+    const style = window.getComputedStyle(element);
+    const overflowX = style.overflowX;
+    const overflowY = style.overflowY;
+    const overflow = style.overflow;
+
+    // Check if element is scrollable
+    const isScrollable =
+      (overflow === 'scroll' || overflow === 'auto') ||
+      (overflowX === 'scroll' || overflowX === 'auto') ||
+      (overflowY === 'scroll' || overflowY === 'auto');
+
+    if (isScrollable) {
+      // Force layout calculation to get accurate scroll dimensions
+      // Accessing offsetHeight forces a reflow
+      void (element as HTMLElement).offsetHeight;
+
+      // Check if element actually has scrollable content
+      const hasScrollableContent =
+        element.scrollHeight > element.clientHeight ||
+        element.scrollWidth > element.clientWidth;
+
+      if (hasScrollableContent) {
+        scrollableElements.push(element);
+      }
+    }
+  }
+
+  return scrollableElements;
+}
+
+/**
+ * Check if a rectangle is visible in viewport
+ * A rectangle is considered visible if it intersects with the viewport
+ * @param rect - The rectangle to check
+ * @returns true if rectangle is visible in viewport
+ */
+export function isRectVisibleInViewport(rect: DOMRect): boolean {
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Check if rectangle intersects with viewport
+  return (
+    rect.right > 0 &&
+    rect.bottom > 0 &&
+    rect.left < viewportWidth &&
+    rect.top < viewportHeight &&
+    rect.width > 0 &&
+    rect.height > 0
+  );
+}
+
+/**
+ * Check if a rectangle is visible within its scrollable parent
+ * @param rect - The rectangle to check (in viewport coordinates)
+ * @param element - The element that contains the rectangle
+ * @returns true if rectangle is visible within scrollable parent
+ */
+export function isRectVisibleInScrollableParent(
+  rect: DOMRect,
+  element: Element | Node
+): boolean {
+  let current: Element | null = null;
+
+  // Get the element from node if needed
+  if (element.nodeType === Node.TEXT_NODE) {
+    current = element.parentElement;
+  } else if (element.nodeType === Node.ELEMENT_NODE) {
+    current = element as Element;
+  }
+
+  if (!current) {
+    return true; // If we can't determine parent, assume visible
+  }
+
+  // Walk up the DOM tree to find scrollable parents
+  while (current && current !== document.body && current !== document.documentElement) {
+    const style = window.getComputedStyle(current);
+    const overflowX = style.overflowX;
+    const overflowY = style.overflowY;
+    const overflow = style.overflow;
+
+    // Check if this element is scrollable
+    const isScrollable =
+      (overflow === 'scroll' || overflow === 'auto') ||
+      (overflowX === 'scroll' || overflowX === 'auto') ||
+      (overflowY === 'scroll' || overflowY === 'auto');
+
+    if (isScrollable) {
+      // Get the scrollable element's bounding rect
+      const parentRect = current.getBoundingClientRect();
+
+      // Check if the rectangle is within the scrollable parent's visible area
+      // The rectangle must intersect with the parent's bounding rect
+      const isWithinParent =
+        rect.right > parentRect.left &&
+        rect.bottom > parentRect.top &&
+        rect.left < parentRect.right &&
+        rect.top < parentRect.bottom;
+
+      if (!isWithinParent) {
+        return false; // Rectangle is outside scrollable parent
+      }
+    }
+
+    current = current.parentElement;
+  }
+
+  return true; // No scrollable parent found, or rectangle is within all parents
+}

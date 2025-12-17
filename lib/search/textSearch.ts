@@ -12,7 +12,11 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
-import { getScrollPosition } from '../utils/domUtils';
+import {
+  getScrollPosition,
+  isRectVisibleInScrollableParent,
+  isRectVisibleInViewport,
+} from '../utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 import { findMultiKeywordMatches, splitQueryIntoKeywords } from './fuzzySearch';
 import { convertNormalizedMatchToOriginal, normalizeText } from './normalization';
@@ -321,9 +325,16 @@ export function createOverlaysFromRanges(
       // Create overlay for each merged rectangle (handles multi-line matches)
       const isCurrent = count === 0; // First match is current
       for (let i = 0; i < mergedRects.length; i++) {
-        const overlay = createOverlay(mergedRects[i], scrollX, scrollY, isCurrent);
-        container.appendChild(overlay);
-        stateManager.addOverlay(overlay);
+        const rect = mergedRects[i];
+        // Only create overlay if rectangle is visible in viewport and within scrollable parents
+        if (
+          isRectVisibleInViewport(rect) &&
+          isRectVisibleInScrollableParent(rect, range.startContainer)
+        ) {
+          const overlay = createOverlay(rect, scrollX, scrollY, isCurrent);
+          container.appendChild(overlay);
+          stateManager.addOverlay(overlay);
+        }
       }
 
       // Store range for position updates

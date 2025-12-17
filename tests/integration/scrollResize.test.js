@@ -169,13 +169,14 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
         }
 
         // 最初の矩形を使用（簡易版）
-        // getClientRects()はビューポート座標を返すので、スクロール位置を加算する
+        // getClientRects()はビューポート座標を返す
+        // position: fixed を使用するため、スクロール位置は加算しない
         const overlay = document.createElement('div');
         overlay.className = 'pattern-lens-highlight-overlay';
         overlay.style.cssText = `
           position: absolute;
-          left: ${rect.left + scrollX - 2}px;
-          top: ${rect.top + scrollY - 2}px;
+          left: ${rect.left - 2}px;
+          top: ${rect.top - 2}px;
           width: ${rect.width + 4}px;
           height: ${rect.height + 4}px;
           background-color: rgba(255, 235, 59, 0.4);
@@ -192,8 +193,8 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
         overlay.className = 'pattern-lens-highlight-overlay';
         overlay.style.cssText = `
           position: absolute;
-          left: ${fallbackRect.left + scrollX - 2}px;
-          top: ${fallbackRect.top + scrollY - 2}px;
+          left: ${fallbackRect.left - 2}px;
+          top: ${fallbackRect.top - 2}px;
           width: ${fallbackRect.width + 4}px;
           height: ${fallbackRect.height + 4}px;
           background-color: rgba(255, 235, 59, 0.4);
@@ -229,7 +230,7 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
                 const c = document.createElement('div');
                 c.id = 'pattern-lens-overlay-container';
                 c.style.cssText = `
-                                 position: absolute;
+                                 position: fixed;
                                  top: 0;
                                  left: 0;
                                  width: 100%;
@@ -242,15 +243,13 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
               })();
 
             const rect = p.getBoundingClientRect();
-            const scrollX = window.scrollX || window.pageXOffset;
-            const scrollY = window.scrollY || window.pageYOffset;
 
             const overlay = document.createElement('div');
             overlay.className = 'pattern-lens-highlight-overlay';
             overlay.style.cssText = `
               position: absolute;
-              left: ${rect.left + scrollX - 2}px;
-              top: ${rect.top + scrollY - 2}px;
+              left: ${rect.left - 2}px;
+              top: ${rect.top - 2}px;
               width: ${rect.width + 4}px;
               height: ${rect.height + 4}px;
               background-color: rgba(255, 235, 59, 0.4);
@@ -349,7 +348,7 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
                 const c = document.createElement('div');
                 c.id = 'pattern-lens-overlay-container';
                 c.style.cssText = `
-                                 position: absolute;
+                                 position: fixed;
                                  top: 0;
                                  left: 0;
                                  width: 100%;
@@ -362,15 +361,13 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
               })();
 
             const rect = p.getBoundingClientRect();
-            const scrollX = window.scrollX || window.pageXOffset;
-            const scrollY = window.scrollY || window.pageYOffset;
 
             const overlay = document.createElement('div');
             overlay.className = 'pattern-lens-highlight-overlay';
             overlay.style.cssText = `
               position: absolute;
-              left: ${rect.left + scrollX - 2}px;
-              top: ${rect.top + scrollY - 2}px;
+              left: ${rect.left - 2}px;
+              top: ${rect.top - 2}px;
               width: ${rect.width + 4}px;
               height: ${rect.height + 4}px;
               background-color: rgba(255, 235, 59, 0.4);

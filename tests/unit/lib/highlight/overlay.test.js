@@ -17,7 +17,7 @@ describe('overlay', () => {
   beforeEach(() => {
     cleanupDOM();
     stateManager = new SearchStateManager();
-    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => {});
+    vi.spyOn(minimapModule, 'removeMinimap').mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -45,7 +45,7 @@ describe('overlay', () => {
     it('コンテナに適切なスタイルが適用される', () => {
       const container = initializeOverlayContainer();
 
-      expect(container.style.position).toBe('absolute');
+      expect(container.style.position).toBe('fixed');
       expect(container.style.top).toBe('0px');
       expect(container.style.left).toBe('0px');
       expect(container.style.width).toBe('100%');
@@ -78,8 +78,9 @@ describe('overlay', () => {
       const overlay = createOverlay(rect, scrollX, scrollY);
 
       // padding (2px) を考慮
-      expect(Number.parseInt(overlay.style.left)).toBe(10 + scrollX - 2);
-      expect(Number.parseInt(overlay.style.top)).toBe(20 + scrollY - 2);
+      // position: fixed を使用するため、スクロール位置は加算しない
+      expect(Number.parseInt(overlay.style.left)).toBe(10 - 2);
+      expect(Number.parseInt(overlay.style.top)).toBe(20 - 2);
       expect(Number.parseInt(overlay.style.width)).toBe(100 + 4); // padding * 2
       expect(Number.parseInt(overlay.style.height)).toBe(30 + 4);
     });

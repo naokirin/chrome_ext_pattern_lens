@@ -11,7 +11,11 @@ import {
   updateOverlayPositions,
 } from '../highlight/overlay';
 import { navigateToMatch } from '../navigation/navigator';
-import { getScrollPosition } from '../utils/domUtils';
+import {
+  getScrollPosition,
+  isRectVisibleInScrollableParent,
+  isRectVisibleInViewport,
+} from '../utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 import { mergeAdjacentRects } from './textSearch';
 
@@ -67,9 +71,16 @@ export function createOverlaysFromElements(
       const mergedRects = mergeAdjacentRects(rects);
 
       for (let i = 0; i < mergedRects.length; i++) {
-        const overlay = createOverlay(mergedRects[i], scrollX, scrollY);
-        container.appendChild(overlay);
-        stateManager.addOverlay(overlay);
+        const rect = mergedRects[i];
+        // Only create overlay if rectangle is visible in viewport and within scrollable parents
+        if (
+          isRectVisibleInViewport(rect) &&
+          isRectVisibleInScrollableParent(rect, element)
+        ) {
+          const overlay = createOverlay(rect, scrollX, scrollY);
+          container.appendChild(overlay);
+          stateManager.addOverlay(overlay);
+        }
       }
 
       // Store element for position updates
