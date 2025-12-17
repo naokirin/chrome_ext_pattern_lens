@@ -1,6 +1,7 @@
 /**
  * Message handlers for content script
  */
+import { DOMSearchObserver, type SearchFunction } from '~/lib/observers/domObserver';
 import { removeMinimap } from '~/lib/highlight/minimap';
 import { clearHighlights } from '~/lib/highlight/overlay';
 import { navigateToMatch } from '~/lib/navigation/navigator';
@@ -30,6 +31,7 @@ import { handleError } from '~/lib/utils/errorHandler';
 export interface MessageHandlerContext {
   stateManager: SearchStateManager;
   updateCallback: (() => void) | null;
+  domObserver?: DOMSearchObserver;
 }
 
 /**
@@ -45,32 +47,68 @@ export async function handleSearch(
       clearHighlights(context.stateManager, removeMinimap, context.updateCallback);
     }
 
+    // Stop existing DOM observer
+    if (context.domObserver) {
+      context.domObserver.stopObserving();
+    }
+
     // Save search state
-    context.stateManager.updateSearchState({
+    const searchState = {
       query: message.query,
       useRegex: message.useRegex,
       caseSensitive: message.caseSensitive,
       useElementSearch: message.useElementSearch,
       elementSearchMode: message.elementSearchMode,
       useFuzzy: message.useFuzzy,
-    });
+    };
+    context.stateManager.updateSearchState(searchState);
+
+    // Perform search
+    let result;
+    let searchFunction: SearchFunction;
 
     if (message.useElementSearch) {
-      const result = searchElements(message.query, message.elementSearchMode, context.stateManager);
-      return {
-        success: true,
-        count: result.count,
-        currentIndex: result.currentIndex,
-        totalMatches: result.totalMatches,
+      result = searchElements(message.query, message.elementSearchMode, context.stateManager);
+      searchFunction = (query: string, options, stateManager, updateCallback) => {
+        // Clear highlights before re-searching
+        if (updateCallback) {
+          clearHighlights(stateManager, removeMinimap, updateCallback);
+        }
+        searchElements(query, options.elementSearchMode, stateManager);
+      };
+    } else {
+      result = searchText(
+        message.query,
+        message.useRegex,
+        message.caseSensitive,
+        context.stateManager,
+        message.useFuzzy
+      );
+      searchFunction = (query: string, options, stateManager, updateCallback) => {
+        // Clear highlights before re-searching
+        if (updateCallback) {
+          clearHighlights(stateManager, removeMinimap, updateCallback);
+        }
+        searchText(
+          query,
+          options.useRegex,
+          options.caseSensitive,
+          stateManager,
+          options.useFuzzy
+        );
       };
     }
-    const result = searchText(
-      message.query,
-      message.useRegex,
-      message.caseSensitive,
-      context.stateManager,
-      message.useFuzzy
-    );
+
+    // Start DOM observer for automatic updates
+    if (context.domObserver) {
+      context.domObserver.startObserving(
+        message.query,
+        searchState,
+        searchFunction,
+        context.updateCallback
+      );
+    }
+
     return {
       success: true,
       count: result.count,
@@ -91,6 +129,11 @@ export function handleClear(
   _message: ClearMessage,
   context: MessageHandlerContext
 ): SearchResponse {
+  // Stop DOM observer
+  if (context.domObserver) {
+    context.domObserver.stopObserving();
+  }
+
   if (context.updateCallback) {
     clearHighlights(context.stateManager, removeMinimap, context.updateCallback);
   }

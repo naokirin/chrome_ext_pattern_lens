@@ -1,0 +1,293 @@
+/**
+ * DOM変更を監視し、検索結果を自動更新
+ */
+import type { SearchStateManager } from '~/lib/state/searchState';
+import type { SearchState } from '~/lib/types';
+import { handleError } from '~/lib/utils/errorHandler';
+
+/**
+ * DOM変更監視のオプション
+ */
+export interface ObserverOptions {
+  enabled: boolean; // 自動更新を有効化するか
+  debounceMs: number; // デバウンス時間（ミリ秒）
+  maxMutationsPerSecond: number; // 1秒あたりの最大変更数（レート制限）
+}
+
+/**
+ * デフォルトのオプション
+ */
+const DEFAULT_OPTIONS: ObserverOptions = {
+  enabled: true,
+  debounceMs: 500,
+  maxMutationsPerSecond: 10,
+};
+
+/**
+ * 検索実行関数の型
+ */
+export type SearchFunction = (
+  query: string,
+  options: SearchState,
+  stateManager: SearchStateManager,
+  updateCallback?: (() => void) | null
+) => void;
+
+/**
+ * DOM変更を監視し、検索結果を自動更新するクラス
+ */
+export class DOMSearchObserver {
+  private observer: MutationObserver | null = null;
+  private stateManager: SearchStateManager;
+  private currentSearchQuery: string | null = null;
+  private searchOptions: SearchState | null = null;
+  private searchFunction: SearchFunction | null = null;
+  private updateCallback: (() => void) | null = null;
+  private options: ObserverOptions;
+  private debounceTimer: number | null = null;
+  private mutationCount = 0;
+  private mutationResetTimer: number | null = null;
+  private isSearching = false;
+
+  constructor(stateManager: SearchStateManager, options?: Partial<ObserverOptions>) {
+    this.stateManager = stateManager;
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+  }
+
+  /**
+   * 検索を開始し、DOM変更を監視
+   */
+  startObserving(
+    query: string,
+    searchOptions: SearchState,
+    searchFunction: SearchFunction,
+    updateCallback?: (() => void) | null
+  ): void {
+    if (!this.options.enabled) {
+      return;
+    }
+
+    this.currentSearchQuery = query;
+    this.searchOptions = searchOptions;
+    this.searchFunction = searchFunction;
+    this.updateCallback = updateCallback || null;
+
+    // 既存の監視を停止
+    this.stopObserving();
+
+    // MutationObserver を設定
+    this.observer = new MutationObserver((mutations) => {
+      this.handleMutations(mutations);
+    });
+
+    this.observer.observe(document.body, {
+      childList: true, // 子要素の追加・削除
+      subtree: true, // すべての子孫要素を監視
+      characterData: true, // テキストノードの変更
+      attributes: false, // 属性変更は不要（パフォーマンス考慮）
+    });
+  }
+
+  /**
+   * DOM変更を処理
+   */
+  private handleMutations(mutations: MutationRecord[]): void {
+    if (!this.currentSearchQuery || !this.searchOptions || !this.searchFunction) {
+      return;
+    }
+
+    // レート制限チェック
+    this.mutationCount++;
+    if (this.mutationCount > this.options.maxMutationsPerSecond) {
+      // レート制限を超えた場合、一定時間後にリセット
+      if (this.mutationResetTimer) {
+        clearTimeout(this.mutationResetTimer);
+      }
+      this.mutationResetTimer = window.setTimeout(() => {
+        this.mutationCount = 0;
+        this.mutationResetTimer = null;
+      }, 1000);
+      return;
+    }
+
+    // 変更された要素を収集
+    const hasRelevantChanges = this.collectChangedNodes(mutations);
+
+    if (hasRelevantChanges) {
+      // 変更があった場合、デバウンスして再検索
+      this.debouncedReSearch();
+    }
+  }
+
+  /**
+   * 変更されたノードを収集し、関連する変更があるかチェック
+   */
+  private collectChangedNodes(mutations: MutationRecord[]): boolean {
+    let hasRelevantChanges = false;
+
+    mutations.forEach((mutation) => {
+      // 追加されたノード
+      mutation.addedNodes.forEach((node) => {
+        if (this.isRelevantNode(node)) {
+          hasRelevantChanges = true;
+        }
+      });
+
+      // 削除されたノード（既存の検索結果が無効になる可能性）
+      mutation.removedNodes.forEach((node) => {
+        if (this.isRelevantNode(node)) {
+          hasRelevantChanges = true;
+          this.invalidateRangesInNode(node);
+        }
+      });
+
+      // テキストノードの変更
+      if (mutation.type === 'characterData') {
+        if (this.isRelevantNode(mutation.target)) {
+          hasRelevantChanges = true;
+        }
+      }
+    });
+
+    return hasRelevantChanges;
+  }
+
+  /**
+   * ノードが検索に関連するかチェック
+   */
+  private isRelevantNode(node: Node): boolean {
+    // テキストノードは常に関連
+    if (node.nodeType === Node.TEXT_NODE) {
+      return true;
+    }
+
+    // 要素ノードの場合、テキストコンテンツがあるかチェック
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+      // script, style, overlay container は除外
+      if (
+        element.tagName === 'SCRIPT' ||
+        element.tagName === 'STYLE' ||
+        element.id === 'pattern-lens-overlay-container' ||
+        element.closest('#pattern-lens-overlay-container')
+      ) {
+        return false;
+      }
+      // テキストコンテンツがあるかチェック
+      return element.textContent !== null && element.textContent.trim().length > 0;
+    }
+
+    return false;
+  }
+
+  /**
+   * ノード内の範囲を無効化
+   */
+  private invalidateRangesInNode(node: Node): void {
+    // 削除されたノード内に含まれる範囲を無効化
+    const ranges = this.stateManager.ranges;
+    const invalidRanges: Range[] = [];
+
+    ranges.forEach((range) => {
+      try {
+        // 範囲の開始/終了ノードが削除されたノードの子孫かチェック
+        if (
+          node.contains(range.startContainer) ||
+          node.contains(range.endContainer)
+        ) {
+          invalidRanges.push(range);
+        }
+      } catch (error) {
+        // 範囲が無効になった場合（ノードが削除されたなど）
+        invalidRanges.push(range);
+      }
+    });
+
+    // 無効な範囲を削除
+    if (invalidRanges.length > 0) {
+      // 範囲を再作成する必要があるため、再検索を実行
+      // ここではフラグを設定するだけ
+    }
+  }
+
+  /**
+   * デバウンス付き再検索
+   */
+  private debouncedReSearch(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    this.debounceTimer = window.setTimeout(() => {
+      this.performSearch();
+      this.debounceTimer = null;
+    }, this.options.debounceMs);
+  }
+
+  /**
+   * 検索を実行
+   */
+  private performSearch(): void {
+    if (
+      !this.currentSearchQuery ||
+      !this.searchOptions ||
+      !this.searchFunction ||
+      this.isSearching
+    ) {
+      return;
+    }
+
+    try {
+      this.isSearching = true;
+
+      // 既存の検索ロジックを呼び出し
+      this.searchFunction(
+        this.currentSearchQuery,
+        this.searchOptions,
+        this.stateManager,
+        this.updateCallback
+      );
+    } catch (error) {
+      handleError(error, 'DOMSearchObserver: Search failed', undefined);
+    } finally {
+      this.isSearching = false;
+    }
+  }
+
+  /**
+   * 監視を停止
+   */
+  stopObserving(): void {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    this.currentSearchQuery = null;
+    this.searchOptions = null;
+    this.searchFunction = null;
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    if (this.mutationResetTimer) {
+      clearTimeout(this.mutationResetTimer);
+      this.mutationResetTimer = null;
+    }
+    this.mutationCount = 0;
+    this.isSearching = false;
+  }
+
+  /**
+   * オプションを更新
+   */
+  updateOptions(options: Partial<ObserverOptions>): void {
+    this.options = { ...this.options, ...options };
+  }
+
+  /**
+   * 監視中かどうか
+   */
+  get isObserving(): boolean {
+    return this.observer !== null;
+  }
+}

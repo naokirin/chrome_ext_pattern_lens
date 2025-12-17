@@ -1,3 +1,4 @@
+import { DOMSearchObserver } from '~/lib/observers/domObserver';
 import { updateOverlayPositions } from '~/lib/highlight/overlay';
 import { routeMessage } from '~/lib/messaging/router';
 import { SearchStateManager } from '~/lib/state/searchState';
@@ -9,6 +10,9 @@ const stateManager = new SearchStateManager();
 
 // Track event listener registration state (managed by overlay module)
 let updateCallback: (() => void) | null = null;
+
+// DOM observer for automatic search updates
+const domObserver = new DOMSearchObserver(stateManager);
 
 // WXT Content Script
 export default defineContentScript({
@@ -24,6 +28,7 @@ export default defineContentScript({
       routeMessage(request as Message, {
         stateManager,
         updateCallback,
+        domObserver,
       }).then((response) => {
         if (response) {
           sendResponse(response);
