@@ -359,11 +359,9 @@ export function searchText(
   caseSensitive: boolean,
   stateManager: SearchStateManager,
   useFuzzy = false,
-  skipNavigation = false
+  skipNavigation = false,
+  previousIndex = -1
 ): SearchResult {
-  // Save previous index before re-search
-  const previousIndex = stateManager.currentIndex;
-  const previousTotal = stateManager.totalMatches;
 
   // Step 1: Create text matches
   const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);

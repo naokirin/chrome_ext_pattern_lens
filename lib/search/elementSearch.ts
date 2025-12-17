@@ -100,11 +100,10 @@ export function searchElements(
   query: string,
   mode: 'css' | 'xpath',
   stateManager: SearchStateManager,
-  skipNavigation = false
+  skipNavigation = false,
+  previousIndex = -1
 ): SearchResult {
   try {
-    // Save previous index before re-search
-    const previousIndex = stateManager.currentIndex;
 
     // Step 1: Find elements
     const elements = findElements(query, mode);
