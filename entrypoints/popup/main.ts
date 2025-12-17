@@ -1,12 +1,16 @@
 import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 // Import shared type definitions
+import { DEFAULT_RESULTS_LIST_CONTEXT_LENGTH } from '~/lib/constants';
 import type {
   ClearMessage,
+  GetResultsListMessage,
   GetStateMessage,
+  JumpToMatchMessage,
   NavigateMessage,
   Response,
   SearchMessage,
   SearchResponse,
+  SearchResultsListResponse,
   Settings,
   StateResponse,
 } from '~/lib/types';
@@ -23,6 +27,8 @@ const caseSensitiveLabel = getRequiredElementById<HTMLLabelElement>('caseSensiti
 const fuzzyMode = getRequiredElementById<HTMLInputElement>('fuzzyMode');
 const fuzzyLabel = getRequiredElementById<HTMLLabelElement>('fuzzyLabel');
 const elementMode = getRequiredElementById<HTMLInputElement>('elementMode');
+const resultsListMode = getRequiredElementById<HTMLInputElement>('resultsListMode');
+const resultsListLabel = getRequiredElementById<HTMLLabelElement>('resultsListLabel');
 const searchModeContainer = getRequiredElementById<HTMLDivElement>('searchModeContainer');
 const searchMode = getRequiredElementById<HTMLSelectElement>('searchMode');
 const results = getRequiredElementById<HTMLDivElement>('results');
@@ -31,6 +37,9 @@ const matchCounter = getRequiredElementById<HTMLSpanElement>('matchCounter');
 const prevBtn = getRequiredElementById<HTMLButtonElement>('prevBtn');
 const nextBtn = getRequiredElementById<HTMLButtonElement>('nextBtn');
 const clearLink = getRequiredElementById<HTMLAnchorElement>('clearLink');
+const resultsList = getRequiredElementById<HTMLDivElement>('resultsList');
+const resultsListCount = getRequiredElementById<HTMLSpanElement>('resultsListCount');
+const resultsListItems = getRequiredElementById<HTMLDivElement>('resultsListItems');
 
 // Track last search query to detect changes
 let _lastSearchQuery = '';
@@ -64,7 +73,7 @@ function updateSearchModeVisibility(): void {
   // Show/hide element search mode selector
   searchModeContainer.style.display = isElementMode ? 'block' : 'none';
 
-  // Disable regex mode, case-sensitive mode, and fuzzy mode when element search is enabled
+  // Disable regex mode, case-sensitive mode, fuzzy mode, and results list when element search is enabled
   if (isElementMode) {
     regexMode.checked = false;
     regexMode.disabled = true;
@@ -75,6 +84,10 @@ function updateSearchModeVisibility(): void {
     fuzzyMode.checked = false;
     fuzzyMode.disabled = true;
     fuzzyLabel.classList.add('disabled');
+    resultsListMode.checked = false;
+    resultsListMode.disabled = true;
+    resultsListLabel.classList.add('disabled');
+    resultsList.style.display = 'none';
   } else {
     // Disable regex mode and case-sensitive mode when fuzzy search is enabled
     if (isFuzzyMode) {
@@ -92,6 +105,8 @@ function updateSearchModeVisibility(): void {
     }
     fuzzyMode.disabled = false;
     fuzzyLabel.classList.remove('disabled');
+    resultsListMode.disabled = false;
+    resultsListLabel.classList.remove('disabled');
   }
 }
 
@@ -196,6 +211,10 @@ async function performSearch(): Promise<void> {
         const totalMatches = response.totalMatches ?? 0;
         const currentIndex = response.currentIndex ?? 0;
         updateNavigation(currentIndex, totalMatches);
+        // 検索結果一覧を更新
+        if (resultsListMode.checked) {
+          fetchAndDisplayResultsList();
+        }
       } else if (response?.error) {
         const error = new Error(response.error);
         handleError(error, 'performSearch: Search response error', (err) => {
@@ -246,6 +265,7 @@ async function clearHighlights(): Promise<void> {
       if (response?.success) {
         hideResult();
         hideNavigation();
+        resultsList.style.display = 'none';
         searchInput.value = '';
         _lastSearchQuery = '';
       }
@@ -355,6 +375,14 @@ elementMode.addEventListener('change', handleCheckboxChange);
 regexMode.addEventListener('change', handleCheckboxChange);
 caseSensitiveMode.addEventListener('change', handleCheckboxChange);
 fuzzyMode.addEventListener('change', handleCheckboxChange);
+resultsListMode.addEventListener('change', () => {
+  updateSearchModeVisibility();
+  if (resultsListMode.checked) {
+    fetchAndDisplayResultsList();
+  } else {
+    resultsList.style.display = 'none';
+  }
+});
 searchMode.addEventListener('change', () => {
   // Element search mode selector change
   const query = searchInput.value.trim();
@@ -413,6 +441,156 @@ searchInput.addEventListener('keydown', (e) => {
   }
 });
 
+/**
+ * 検索結果一覧を取得して表示
+ */
+async function fetchAndDisplayResultsList(): Promise<void> {
+  if (!resultsListMode.checked) {
+    resultsList.style.display = 'none';
+    return;
+  }
+
+  try {
+    const tab = await getActiveTab();
+    if (!tab || isSpecialPage(tab.url)) {
+      return;
+    }
+
+    const message: GetResultsListMessage = {
+      action: 'get-results-list',
+      contextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+    };
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      message,
+      (response: SearchResultsListResponse | undefined) => {
+        if (chrome.runtime.lastError || !response?.success) {
+          return;
+        }
+
+        displayResultsList(response.items || [], response.totalMatches || 0);
+      }
+    );
+  } catch (error) {
+    handleError(error, 'fetchAndDisplayResultsList: Exception', undefined);
+  }
+}
+
+/**
+ * 検索結果一覧を表示
+ */
+function displayResultsList(
+  items: Array<{
+    index: number;
+    matchedText: string;
+    contextBefore: string;
+    contextAfter: string;
+    fullText: string;
+  }>,
+  totalMatches: number
+): void {
+  resultsListCount.textContent = `${totalMatches}件`;
+  resultsListItems.innerHTML = '';
+
+  if (items.length === 0) {
+    resultsList.style.display = 'none';
+    return;
+  }
+
+  resultsList.style.display = 'flex';
+
+  items.forEach((item) => {
+    const itemElement = document.createElement('div');
+    itemElement.className = 'results-list-item';
+    itemElement.dataset.index = item.index.toString();
+
+    // インデックス表示
+    const indexElement = document.createElement('div');
+    indexElement.className = 'results-list-item-index';
+    indexElement.textContent = `#${item.index + 1}`;
+    itemElement.appendChild(indexElement);
+
+    // テキスト表示（マッチ部分をハイライト）
+    const textElement = document.createElement('div');
+    textElement.className = 'results-list-item-text';
+
+    // 前文脈 + マッチ + 後文脈を構築
+    const beforeSpan = document.createElement('span');
+    beforeSpan.textContent = item.contextBefore;
+
+    const matchedSpan = document.createElement('span');
+    matchedSpan.className = 'results-list-item-matched';
+    matchedSpan.textContent = item.matchedText;
+
+    const afterSpan = document.createElement('span');
+    afterSpan.textContent = item.contextAfter;
+
+    textElement.appendChild(beforeSpan);
+    textElement.appendChild(matchedSpan);
+    textElement.appendChild(afterSpan);
+
+    itemElement.appendChild(textElement);
+
+    // クリックイベント: 該当位置にジャンプ
+    itemElement.addEventListener('click', () => {
+      jumpToMatch(item.index);
+    });
+
+    resultsListItems.appendChild(itemElement);
+  });
+}
+
+/**
+ * 指定されたインデックスのマッチにジャンプ
+ */
+async function jumpToMatch(index: number): Promise<void> {
+  try {
+    const tab = await getActiveTab();
+    if (!tab || isSpecialPage(tab.url)) {
+      return;
+    }
+
+    const message: JumpToMatchMessage = {
+      action: 'jump-to-match',
+      index,
+    };
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      message,
+      (response: SearchResponse | undefined) => {
+        if (response?.success) {
+          // ナビゲーションUIを更新
+          if (response.totalMatches !== undefined && response.currentIndex !== undefined) {
+            updateNavigation(response.currentIndex, response.totalMatches);
+          }
+          // 一覧の現在のマッチをハイライト
+          updateResultsListHighlight(response.currentIndex ?? -1);
+        }
+      }
+    );
+  } catch (error) {
+    handleError(error, 'jumpToMatch: Exception', undefined);
+  }
+}
+
+/**
+ * 検索結果一覧の現在のマッチをハイライト
+ */
+function updateResultsListHighlight(currentIndex: number): void {
+  const items = resultsListItems.querySelectorAll('.results-list-item');
+  items.forEach((item, index) => {
+    if (index === currentIndex) {
+      item.classList.add('current');
+      // スクロールして表示領域に収める
+      item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      item.classList.remove('current');
+    }
+  });
+}
+
 // Restore previous search state from content script
 async function restoreSearchState(): Promise<void> {
   try {
@@ -454,6 +632,11 @@ async function restoreSearchState(): Promise<void> {
         const totalMatches = response.totalMatches ?? 0;
         const currentIndex = response.currentIndex ?? 0;
         updateNavigation(currentIndex, totalMatches);
+
+        // 検索結果一覧を復元
+        if (resultsListMode.checked) {
+          fetchAndDisplayResultsList();
+        }
 
         _lastSearchQuery = state.query;
       }

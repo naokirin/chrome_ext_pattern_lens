@@ -1,10 +1,13 @@
 import type {
   ClearMessage,
+  GetResultsListMessage,
   GetStateMessage,
+  JumpToMatchMessage,
   Message,
   NavigateMessage,
   SearchMessage,
   SearchResponse,
+  SearchResultsListResponse,
   StateResponse,
 } from '~/lib/types';
 import { handleError } from '~/lib/utils/errorHandler';
@@ -14,7 +17,9 @@ import { handleError } from '~/lib/utils/errorHandler';
 import type { MessageHandlerContext } from './handlers';
 import {
   handleClear,
+  handleGetResultsList,
   handleGetState,
+  handleJumpToMatch,
   handleNavigateNext,
   handleNavigatePrev,
   handleSearch,
@@ -26,7 +31,7 @@ import {
 export async function routeMessage(
   message: Message,
   context: MessageHandlerContext
-): Promise<SearchResponse | StateResponse | undefined> {
+): Promise<SearchResponse | StateResponse | SearchResultsListResponse | undefined> {
   try {
     switch (message.action) {
       case 'search': {
@@ -47,6 +52,14 @@ export async function routeMessage(
       }
       case 'get-state': {
         const result = handleGetState(message as GetStateMessage, context);
+        return result;
+      }
+      case 'get-results-list': {
+        const result = handleGetResultsList(message as GetResultsListMessage, context);
+        return result;
+      }
+      case 'jump-to-match': {
+        const result = handleJumpToMatch(message as JumpToMatchMessage, context);
         return result;
       }
       default: {

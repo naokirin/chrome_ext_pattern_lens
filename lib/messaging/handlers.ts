@@ -4,15 +4,22 @@
 import { removeMinimap } from '~/lib/highlight/minimap';
 import { clearHighlights } from '~/lib/highlight/overlay';
 import { navigateToMatch } from '~/lib/navigation/navigator';
+import {
+  collectElementSearchResults,
+  collectTextSearchResults,
+} from '~/lib/search/resultsCollector';
 import { searchElements } from '~/lib/search/elementSearch';
 import { searchText } from '~/lib/search/textSearch';
 import type { SearchStateManager } from '~/lib/state/searchState';
 import type {
   ClearMessage,
+  GetResultsListMessage,
   GetStateMessage,
+  JumpToMatchMessage,
   NavigateMessage,
   SearchMessage,
   SearchResponse,
+  SearchResultsListResponse,
   StateResponse,
 } from '~/lib/types';
 import { handleError } from '~/lib/utils/errorHandler';
@@ -141,5 +148,62 @@ export function handleGetState(
     state: context.stateManager.searchState,
     currentIndex: context.stateManager.currentIndex,
     totalMatches: context.stateManager.totalMatches,
+  };
+}
+
+/**
+ * Handle get-results-list action
+ */
+export function handleGetResultsList(
+  message: GetResultsListMessage,
+  context: MessageHandlerContext
+): SearchResultsListResponse {
+  try {
+    if (context.stateManager.hasTextMatches()) {
+      const items = collectTextSearchResults(
+        context.stateManager.ranges,
+        message.contextLength
+      );
+      return {
+        success: true,
+        items,
+        totalMatches: context.stateManager.totalMatches,
+      };
+    } else if (context.stateManager.hasElementMatches()) {
+      const items = collectElementSearchResults(
+        context.stateManager.elements,
+        message.contextLength
+      );
+      return {
+        success: true,
+        items,
+        totalMatches: context.stateManager.totalMatches,
+      };
+    }
+
+    return {
+      success: true,
+      items: [],
+      totalMatches: 0,
+    };
+  } catch (error) {
+    const err = error as Error;
+    handleError(error, 'handleGetResultsList: Failed to collect results', undefined);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Handle jump-to-match action
+ */
+export function handleJumpToMatch(
+  message: JumpToMatchMessage,
+  context: MessageHandlerContext
+): SearchResponse {
+  const result = navigateToMatch(message.index, context.stateManager);
+  return {
+    success: true,
+    currentIndex: result.currentIndex,
+    totalMatches: result.totalMatches,
   };
 }

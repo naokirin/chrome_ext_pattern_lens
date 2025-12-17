@@ -6,11 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pattern Lens</title>
   <style>
+    html {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       width: 350px;
+      max-height: 600px;
       padding: 15px;
       margin: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     h1 {
@@ -24,6 +34,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
+      flex-shrink: 0;
     }
 
     .header h1 {
@@ -47,6 +58,7 @@
 
     .search-container {
       margin-bottom: 15px;
+      flex-shrink: 0;
     }
 
     input[type="text"] {
@@ -63,6 +75,7 @@
       flex-direction: column;
       gap: 10px;
       margin-bottom: 15px;
+      flex-shrink: 0;
     }
 
     .options-row {
@@ -93,6 +106,7 @@
 
     .search-mode {
       margin-bottom: 15px;
+      flex-shrink: 0;
     }
 
     select {
@@ -110,6 +124,7 @@
       border-radius: 4px;
       font-size: 13px;
       display: none;
+      flex-shrink: 0;
     }
 
     .error {
@@ -128,6 +143,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
 
     .match-counter {
@@ -166,6 +182,81 @@
       background-color: #ccc;
       cursor: not-allowed;
     }
+
+    .results-list {
+      margin-top: 15px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+
+    .results-list-header {
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .results-list-title {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .results-list-count {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .results-list-items {
+      padding: 5px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .results-list-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .results-list-item:hover {
+      background-color: #f9f9f9;
+    }
+
+    .results-list-item.current {
+      background-color: #fff3cd;
+      border-left: 3px solid #ffc107;
+    }
+
+    .results-list-item-index {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .results-list-item-text {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #333;
+    }
+
+    .results-list-item-matched {
+      background-color: #fff9c4;
+      font-weight: 500;
+      padding: 0 2px;
+    }
   </style>
 </head>
 
@@ -200,6 +291,12 @@
         要素検索
       </label>
     </div>
+    <div class="options-row">
+      <label id="resultsListLabel">
+        <input type="checkbox" id="resultsListMode">
+        検索結果一覧
+      </label>
+    </div>
   </div>
 
   <div class="search-mode" id="searchModeContainer" style="display: none;">
@@ -218,6 +315,16 @@
     <div class="nav-buttons">
       <button class="nav-btn" id="prevBtn" title="前へ (Shift+Enter)">▲</button>
       <button class="nav-btn" id="nextBtn" title="次へ (Enter)">▼</button>
+    </div>
+  </div>
+
+  <div class="results-list" id="resultsList">
+    <div class="results-list-header">
+      <span class="results-list-title">検索結果一覧</span>
+      <span class="results-list-count" id="resultsListCount">0件</span>
+    </div>
+    <div class="results-list-items" id="resultsListItems">
+      <!-- 動的に生成される検索結果アイテム -->
     </div>
   </div>
 

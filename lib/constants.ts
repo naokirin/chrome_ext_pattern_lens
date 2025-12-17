@@ -141,3 +141,22 @@ export const FUZZY_SEARCH_MIN_DISTANCE = 20;
  * Prevents excessive matches for very long keywords
  */
 export const FUZZY_SEARCH_MAX_DISTANCE = 200;
+
+// ============================================================================
+// Search Results List Constants
+// ============================================================================
+
+/**
+ * Default context length (characters before and after match) for search results list
+ */
+export const DEFAULT_RESULTS_LIST_CONTEXT_LENGTH = 30;
+
+/**
+ * Minimum context length for search results list
+ */
+export const MIN_RESULTS_LIST_CONTEXT_LENGTH = 10;
+
+/**
+ * Maximum context length for search results list
+ */
+export const MAX_RESULTS_LIST_CONTEXT_LENGTH = 100;

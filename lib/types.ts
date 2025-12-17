@@ -23,7 +23,23 @@ export interface GetStateMessage {
   action: 'get-state';
 }
 
-export type Message = SearchMessage | ClearMessage | NavigateMessage | GetStateMessage;
+export interface GetResultsListMessage {
+  action: 'get-results-list';
+  contextLength?: number;
+}
+
+export interface JumpToMatchMessage {
+  action: 'jump-to-match';
+  index: number;
+}
+
+export type Message =
+  | SearchMessage
+  | ClearMessage
+  | NavigateMessage
+  | GetStateMessage
+  | GetResultsListMessage
+  | JumpToMatchMessage;
 
 // Response types
 export interface SearchResponse {
@@ -41,7 +57,26 @@ export interface StateResponse {
   totalMatches?: number;
 }
 
-export type Response = SearchResponse | StateResponse | { success: boolean };
+export interface SearchResultItem {
+  index: number;
+  matchedText: string;
+  contextBefore: string;
+  contextAfter: string;
+  fullText: string;
+}
+
+export interface SearchResultsListResponse {
+  success: boolean;
+  items?: SearchResultItem[];
+  totalMatches?: number;
+  error?: string;
+}
+
+export type Response =
+  | SearchResponse
+  | StateResponse
+  | SearchResultsListResponse
+  | { success: boolean };
 
 // Settings types
 export interface Settings {
