@@ -11,7 +11,6 @@ import { handleError } from '~/lib/utils/errorHandler';
 export interface ObserverOptions {
   enabled: boolean; // 自動更新を有効化するか
   debounceMs: number; // デバウンス時間（ミリ秒）
-  maxMutationsPerSecond: number; // 1秒あたりの最大変更数（レート制限）
 }
 
 /**
@@ -20,7 +19,6 @@ export interface ObserverOptions {
 const DEFAULT_OPTIONS: ObserverOptions = {
   enabled: true,
   debounceMs: 100,
-  maxMutationsPerSecond: 30,
 };
 
 /**
@@ -46,8 +44,6 @@ export class DOMSearchObserver {
   private updateCallback: (() => void) | null = null;
   private options: ObserverOptions;
   private debounceTimer: number | null = null;
-  private mutationCount = 0;
-  private mutationResetTimer: number | null = null;
   private isSearching = false;
 
   constructor(stateManager: SearchStateManager, options?: Partial<ObserverOptions>) {
@@ -101,25 +97,12 @@ export class DOMSearchObserver {
       return;
     }
 
-    // レート制限チェック
-    this.mutationCount++;
-    if (this.mutationCount > this.options.maxMutationsPerSecond) {
-      // レート制限を超えた場合、一定時間後にリセット
-      if (this.mutationResetTimer) {
-        clearTimeout(this.mutationResetTimer);
-      }
-      this.mutationResetTimer = window.setTimeout(() => {
-        this.mutationCount = 0;
-        this.mutationResetTimer = null;
-      }, 1000);
-      return;
-    }
-
     // 変更された要素を収集
     const hasRelevantChanges = this.collectChangedNodes(mutations);
 
     if (hasRelevantChanges) {
       // 変更があった場合、デバウンスして再検索
+      // （デバウンスにより自動的にレート制限される）
       this.debouncedReSearch();
     }
   }
@@ -275,11 +258,6 @@ export class DOMSearchObserver {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    if (this.mutationResetTimer) {
-      clearTimeout(this.mutationResetTimer);
-      this.mutationResetTimer = null;
-    }
-    this.mutationCount = 0;
     this.isSearching = false;
   }
 
