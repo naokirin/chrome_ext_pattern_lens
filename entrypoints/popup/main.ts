@@ -81,8 +81,27 @@ function loadSettings(): void {
       }
 
       updateSearchModeVisibility();
+      updateAllChipStates();
     }
   );
+}
+
+// Update chip active state based on checkbox
+function updateChipState(checkbox: HTMLInputElement, label: HTMLLabelElement): void {
+  if (checkbox.checked) {
+    label.classList.add('active');
+  } else {
+    label.classList.remove('active');
+  }
+}
+
+// Update all chip states
+function updateAllChipStates(): void {
+  updateChipState(regexMode, regexLabel);
+  updateChipState(caseSensitiveMode, caseSensitiveLabel);
+  updateChipState(fuzzyMode, fuzzyLabel);
+  updateChipState(elementMode, getRequiredElementById<HTMLLabelElement>('elementLabel'));
+  updateChipState(resultsListMode, resultsListLabel);
 }
 
 // Update search mode selector visibility and regex mode state
@@ -130,6 +149,9 @@ function updateSearchModeVisibility(): void {
     resultsListMode.disabled = false;
     resultsListLabel.classList.remove('disabled');
   }
+
+  // Update all chip visual states
+  updateAllChipStates();
 }
 
 // Show result message
