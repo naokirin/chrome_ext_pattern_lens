@@ -14,6 +14,7 @@ import type {
   Response,
   SearchMessage,
   SearchResponse,
+  SearchResultItem,
   SearchResultsListResponse,
   Settings,
   StateResponse,
@@ -123,12 +124,9 @@ function updateSearchModeVisibility(): void {
     fuzzyMode.checked = false;
     fuzzyMode.disabled = true;
     fuzzyLabel.classList.add('disabled');
-    resultsListMode.checked = false;
-    resultsListMode.disabled = true;
-    resultsListLabel.classList.add('disabled');
-    resultsList.style.display = 'none';
-    resultsList.classList.remove('visible');
-    document.body.classList.remove('has-results-list');
+    // 要素検索でも検索結果一覧は利用可能
+    resultsListMode.disabled = false;
+    resultsListLabel.classList.remove('disabled');
   } else {
     // Disable regex mode and case-sensitive mode when fuzzy search is enabled
     if (isFuzzyMode) {
@@ -544,16 +542,7 @@ async function fetchAndDisplayResultsList(): Promise<void> {
 /**
  * 検索結果一覧を表示
  */
-function displayResultsList(
-  items: Array<{
-    index: number;
-    matchedText: string;
-    contextBefore: string;
-    contextAfter: string;
-    fullText: string;
-  }>,
-  totalMatches: number
-): void {
+function displayResultsList(items: SearchResultItem[], totalMatches: number): void {
   resultsListCount.textContent = `${totalMatches}件`;
   resultsListItems.innerHTML = '';
 
@@ -583,20 +572,34 @@ function displayResultsList(
     const textElement = document.createElement('div');
     textElement.className = 'results-list-item-text';
 
-    // 前文脈 + マッチ + 後文脈を構築
-    const beforeSpan = document.createElement('span');
-    beforeSpan.textContent = item.contextBefore;
+    // 要素検索の場合はtagInfo + テキスト、テキスト検索の場合は前文脈 + マッチ + 後文脈
+    if (item.tagInfo) {
+      // 要素検索: <tag#id.class> テキスト...
+      const tagSpan = document.createElement('span');
+      tagSpan.className = 'results-list-item-tag';
+      tagSpan.textContent = `${item.tagInfo} `;
 
-    const matchedSpan = document.createElement('span');
-    matchedSpan.className = 'results-list-item-matched';
-    matchedSpan.textContent = item.matchedText;
+      const textSpan = document.createElement('span');
+      textSpan.textContent = item.matchedText;
 
-    const afterSpan = document.createElement('span');
-    afterSpan.textContent = item.contextAfter;
+      textElement.appendChild(tagSpan);
+      textElement.appendChild(textSpan);
+    } else {
+      // テキスト検索: 前文脈 + マッチ + 後文脈
+      const beforeSpan = document.createElement('span');
+      beforeSpan.textContent = item.contextBefore;
 
-    textElement.appendChild(beforeSpan);
-    textElement.appendChild(matchedSpan);
-    textElement.appendChild(afterSpan);
+      const matchedSpan = document.createElement('span');
+      matchedSpan.className = 'results-list-item-matched';
+      matchedSpan.textContent = item.matchedText;
+
+      const afterSpan = document.createElement('span');
+      afterSpan.textContent = item.contextAfter;
+
+      textElement.appendChild(beforeSpan);
+      textElement.appendChild(matchedSpan);
+      textElement.appendChild(afterSpan);
+    }
 
     itemElement.appendChild(textElement);
 

@@ -63,6 +63,7 @@ export interface SearchResultItem {
   contextBefore: string;
   contextAfter: string;
   fullText: string;
+  tagInfo?: string; // 要素検索用: "<div#id.class>" 形式
 }
 
 export interface SearchResultsListResponse {

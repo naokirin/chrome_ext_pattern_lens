@@ -145,7 +145,33 @@ describe('lib/search/resultsCollector', () => {
       expect(result[0].matchedText).toContain('Test content');
       expect(result[0].contextBefore).toBe('');
       expect(result[0].contextAfter).toBe('');
-      expect(result[0].fullText).toBe(result[0].matchedText);
+      expect(result[0].tagInfo).toBe('<div.test>');
+      expect(result[0].fullText).toContain('<div.test>');
+    });
+
+    it('id付きのElementのtagInfoを正しく生成する', () => {
+      document.body.innerHTML = '<div id="main" class="container header">Content</div>';
+      const element = document.body.querySelector('#main');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      const result = collectElementSearchResults([element]);
+
+      expect(result[0].tagInfo).toBe('<div#main.container.header>');
+    });
+
+    it('長いテキストをcontextLengthで切り詰める', () => {
+      const longText = 'A'.repeat(100);
+      document.body.innerHTML = `<div class="test">${longText}</div>`;
+      const element = document.body.querySelector('.test');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      const result = collectElementSearchResults([element], 30);
+
+      expect(result[0].matchedText).toBe(`${'A'.repeat(30)}...`);
     });
 
     it('複数のElementから検索結果を収集できる', () => {
@@ -174,7 +200,8 @@ describe('lib/search/resultsCollector', () => {
       const result = collectElementSearchResults([element]);
 
       expect(result).toHaveLength(1);
-      expect(result[0].matchedText).toBeTruthy();
+      expect(result[0].matchedText).toBe('');
+      expect(result[0].tagInfo).toBe('<div.test>');
     });
   });
 });

@@ -7,8 +7,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanupDOM } from '../helpers/dom-helpers.js';
 import { createChromeMock } from '../helpers/chrome-mock.js';
+import { cleanupDOM } from '../helpers/dom-helpers.js';
 
 // テスト用定数
 const TEST_VIEWPORT = {
@@ -160,7 +160,12 @@ describe('統合テスト: スクロール/リサイズ時の追従', () => {
       } catch (_error) {
         // Failed to update overlay position, silently ignore
         // テスト環境では、エラーが発生してもオーバーレイを作成する
-        const fallbackRect = new DOMRect(0, index * FALLBACK_RECT_SPACING + FALLBACK_RECT_OFFSET, 100, 20);
+        const fallbackRect = new DOMRect(
+          0,
+          index * FALLBACK_RECT_SPACING + FALLBACK_RECT_OFFSET,
+          100,
+          20
+        );
         const overlay = document.createElement('div');
         overlay.className = 'pattern-lens-highlight-overlay';
         overlay.style.cssText = `

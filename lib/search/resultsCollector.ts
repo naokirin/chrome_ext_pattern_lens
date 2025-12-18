@@ -204,23 +204,46 @@ export function collectTextSearchResults(
 }
 
 /**
+ * Generate tag info string for an element (e.g., "<div#id.class1.class2>")
+ */
+function getElementTagInfo(element: Element): string {
+  let info = element.tagName.toLowerCase();
+  if (element.id) {
+    info += `#${element.id}`;
+  }
+  if (element.classList.length > 0) {
+    info += `.${Array.from(element.classList).join('.')}`;
+  }
+  return `<${info}>`;
+}
+
+/**
  * Collect element search results
  */
 export function collectElementSearchResults(
   elements: Element[],
-  _contextLength?: number
+  contextLength?: number
 ): SearchResultItem[] {
+  const normalizedContextLength = normalizeContextLength(contextLength);
   const items: SearchResultItem[] = [];
 
   elements.forEach((element, index) => {
     try {
-      // For element search, show the element's text content
-      const matchedText = element.textContent?.trim() || element.outerHTML.substring(0, 100);
+      // Get tag info
+      const tagInfo = getElementTagInfo(element);
+
+      // Get text content, truncated to contextLength
+      let textContent = element.textContent?.trim() || '';
+      if (textContent.length > normalizedContextLength) {
+        textContent = `${textContent.substring(0, normalizedContextLength)}...`;
+      }
+
+      const matchedText = textContent;
       const contextBefore = '';
       const contextAfter = '';
 
-      // Build full text
-      const fullText = matchedText;
+      // Build full text: tagInfo + text content
+      const fullText = `${tagInfo} ${matchedText}`;
 
       items.push({
         index,
@@ -228,6 +251,7 @@ export function collectElementSearchResults(
         contextBefore,
         contextAfter,
         fullText,
+        tagInfo,
       });
     } catch (error) {
       handleError(
