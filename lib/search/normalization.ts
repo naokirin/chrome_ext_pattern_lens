@@ -460,14 +460,58 @@ function normalizeFullWidthKatakana(char: string): string | null {
  */
 function normalizeSymbols(char: string): string | null {
   const symbolMap: Record<string, string> = {
+    // Hyphens and dashes
     ー: '-', // Long vowel mark → hyphen
     '－': '-', // Full-width hyphen → hyphen
+    '—': '-', // Em dash → hyphen
+    '–': '-', // En dash → hyphen
+    '―': '-', // Horizontal bar → hyphen
+    // Punctuation
     '／': '/', // Full-width slash → slash
+    '＼': '\\', // Full-width backslash → backslash
     '：': ':', // Full-width colon → colon
     '；': ';', // Full-width semicolon → semicolon
     '，': ',', // Full-width comma → comma
     '。': '.', // Full-width period → period
+    '．': '.', // Full-width full stop → period
+    '、': ',', // Ideographic comma → comma
     '　': ' ', // Full-width space → space
+    // Brackets
+    '（': '(', // Full-width left parenthesis
+    '）': ')', // Full-width right parenthesis
+    '［': '[', // Full-width left square bracket
+    '］': ']', // Full-width right square bracket
+    '｛': '{', // Full-width left curly bracket
+    '｝': '}', // Full-width right curly bracket
+    '＜': '<', // Full-width less-than sign
+    '＞': '>', // Full-width greater-than sign
+    '「': '"', // Left corner bracket → double quote
+    '」': '"', // Right corner bracket → double quote
+    '『': '"', // Left white corner bracket → double quote
+    '』': '"', // Right white corner bracket → double quote
+    // Quotes
+    '\uFF02': '"', // Full-width quotation mark
+    '\uFF07': "'", // Full-width apostrophe
+    '\u2018': "'", // Left single quotation mark
+    '\u2019': "'", // Right single quotation mark
+    '\u201C': '"', // Left double quotation mark
+    '\u201D': '"', // Right double quotation mark
+    // Math and symbols
+    '＋': '+', // Full-width plus sign
+    '＝': '=', // Full-width equals sign
+    '＊': '*', // Full-width asterisk
+    '＃': '#', // Full-width number sign
+    '＄': '$', // Full-width dollar sign
+    '％': '%', // Full-width percent sign
+    '＆': '&', // Full-width ampersand
+    '＠': '@', // Full-width at sign
+    '＾': '^', // Full-width circumflex
+    '｜': '|', // Full-width vertical line
+    '～': '~', // Full-width tilde
+    '＿': '_', // Full-width low line
+    '！': '!', // Full-width exclamation mark
+    '？': '?', // Full-width question mark
+    '｀': '`', // Full-width grave accent
   };
   return symbolMap[char] || null;
 }
