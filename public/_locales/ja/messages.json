@@ -187,6 +187,14 @@
     "message": "複数キーワード検索: 空白で区切られた複数のキーワードが一定範囲内に存在する場合にマッチします",
     "description": "あいまい検索の複数キーワード検索の説明"
   },
+  "options_fuzzySearchHelp_hiraganaKatakana": {
+    "message": "ひらがな・カタカナの相互一致: ひらがなとカタカナを区別せずに検索します（例: あいう と アイウ を同一視）",
+    "description": "あいまい検索のひらがな・カタカナの相互一致の説明"
+  },
+  "options_fuzzySearchHelp_caseInsensitive": {
+    "message": "アルファベットの大文字小文字の相互一致: アルファベットの大文字と小文字を区別せずに検索します（例: ABC と abc を同一視）",
+    "description": "あいまい検索のアルファベットの大文字小文字の相互一致の説明"
+  },
   "options_fuzzySearchHelp_symbol": {
     "message": "記号の表記ゆれ吸収: ハイフン、伸ばし棒などの半角・全角の差異を吸収します（例: -、ー、－ を同一視）",
     "description": "あいまい検索の記号の表記ゆれ吸収の説明"

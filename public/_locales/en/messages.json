@@ -187,6 +187,14 @@
     "message": "Multiple keyword search: Matches when multiple keywords separated by spaces exist within a certain range",
     "description": "Description of fuzzy search multiple keyword search"
   },
+  "options_fuzzySearchHelp_hiraganaKatakana": {
+    "message": "Hiragana-Katakana mutual matching: Searches without distinguishing between hiragana and katakana (e.g., treats あいう and アイウ as the same)",
+    "description": "Description of fuzzy search hiragana-katakana mutual matching"
+  },
+  "options_fuzzySearchHelp_caseInsensitive": {
+    "message": "Case-insensitive alphabet matching: Searches without distinguishing between uppercase and lowercase letters (e.g., treats ABC and abc as the same)",
+    "description": "Description of fuzzy search case-insensitive alphabet matching"
+  },
   "options_fuzzySearchHelp_symbol": {
     "message": "Symbol variation absorption: Absorbs differences between half-width and full-width symbols (e.g., treats -, ー, － as the same)",
     "description": "Description of fuzzy search symbol variation absorption"
