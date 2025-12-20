@@ -6,9 +6,10 @@ export default defineConfig({
     const isDevelopment = mode === 'development';
 
     return {
-      name: 'Pattern Lens',
+      name: '__MSG_extName__',
       version: '1.0.0',
-      description: 'Enhanced page search with regex and DOM element selector support',
+      description: '__MSG_extDescription__',
+      default_locale: 'ja',
       permissions: ['storage', 'activeTab'],
       icons: {
         16: '/icons/icon16.png',

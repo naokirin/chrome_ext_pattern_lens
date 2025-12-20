@@ -1,0 +1,158 @@
+{
+  "extName": {
+    "message": "Pattern Lens",
+    "description": "拡張機能の名前"
+  },
+  "extDescription": {
+    "message": "正規表現とDOM要素セレクタをサポートした高度なページ内検索",
+    "description": "拡張機能の説明"
+  },
+  "popup_title": {
+    "message": "Pattern Lens",
+    "description": "ポップアップのタイトル"
+  },
+  "popup_clearLink": {
+    "message": "検索をクリア",
+    "description": "検索をクリアするリンク"
+  },
+  "popup_searchPlaceholder": {
+    "message": "検索キーワードを入力...",
+    "description": "検索入力欄のプレースホルダー"
+  },
+  "popup_regexMode": {
+    "message": "正規表現",
+    "description": "正規表現検索モードのラベル"
+  },
+  "popup_caseSensitiveMode": {
+    "message": "大文字小文字を区別",
+    "description": "大文字小文字を区別するモードのラベル"
+  },
+  "popup_fuzzyMode": {
+    "message": "あいまい検索",
+    "description": "あいまい検索モードのラベル"
+  },
+  "popup_elementMode": {
+    "message": "要素検索",
+    "description": "要素検索モードのラベル"
+  },
+  "popup_resultsListMode": {
+    "message": "検索結果一覧",
+    "description": "検索結果一覧モードのラベル"
+  },
+  "popup_searchMode_css": {
+    "message": "CSSセレクタ",
+    "description": "CSSセレクタ検索モード"
+  },
+  "popup_searchMode_xpath": {
+    "message": "XPath",
+    "description": "XPath検索モード"
+  },
+  "popup_prevBtn_title": {
+    "message": "前へ (Shift+Enter)",
+    "description": "前の検索結果へ移動するボタンのツールチップ"
+  },
+  "popup_nextBtn_title": {
+    "message": "次へ (Enter)",
+    "description": "次の検索結果へ移動するボタンのツールチップ"
+  },
+  "popup_resultsListTitle": {
+    "message": "検索結果一覧",
+    "description": "検索結果一覧のタイトル"
+  },
+  "popup_resultsListCount": {
+    "message": "$COUNT$件",
+    "description": "検索結果の件数表示",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "popup_error_noKeyword": {
+    "message": "検索キーワードを入力してください",
+    "description": "キーワード未入力時のエラーメッセージ"
+  },
+  "popup_error_noTab": {
+    "message": "エラー: タブ情報を取得できませんでした",
+    "description": "タブ情報取得失敗時のエラーメッセージ"
+  },
+  "popup_error_specialPage": {
+    "message": "このページでは拡張機能を使用できません",
+    "description": "特殊ページでのエラーメッセージ"
+  },
+  "popup_error_connection": {
+    "message": "ページに接続できませんでした",
+    "description": "ページ接続失敗時のエラーメッセージ"
+  },
+  "popup_error_searchFailed": {
+    "message": "検索に失敗しました",
+    "description": "検索失敗時のエラーメッセージ"
+  },
+  "popup_error_prefix": {
+    "message": "エラー: $MESSAGE$",
+    "description": "エラーメッセージのプレフィックス",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "接続できませんでした"
+      }
+    }
+  },
+  "options_title": {
+    "message": "Pattern Lens - 設定",
+    "description": "設定ページのタイトル"
+  },
+  "options_defaultSearchOptions": {
+    "message": "デフォルト検索オプション",
+    "description": "デフォルト検索オプションのセクションタイトル"
+  },
+  "options_defaultRegex": {
+    "message": "正規表現検索をデフォルトで有効にする",
+    "description": "正規表現をデフォルトで有効にする設定"
+  },
+  "options_defaultRegex_desc": {
+    "message": "チェックすると、拡張機能を開いた際に正規表現検索が有効になります",
+    "description": "正規表現デフォルト設定の説明"
+  },
+  "options_elementSearchOptions": {
+    "message": "要素検索オプション",
+    "description": "要素検索オプションのセクションタイトル"
+  },
+  "options_defaultElementSearch": {
+    "message": "要素検索をデフォルトで有効にする",
+    "description": "要素検索をデフォルトで有効にする設定"
+  },
+  "options_defaultElementSearch_desc": {
+    "message": "CSSセレクタやXPathによる要素検索をデフォルトで有効にします",
+    "description": "要素検索デフォルト設定の説明"
+  },
+  "options_resultsListOptions": {
+    "message": "検索結果一覧オプション",
+    "description": "検索結果一覧オプションのセクションタイトル"
+  },
+  "options_contextLength": {
+    "message": "前後文脈の文字数:",
+    "description": "前後文脈の文字数設定"
+  },
+  "options_contextLength_desc": {
+    "message": "検索結果一覧に表示する前後の文脈の文字数（10〜100文字）",
+    "description": "前後文脈の文字数設定の説明"
+  },
+  "options_dynamicContentOptions": {
+    "message": "動的コンテンツ検索オプション",
+    "description": "動的コンテンツ検索オプションのセクションタイトル"
+  },
+  "options_autoUpdateSearch": {
+    "message": "動的に追加された要素を自動的に検索する",
+    "description": "動的コンテンツ自動検索設定"
+  },
+  "options_autoUpdateSearch_desc": {
+    "message": "ページに動的に追加された要素や変更された要素を自動的に検索します（SPAや無限スクロールなどに対応）",
+    "description": "動的コンテンツ自動検索設定の説明"
+  },
+  "options_saveStatus": {
+    "message": "設定を保存しました",
+    "description": "設定保存完了メッセージ"
+  }
+}

@@ -21,6 +21,7 @@ import type {
 } from '~/lib/types';
 import { getRequiredElementById } from '~/lib/utils/domUtils';
 import { handleError } from '~/lib/utils/errorHandler';
+import { getMessage, initializeI18n } from '~/lib/utils/i18n';
 import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
 
 // DOM elements - these are required elements in popup.html
@@ -194,7 +195,7 @@ async function performSearch(): Promise<void> {
   const query = searchInput.value.trim();
 
   if (!query) {
-    showResult('検索キーワードを入力してください', true);
+    showResult(getMessage('popup_error_noKeyword'), true);
     return;
   }
 
@@ -205,13 +206,13 @@ async function performSearch(): Promise<void> {
     const tab = await getActiveTab();
 
     if (!tab) {
-      showResult('エラー: タブ情報を取得できませんでした', true);
+      showResult(getMessage('popup_error_noTab'), true);
       return;
     }
 
     // Check if the page is a special page where content scripts cannot run
     if (isSpecialPage(tab.url)) {
-      showResult('このページでは拡張機能を使用できません', true);
+      showResult(getMessage('popup_error_specialPage'), true);
       return;
     }
 
@@ -236,9 +237,11 @@ async function performSearch(): Promise<void> {
       }
 
       if (chrome.runtime.lastError) {
-        const error = new Error(chrome.runtime.lastError.message || 'ページに接続できませんでした');
+        const error = new Error(
+          chrome.runtime.lastError.message || getMessage('popup_error_connection')
+        );
         handleError(error, 'performSearch: Chrome runtime error', (err) => {
-          showResult(`エラー: ${err.message}`, true);
+          showResult(getMessage('popup_error_prefix', err.message), true);
         });
         hideNavigation();
         return;
@@ -260,20 +263,20 @@ async function performSearch(): Promise<void> {
       } else if (response?.error) {
         const error = new Error(response.error);
         handleError(error, 'performSearch: Search response error', (err) => {
-          showResult(`エラー: ${err.message}`, true);
+          showResult(getMessage('popup_error_prefix', err.message), true);
         });
         hideNavigation();
       } else {
-        const error = new Error('検索に失敗しました');
+        const error = new Error(getMessage('popup_error_searchFailed'));
         handleError(error, 'performSearch: Unknown search failure', (err) => {
-          showResult(`エラー: ${err.message}`, true);
+          showResult(getMessage('popup_error_prefix', err.message), true);
         });
         hideNavigation();
       }
     });
   } catch (error) {
     handleError(error, 'performSearch: Exception', (err) => {
-      showResult(`エラー: ${err.message}`, true);
+      showResult(getMessage('popup_error_prefix', err.message), true);
     });
   }
 }
@@ -284,22 +287,24 @@ async function clearHighlights(): Promise<void> {
     const tab = await getActiveTab();
 
     if (!tab) {
-      showResult('エラー: タブ情報を取得できませんでした', true);
+      showResult(getMessage('popup_error_noTab'), true);
       return;
     }
 
     // Check if the page is a special page
     if (isSpecialPage(tab.url)) {
-      showResult('このページでは拡張機能を使用できません', true);
+      showResult(getMessage('popup_error_specialPage'), true);
       return;
     }
 
     const message: ClearMessage = { action: 'clear' };
     chrome.tabs.sendMessage(tab.id, message, (response: Response | undefined) => {
       if (chrome.runtime.lastError) {
-        const error = new Error(chrome.runtime.lastError.message || 'ページに接続できませんでした');
+        const error = new Error(
+          chrome.runtime.lastError.message || getMessage('popup_error_connection')
+        );
         handleError(error, 'clearHighlights: Chrome runtime error', (err) => {
-          showResult(`エラー: ${err.message}`, true);
+          showResult(getMessage('popup_error_prefix', err.message), true);
         });
         return;
       }
@@ -316,7 +321,7 @@ async function clearHighlights(): Promise<void> {
     });
   } catch (error) {
     handleError(error, 'clearHighlights: Exception', (err) => {
-      showResult(`エラー: ${err.message}`, true);
+      showResult(getMessage('popup_error_prefix', err.message), true);
     });
   }
 }
@@ -543,7 +548,7 @@ async function fetchAndDisplayResultsList(): Promise<void> {
  * 検索結果一覧を表示
  */
 function displayResultsList(items: SearchResultItem[], totalMatches: number): void {
-  resultsListCount.textContent = `${totalMatches}件`;
+  resultsListCount.textContent = getMessage('popup_resultsListCount', String(totalMatches));
   resultsListItems.innerHTML = '';
 
   if (items.length === 0) {
@@ -749,6 +754,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize i18n
+  initializeI18n();
+  // Load settings
   loadSettings();
   // Restore previous search state after settings are loaded
   setTimeout(() => {

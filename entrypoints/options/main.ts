@@ -2,6 +2,7 @@
 import { DEFAULT_RESULTS_LIST_CONTEXT_LENGTH } from '~/lib/constants';
 import type { Settings } from '~/lib/types';
 import { getElementById } from '~/lib/utils/domUtils';
+import { initializeI18n } from '~/lib/utils/i18n';
 
 // Load saved settings
 function loadSettings(): void {
@@ -85,7 +86,10 @@ function saveSettings(): void {
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', loadSettings);
+document.addEventListener('DOMContentLoaded', () => {
+  initializeI18n();
+  loadSettings();
+});
 
 // Auto-save on change
 const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');

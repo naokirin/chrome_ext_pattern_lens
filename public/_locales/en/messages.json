@@ -1,0 +1,158 @@
+{
+  "extName": {
+    "message": "Pattern Lens",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Enhanced page search with regex and DOM element selector support",
+    "description": "Extension description"
+  },
+  "popup_title": {
+    "message": "Pattern Lens",
+    "description": "Popup title"
+  },
+  "popup_clearLink": {
+    "message": "Clear Search",
+    "description": "Clear search link"
+  },
+  "popup_searchPlaceholder": {
+    "message": "Enter search keyword...",
+    "description": "Search input placeholder"
+  },
+  "popup_regexMode": {
+    "message": "Regex",
+    "description": "Regex search mode label"
+  },
+  "popup_caseSensitiveMode": {
+    "message": "Case Sensitive",
+    "description": "Case sensitive mode label"
+  },
+  "popup_fuzzyMode": {
+    "message": "Fuzzy Search",
+    "description": "Fuzzy search mode label"
+  },
+  "popup_elementMode": {
+    "message": "Element Search",
+    "description": "Element search mode label"
+  },
+  "popup_resultsListMode": {
+    "message": "Results List",
+    "description": "Results list mode label"
+  },
+  "popup_searchMode_css": {
+    "message": "CSS Selector",
+    "description": "CSS selector search mode"
+  },
+  "popup_searchMode_xpath": {
+    "message": "XPath",
+    "description": "XPath search mode"
+  },
+  "popup_prevBtn_title": {
+    "message": "Previous (Shift+Enter)",
+    "description": "Tooltip for previous match button"
+  },
+  "popup_nextBtn_title": {
+    "message": "Next (Enter)",
+    "description": "Tooltip for next match button"
+  },
+  "popup_resultsListTitle": {
+    "message": "Search Results",
+    "description": "Results list title"
+  },
+  "popup_resultsListCount": {
+    "message": "$COUNT$ items",
+    "description": "Search results count display",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "popup_error_noKeyword": {
+    "message": "Please enter a search keyword",
+    "description": "Error message when no keyword is entered"
+  },
+  "popup_error_noTab": {
+    "message": "Error: Failed to get tab information",
+    "description": "Error message when tab info cannot be retrieved"
+  },
+  "popup_error_specialPage": {
+    "message": "This extension cannot be used on this page",
+    "description": "Error message on special pages"
+  },
+  "popup_error_connection": {
+    "message": "Could not connect to page",
+    "description": "Error message when connection to page fails"
+  },
+  "popup_error_searchFailed": {
+    "message": "Search failed",
+    "description": "Error message when search fails"
+  },
+  "popup_error_prefix": {
+    "message": "Error: $MESSAGE$",
+    "description": "Error message prefix",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "Could not connect"
+      }
+    }
+  },
+  "options_title": {
+    "message": "Pattern Lens - Settings",
+    "description": "Settings page title"
+  },
+  "options_defaultSearchOptions": {
+    "message": "Default Search Options",
+    "description": "Default search options section title"
+  },
+  "options_defaultRegex": {
+    "message": "Enable regex search by default",
+    "description": "Enable regex by default setting"
+  },
+  "options_defaultRegex_desc": {
+    "message": "When checked, regex search will be enabled when opening the extension",
+    "description": "Description for default regex setting"
+  },
+  "options_elementSearchOptions": {
+    "message": "Element Search Options",
+    "description": "Element search options section title"
+  },
+  "options_defaultElementSearch": {
+    "message": "Enable element search by default",
+    "description": "Enable element search by default setting"
+  },
+  "options_defaultElementSearch_desc": {
+    "message": "Enable element search with CSS selectors or XPath by default",
+    "description": "Description for default element search setting"
+  },
+  "options_resultsListOptions": {
+    "message": "Results List Options",
+    "description": "Results list options section title"
+  },
+  "options_contextLength": {
+    "message": "Context length:",
+    "description": "Context length setting label"
+  },
+  "options_contextLength_desc": {
+    "message": "Number of characters to display before and after matches in results list (10-100 characters)",
+    "description": "Description for context length setting"
+  },
+  "options_dynamicContentOptions": {
+    "message": "Dynamic Content Search Options",
+    "description": "Dynamic content search options section title"
+  },
+  "options_autoUpdateSearch": {
+    "message": "Automatically search dynamically added elements",
+    "description": "Auto update search setting"
+  },
+  "options_autoUpdateSearch_desc": {
+    "message": "Automatically search elements that are dynamically added or modified on the page (supports SPAs and infinite scroll)",
+    "description": "Description for auto update search setting"
+  },
+  "options_saveStatus": {
+    "message": "Settings saved",
+    "description": "Settings save success message"
+  }
+}

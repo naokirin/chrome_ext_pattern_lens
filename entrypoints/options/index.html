@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pattern Lens - Settings</title>
+  <title data-i18n="options_title">Pattern Lens - Settings</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -83,48 +83,48 @@
 </head>
 
 <body>
-  <h1>Pattern Lens - 設定</h1>
+  <h1 data-i18n="options_title">Pattern Lens - 設定</h1>
 
   <div class="setting-group">
-    <h2>デフォルト検索オプション</h2>
+    <h2 data-i18n="options_defaultSearchOptions">デフォルト検索オプション</h2>
     <label>
       <input type="checkbox" id="defaultRegex">
-      <span>正規表現検索をデフォルトで有効にする</span>
+      <span data-i18n="options_defaultRegex">正規表現検索をデフォルトで有効にする</span>
     </label>
-    <p class="description">チェックすると、拡張機能を開いた際に正規表現検索が有効になります</p>
+    <p class="description" data-i18n="options_defaultRegex_desc">チェックすると、拡張機能を開いた際に正規表現検索が有効になります</p>
   </div>
 
   <div class="setting-group">
-    <h2>要素検索オプション</h2>
+    <h2 data-i18n="options_elementSearchOptions">要素検索オプション</h2>
     <label>
       <input type="checkbox" id="defaultElementSearch">
-      <span>要素検索をデフォルトで有効にする</span>
+      <span data-i18n="options_defaultElementSearch">要素検索をデフォルトで有効にする</span>
     </label>
-    <p class="description">CSSセレクタやXPathによる要素検索をデフォルトで有効にします</p>
+    <p class="description" data-i18n="options_defaultElementSearch_desc">CSSセレクタやXPathによる要素検索をデフォルトで有効にします</p>
   </div>
 
   <div class="setting-group">
-    <h2>検索結果一覧オプション</h2>
+    <h2 data-i18n="options_resultsListOptions">検索結果一覧オプション</h2>
     <div class="setting-row">
       <label>
-        <span>前後文脈の文字数:</span>
+        <span data-i18n="options_contextLength">前後文脈の文字数:</span>
         <input type="number" id="resultsListContextLength" min="10" max="100" value="30">
       </label>
     </div>
-    <p class="description">検索結果一覧に表示する前後の文脈の文字数（10〜100文字）</p>
+    <p class="description" data-i18n="options_contextLength_desc">検索結果一覧に表示する前後の文脈の文字数（10〜100文字）</p>
   </div>
 
   <div class="setting-group">
-    <h2>動的コンテンツ検索オプション</h2>
+    <h2 data-i18n="options_dynamicContentOptions">動的コンテンツ検索オプション</h2>
     <label>
       <input type="checkbox" id="autoUpdateSearch" checked>
-      <span>動的に追加された要素を自動的に検索する</span>
+      <span data-i18n="options_autoUpdateSearch">動的に追加された要素を自動的に検索する</span>
     </label>
-    <p class="description">ページに動的に追加された要素や変更された要素を自動的に検索します（SPAや無限スクロールなどに対応）</p>
+    <p class="description" data-i18n="options_autoUpdateSearch_desc">ページに動的に追加された要素や変更された要素を自動的に検索します（SPAや無限スクロールなどに対応）</p>
   </div>
 
   <div class="save-status" id="saveStatus">
-    設定を保存しました
+    <span data-i18n="options_saveStatus">設定を保存しました</span>
   </div>
 
   <script type="module" src="./main.ts"></script>

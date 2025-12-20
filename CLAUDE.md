@@ -136,6 +136,12 @@ Gemini MCPの助言に基づき、**テキストノード置換方式**を採用
 - [entrypoints/content.ts](entrypoints/content.ts): popupからのメッセージ受信
 - [entrypoints/popup/main.ts](entrypoints/popup/main.ts): エラーハンドリング、設定変更の監視（chrome.storage.onChanged）
 
+### chrome.i18n
+
+- [lib/utils/i18n.ts](lib/utils/i18n.ts): 多言語化ユーティリティ
+- [entrypoints/popup/main.ts](entrypoints/popup/main.ts): UIテキストの国際化
+- [entrypoints/options/main.ts](entrypoints/options/main.ts): 設定ページの国際化
+
 ## 実装済みの機能
 
 1. **あいまい検索** ✅
@@ -151,6 +157,29 @@ Gemini MCPの助言に基づき、**テキストノード置換方式**を採用
    - 要素検索時は強制OFF
    - ポップアップサイズの自動調整
    - 実装: [lib/search/resultsCollector.ts](lib/search/resultsCollector.ts), [lib/messaging/handlers.ts](lib/messaging/handlers.ts), [entrypoints/popup/](entrypoints/popup/)
+
+3. **国際化対応（i18n）** ✅
+   - 日本語・英語の2言語に対応
+   - chrome.i18n APIを使用
+   - ブラウザの言語設定に基づいて自動切り替え
+   - 実装: [public/_locales/](public/_locales/), [lib/utils/i18n.ts](lib/utils/i18n.ts)
+   - HTMLの`data-i18n`属性でテキストを自動置換
+   - TypeScriptコードでは`getMessage()`関数を使用
+
+## 多言語化の実装方法
+
+### 新しいメッセージの追加
+
+1. `public/_locales/ja/messages.json`と`public/_locales/en/messages.json`にメッセージキーを追加
+2. HTMLの場合: `data-i18n="messageKey"`属性を追加
+3. TypeScriptの場合: `getMessage('messageKey')`を使用
+4. プレースホルダー付きメッセージの場合: `getMessage('messageKey', value)`
+
+### 新しい言語の追加
+
+1. `public/_locales/[言語コード]/`ディレクトリを作成
+2. `messages.json`ファイルを作成し、すべてのメッセージキーを翻訳
+3. 必要に応じて`wxt.config.ts`の`default_locale`を変更
 
 ## 拡張予定の機能
 

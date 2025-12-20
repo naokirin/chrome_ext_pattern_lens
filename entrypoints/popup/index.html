@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 
 <head>
   <meta charset="UTF-8">
@@ -320,34 +320,34 @@
 
 <body>
   <div class="header">
-    <h1>Pattern Lens</h1>
-    <a href="#" class="clear-link" id="clearLink">検索をクリア</a>
+    <h1 data-i18n="popup_title">Pattern Lens</h1>
+    <a href="#" class="clear-link" id="clearLink" data-i18n="popup_clearLink">検索をクリア</a>
   </div>
 
   <div class="search-container">
-    <input type="text" id="searchInput" placeholder="検索キーワードを入力...">
+    <input type="text" id="searchInput" data-i18n-placeholder="popup_searchPlaceholder" placeholder="検索キーワードを入力...">
   </div>
 
   <div class="options">
     <label class="chip" id="regexLabel">
       <span class="chip-check">✓</span>
       <input type="checkbox" id="regexMode">
-      正規表現
+      <span data-i18n="popup_regexMode">正規表現</span>
     </label>
     <label class="chip" id="caseSensitiveLabel">
       <span class="chip-check">✓</span>
       <input type="checkbox" id="caseSensitiveMode">
-      大文字小文字を区別
+      <span data-i18n="popup_caseSensitiveMode">大文字小文字を区別</span>
     </label>
     <label class="chip" id="fuzzyLabel">
       <span class="chip-check">✓</span>
       <input type="checkbox" id="fuzzyMode">
-      あいまい検索
+      <span data-i18n="popup_fuzzyMode">あいまい検索</span>
     </label>
     <label class="chip" id="elementLabel">
       <span class="chip-check">✓</span>
       <input type="checkbox" id="elementMode">
-      要素検索
+      <span data-i18n="popup_elementMode">要素検索</span>
     </label>
   </div>
 
@@ -355,14 +355,14 @@
     <label class="chip chip-display" id="resultsListLabel">
       <span class="chip-check">✓</span>
       <input type="checkbox" id="resultsListMode">
-      検索結果一覧
+      <span data-i18n="popup_resultsListMode">検索結果一覧</span>
     </label>
   </div>
 
   <div class="search-mode" id="searchModeContainer" style="display: none;">
     <select id="searchMode">
-      <option value="css">CSSセレクタ</option>
-      <option value="xpath">XPath</option>
+      <option value="css" data-i18n="popup_searchMode_css">CSSセレクタ</option>
+      <option value="xpath" data-i18n="popup_searchMode_xpath">XPath</option>
     </select>
   </div>
 
@@ -373,14 +373,14 @@
       <span id="matchCounter">0/0</span>
     </div>
     <div class="nav-buttons">
-      <button class="nav-btn" id="prevBtn" title="前へ (Shift+Enter)">▲</button>
-      <button class="nav-btn" id="nextBtn" title="次へ (Enter)">▼</button>
+      <button class="nav-btn" id="prevBtn" data-i18n-title="popup_prevBtn_title" title="前へ (Shift+Enter)">▲</button>
+      <button class="nav-btn" id="nextBtn" data-i18n-title="popup_nextBtn_title" title="次へ (Enter)">▼</button>
     </div>
   </div>
 
   <div class="results-list" id="resultsList">
     <div class="results-list-header">
-      <span class="results-list-title">検索結果一覧</span>
+      <span class="results-list-title" data-i18n="popup_resultsListTitle">検索結果一覧</span>
       <span class="results-list-count" id="resultsListCount">0件</span>
     </div>
     <div class="results-list-items" id="resultsListItems">

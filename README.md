@@ -154,14 +154,37 @@ chrome_ext_pattern_lens/
 │   │   └── main.ts
 │   └── content.ts           # コンテンツスクリプト
 ├── lib/                      # 共通ライブラリ
-│   └── types.ts             # 型定義
+│   ├── types.ts             # 型定義
+│   └── utils/
+│       └── i18n.ts          # 国際化ユーティリティ
 ├── public/                   # 静的リソース
-│   └── icons/               # 拡張機能のアイコン
+│   ├── icons/               # 拡張機能のアイコン
+│   └── _locales/            # 多言語対応
+│       ├── ja/              # 日本語
+│       │   └── messages.json
+│       └── en/              # 英語
+│           └── messages.json
 ├── tests/                   # テストファイル
 ├── wxt.config.ts            # WXT設定ファイル
 ├── tsconfig.json            # TypeScript設定
 └── package.json             # 依存関係
 ```
+
+## 言語対応
+
+この拡張機能は以下の言語に対応しています：
+
+- **日本語** (デフォルト)
+- **英語**
+
+拡張機能の表示言語は、Chromeブラウザの言語設定に基づいて自動的に切り替わります。
+
+### 言語設定の変更方法
+
+1. Chromeの設定 (`chrome://settings/languages`) を開く
+2. 優先する言語を設定
+3. Chromeを再起動
+4. 拡張機能の表示言語が自動的に切り替わります
 
 ## 技術スタック
 
@@ -173,6 +196,7 @@ chrome_ext_pattern_lens/
   - `chrome.storage.sync`: 設定の保存
   - `chrome.tabs`: タブとの通信
   - `chrome.runtime`: メッセージング
+  - `chrome.i18n`: 国際化対応
 
 ## 技術的な特徴
 
