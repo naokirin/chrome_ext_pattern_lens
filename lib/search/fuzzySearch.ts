@@ -11,15 +11,20 @@ import { searchInVirtualText } from './textSearch';
 /**
  * Calculate maximum distance between keywords based on total keyword length
  * @param totalKeywordLength Total length of all keywords combined
+ * @param baseMultiplier Multiplier for calculating distance (default: FUZZY_SEARCH_BASE_MULTIPLIER)
+ * @param minDistance Minimum distance (default: FUZZY_SEARCH_MIN_DISTANCE)
+ * @param maxDistance Maximum distance (default: FUZZY_SEARCH_MAX_DISTANCE)
  * @returns Maximum distance in characters
  */
-function calculateMaxKeywordDistance(totalKeywordLength: number): number {
-  const calculatedDistance = totalKeywordLength * FUZZY_SEARCH_BASE_MULTIPLIER;
+function calculateMaxKeywordDistance(
+  totalKeywordLength: number,
+  baseMultiplier: number = FUZZY_SEARCH_BASE_MULTIPLIER,
+  minDistance: number = FUZZY_SEARCH_MIN_DISTANCE,
+  maxDistance: number = FUZZY_SEARCH_MAX_DISTANCE
+): number {
+  const calculatedDistance = totalKeywordLength * baseMultiplier;
 
-  return Math.max(
-    FUZZY_SEARCH_MIN_DISTANCE,
-    Math.min(calculatedDistance, FUZZY_SEARCH_MAX_DISTANCE)
-  );
+  return Math.max(minDistance, Math.min(calculatedDistance, maxDistance));
 }
 
 /**
@@ -126,10 +131,18 @@ function isValidCombination(
 /**
  * Find multi-keyword matches in normalized text
  * Returns matches where all keywords are found within dynamically calculated maxDistance
+ * @param keywords Array of keywords to search for
+ * @param normalizedText Normalized text to search in
+ * @param baseMultiplier Multiplier for calculating distance (default: FUZZY_SEARCH_BASE_MULTIPLIER)
+ * @param minDistance Minimum distance (default: FUZZY_SEARCH_MIN_DISTANCE)
+ * @param maxDistance Maximum distance (default: FUZZY_SEARCH_MAX_DISTANCE)
  */
 export function findMultiKeywordMatches(
   keywords: string[],
-  normalizedText: string
+  normalizedText: string,
+  baseMultiplier: number = FUZZY_SEARCH_BASE_MULTIPLIER,
+  minDistance: number = FUZZY_SEARCH_MIN_DISTANCE,
+  maxDistance: number = FUZZY_SEARCH_MAX_DISTANCE
 ): MultiKeywordMatch[] {
   if (keywords.length === 0) {
     return [];
@@ -143,7 +156,12 @@ export function findMultiKeywordMatches(
 
   // Calculate maximum distance based on total keyword length
   const totalKeywordLength = validKeywords.reduce((sum, keyword) => sum + keyword.length, 0);
-  const maxDistance = calculateMaxKeywordDistance(totalKeywordLength);
+  const calculatedMaxDistance = calculateMaxKeywordDistance(
+    totalKeywordLength,
+    baseMultiplier,
+    minDistance,
+    maxDistance
+  );
 
   // Find matches for each keyword
   const keywordMatches = findMatchesForKeywords(validKeywords, normalizedText);
@@ -158,7 +176,11 @@ export function findMultiKeywordMatches(
   const combinations = generateMatchCombinations(keywordMatches);
 
   for (const combination of combinations) {
-    const { isValid, minRange } = isValidCombination(combination, normalizedText, maxDistance);
+    const { isValid, minRange } = isValidCombination(
+      combination,
+      normalizedText,
+      calculatedMaxDistance
+    );
     if (isValid && minRange) {
       results.push({
         keywords: validKeywords,

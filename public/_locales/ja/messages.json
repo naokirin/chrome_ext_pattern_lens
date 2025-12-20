@@ -104,7 +104,7 @@
     "description": "設定ページのタイトル"
   },
   "options_defaultSearchOptions": {
-    "message": "デフォルト検索オプション",
+    "message": "デフォルト検索",
     "description": "デフォルト検索オプションのセクションタイトル"
   },
   "options_defaultRegex": {
@@ -132,7 +132,7 @@
     "description": "あいまい検索デフォルト設定の説明"
   },
   "options_elementSearchOptions": {
-    "message": "要素検索オプション",
+    "message": "要素検索",
     "description": "要素検索オプションのセクションタイトル"
   },
   "options_defaultElementSearch": {
@@ -207,8 +207,36 @@
     "message": "注意: 要素検索モードがONの場合は、あいまい検索は自動的にOFFになります",
     "description": "あいまい検索の制約に関する注意事項"
   },
+  "options_fuzzySearchOptions": {
+    "message": "あいまい検索",
+    "description": "あいまい検索オプションのセクションタイトル"
+  },
+  "options_fuzzySearchBaseMultiplier": {
+    "message": "複数キーワード検索の範囲倍率:",
+    "description": "あいまい検索の範囲倍率設定ラベル"
+  },
+  "options_fuzzySearchBaseMultiplier_desc": {
+    "message": "複数キーワード検索で、キーワード間の最大距離を計算する際の倍率を設定します。範囲 = キーワードの総文字数 × 倍率（例: 倍率6の場合、10文字のキーワードは60文字の範囲内でマッチします）",
+    "description": "あいまい検索の範囲倍率設定の説明"
+  },
+  "options_fuzzySearchMinDistance": {
+    "message": "複数キーワード検索の最小範囲:",
+    "description": "あいまい検索の最小範囲設定ラベル"
+  },
+  "options_fuzzySearchMinDistance_desc": {
+    "message": "複数キーワード検索で、キーワード間の最小距離を設定します。短いキーワードでも、この最小範囲が適用されます",
+    "description": "あいまい検索の最小範囲設定の説明"
+  },
+  "options_fuzzySearchMaxDistance": {
+    "message": "複数キーワード検索の最大範囲:",
+    "description": "あいまい検索の最大範囲設定ラベル"
+  },
+  "options_fuzzySearchMaxDistance_desc": {
+    "message": "複数キーワード検索で、キーワード間の最大距離を設定します。長いキーワードでも、この最大範囲を超えることはありません",
+    "description": "あいまい検索の最大範囲設定の説明"
+  },
   "options_resultsListOptions": {
-    "message": "検索結果一覧オプション",
+    "message": "検索結果一覧",
     "description": "検索結果一覧オプションのセクションタイトル"
   },
   "options_contextLength": {
@@ -220,7 +248,7 @@
     "description": "前後文脈の文字数設定の説明"
   },
   "options_dynamicContentOptions": {
-    "message": "動的コンテンツ検索オプション",
+    "message": "動的コンテンツ検索",
     "description": "動的コンテンツ検索オプションのセクションタイトル"
   },
   "options_autoUpdateSearch": {
@@ -236,7 +264,7 @@
     "description": "設定保存完了メッセージ"
   },
   "options_keyboardShortcutOptions": {
-    "message": "キーボードショートカットオプション",
+    "message": "キーボードショートカット",
     "description": "キーボードショートカットオプションのセクションタイトル"
   },
   "options_overrideCtrlF": {

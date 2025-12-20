@@ -104,7 +104,7 @@
     "description": "Settings page title"
   },
   "options_defaultSearchOptions": {
-    "message": "Default Search Options",
+    "message": "Default Search",
     "description": "Default search options section title"
   },
   "options_defaultRegex": {
@@ -132,7 +132,7 @@
     "description": "Description for default fuzzy search setting"
   },
   "options_elementSearchOptions": {
-    "message": "Element Search Options",
+    "message": "Element Search",
     "description": "Element search options section title"
   },
   "options_defaultElementSearch": {
@@ -207,8 +207,36 @@
     "message": "Note: Fuzzy search is automatically disabled when element search mode is ON",
     "description": "Note about fuzzy search constraints"
   },
+  "options_fuzzySearchOptions": {
+    "message": "Fuzzy Search",
+    "description": "Fuzzy search options section title"
+  },
+  "options_fuzzySearchBaseMultiplier": {
+    "message": "Multi-keyword search range multiplier:",
+    "description": "Fuzzy search range multiplier setting label"
+  },
+  "options_fuzzySearchBaseMultiplier_desc": {
+    "message": "Set the multiplier for calculating the maximum distance between keywords in multi-keyword search. Range = total keyword length × multiplier (e.g., with multiplier 6, a 10-character keyword matches within a 60-character range)",
+    "description": "Description for fuzzy search range multiplier setting"
+  },
+  "options_fuzzySearchMinDistance": {
+    "message": "Multi-keyword search minimum range:",
+    "description": "Fuzzy search minimum range setting label"
+  },
+  "options_fuzzySearchMinDistance_desc": {
+    "message": "Set the minimum distance between keywords in multi-keyword search. This minimum range is applied even for very short keywords",
+    "description": "Description for fuzzy search minimum range setting"
+  },
+  "options_fuzzySearchMaxDistance": {
+    "message": "Multi-keyword search maximum range:",
+    "description": "Fuzzy search maximum range setting label"
+  },
+  "options_fuzzySearchMaxDistance_desc": {
+    "message": "Set the maximum distance between keywords in multi-keyword search. Even for very long keywords, the range will not exceed this maximum",
+    "description": "Description for fuzzy search maximum range setting"
+  },
   "options_resultsListOptions": {
-    "message": "Results List Options",
+    "message": "Results List",
     "description": "Results list options section title"
   },
   "options_contextLength": {
@@ -220,7 +248,7 @@
     "description": "Description for context length setting"
   },
   "options_dynamicContentOptions": {
-    "message": "Dynamic Content Search Options",
+    "message": "Dynamic Content Search",
     "description": "Dynamic content search options section title"
   },
   "options_autoUpdateSearch": {
@@ -236,7 +264,7 @@
     "description": "Settings save success message"
   },
   "options_keyboardShortcutOptions": {
-    "message": "Keyboard Shortcut Options",
+    "message": "Keyboard Shortcut",
     "description": "Keyboard shortcut options section title"
   },
   "options_overrideCtrlF": {

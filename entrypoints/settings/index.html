@@ -178,14 +178,13 @@
   </div>
 
   <div class="setting-group">
-    <h2 data-i18n="options_resultsListOptions">検索結果一覧オプション</h2>
-    <div class="setting-row">
-      <label>
-        <span data-i18n="options_contextLength">前後文脈の文字数:</span>
-        <input type="number" id="resultsListContextLength" min="10" max="100" value="30">
-      </label>
-    </div>
-    <p class="description" data-i18n="options_contextLength_desc">検索結果一覧に表示する前後の文脈の文字数（10〜100文字）</p>
+    <h2 data-i18n="options_keyboardShortcutOptions">キーボードショートカットオプション</h2>
+    <label>
+      <input type="checkbox" id="overrideCtrlF">
+      <span data-i18n="options_overrideCtrlF">Ctrl+F（Cmd+F）で拡張機能を開く</span>
+    </label>
+    <p class="description" data-i18n="options_overrideCtrlF_desc">
+      チェックすると、Ctrl+F（macOSではCmd+F）を押したときに、Chromeの標準検索機能の代わりにこの拡張機能のポップアップが開きます</p>
   </div>
 
   <div class="setting-group">
@@ -199,13 +198,42 @@
   </div>
 
   <div class="setting-group">
-    <h2 data-i18n="options_keyboardShortcutOptions">キーボードショートカットオプション</h2>
-    <label>
-      <input type="checkbox" id="overrideCtrlF">
-      <span data-i18n="options_overrideCtrlF">Ctrl+F（Cmd+F）で拡張機能を開く</span>
-    </label>
-    <p class="description" data-i18n="options_overrideCtrlF_desc">
-      チェックすると、Ctrl+F（macOSではCmd+F）を押したときに、Chromeの標準検索機能の代わりにこの拡張機能のポップアップが開きます</p>
+    <h2 data-i18n="options_resultsListOptions">検索結果一覧オプション</h2>
+    <div class="setting-row">
+      <label>
+        <span data-i18n="options_contextLength">前後文脈の文字数:</span>
+        <input type="number" id="resultsListContextLength" min="10" max="100" value="30">
+      </label>
+    </div>
+    <p class="description" data-i18n="options_contextLength_desc">検索結果一覧に表示する前後の文脈の文字数（10〜100文字）</p>
+  </div>
+
+  <div class="setting-group">
+    <h2 data-i18n="options_fuzzySearchOptions">あいまい検索オプション</h2>
+    <div class="setting-row">
+      <label>
+        <span data-i18n="options_fuzzySearchBaseMultiplier">複数キーワード検索の範囲倍率:</span>
+        <input type="number" id="fuzzySearchBaseMultiplier" min="1" max="20" value="6" step="1">
+      </label>
+    </div>
+    <p class="description" data-i18n="options_fuzzySearchBaseMultiplier_desc">複数キーワード検索で、キーワード間の最大距離を計算する際の倍率を設定します。範囲 =
+      キーワードの総文字数 × 倍率（例: 倍率6の場合、10文字のキーワードは60文字の範囲内でマッチします）</p>
+    <div class="setting-row">
+      <label>
+        <span data-i18n="options_fuzzySearchMinDistance">複数キーワード検索の最小範囲:</span>
+        <input type="number" id="fuzzySearchMinDistance" min="1" max="100" value="20" step="1">
+      </label>
+    </div>
+    <p class="description" data-i18n="options_fuzzySearchMinDistance_desc">
+      複数キーワード検索で、キーワード間の最小距離を設定します。短いキーワードでも、この最小範囲が適用されます</p>
+    <div class="setting-row">
+      <label>
+        <span data-i18n="options_fuzzySearchMaxDistance">複数キーワード検索の最大範囲:</span>
+        <input type="number" id="fuzzySearchMaxDistance" min="50" max="1000" value="200" step="10">
+      </label>
+    </div>
+    <p class="description" data-i18n="options_fuzzySearchMaxDistance_desc">
+      複数キーワード検索で、キーワード間の最大距離を設定します。長いキーワードでも、この最大範囲を超えることはありません</p>
   </div>
 
   <div class="help-section">

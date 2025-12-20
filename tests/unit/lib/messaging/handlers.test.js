@@ -1,4 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  FUZZY_SEARCH_BASE_MULTIPLIER,
+  FUZZY_SEARCH_MAX_DISTANCE,
+  FUZZY_SEARCH_MIN_DISTANCE,
+} from '~/lib/constants';
 import * as minimapModule from '~/lib/highlight/minimap';
 import * as overlayModule from '~/lib/highlight/overlay';
 import {
@@ -29,6 +34,21 @@ describe('messaging/handlers', () => {
     context = {
       stateManager,
       updateCallback,
+    };
+
+    // Mock chrome.storage.sync.get
+    global.chrome = {
+      storage: {
+        sync: {
+          get: vi.fn((keys, callback) => {
+            callback({
+              fuzzySearchBaseMultiplier: FUZZY_SEARCH_BASE_MULTIPLIER,
+              fuzzySearchMinDistance: FUZZY_SEARCH_MIN_DISTANCE,
+              fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE,
+            });
+          }),
+        },
+      },
     };
 
     // Mock dependencies
@@ -100,7 +120,12 @@ describe('messaging/handlers', () => {
         false,
         false,
         stateManager,
-        false
+        false,
+        false,
+        -1,
+        FUZZY_SEARCH_BASE_MULTIPLIER,
+        FUZZY_SEARCH_MIN_DISTANCE,
+        FUZZY_SEARCH_MAX_DISTANCE
       );
     });
 

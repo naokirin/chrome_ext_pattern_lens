@@ -94,6 +94,9 @@ export interface Settings {
   resultsListContextLength?: number;
   autoUpdateSearch?: boolean; // 動的要素の自動検索更新を有効化
   overrideCtrlF?: boolean; // Ctrl+Fで拡張機能を開く（デフォルト: false）
+  fuzzySearchBaseMultiplier?: number; // あいまい検索の範囲計算倍率（デフォルト: 6）
+  fuzzySearchMinDistance?: number; // あいまい検索の最小範囲（デフォルト: 20）
+  fuzzySearchMaxDistance?: number; // あいまい検索の最大範囲（デフォルト: 200）
 }
 
 export interface SearchState {

@@ -1,4 +1,9 @@
-import { ESCAPED_DOT_PLACEHOLDER } from '~/lib/constants';
+import {
+  ESCAPED_DOT_PLACEHOLDER,
+  FUZZY_SEARCH_BASE_MULTIPLIER,
+  FUZZY_SEARCH_MAX_DISTANCE,
+  FUZZY_SEARCH_MIN_DISTANCE,
+} from '~/lib/constants';
 import type { SearchStateManager } from '~/lib/state/searchState';
 /**
  * Text search functionality using virtual text layer
@@ -236,9 +241,18 @@ function performSingleKeywordFuzzySearch(
 function performMultiKeywordFuzzySearch(
   keywords: string[],
   normalizedText: string,
-  textMapping: { ranges: Array<{ start: number; end: number }> }
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  baseMultiplier: number,
+  minDistance: number,
+  maxDistance: number
 ): VirtualMatch[] {
-  const multiKeywordMatches = findMultiKeywordMatches(keywords, normalizedText);
+  const multiKeywordMatches = findMultiKeywordMatches(
+    keywords,
+    normalizedText,
+    baseMultiplier,
+    minDistance,
+    maxDistance
+  );
 
   // Convert normalized matches to original virtual text positions
   const matches: VirtualMatch[] = [];
@@ -257,24 +271,40 @@ function performMultiKeywordFuzzySearch(
 function performFuzzySearch(
   query: string,
   normalizedText: string,
-  textMapping: { ranges: Array<{ start: number; end: number }> }
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  baseMultiplier: number,
+  minDistance: number,
+  maxDistance: number
 ): VirtualMatch[] {
   const keywords = splitQueryIntoKeywords(query);
   if (keywords.length > 1) {
-    return performMultiKeywordFuzzySearch(keywords, normalizedText, textMapping);
+    return performMultiKeywordFuzzySearch(
+      keywords,
+      normalizedText,
+      textMapping,
+      baseMultiplier,
+      minDistance,
+      maxDistance
+    );
   }
   return performSingleKeywordFuzzySearch(query, normalizedText, textMapping);
 }
 
 /**
  * Create text matches from query using virtual text layer
+ * @param baseMultiplier Multiplier for fuzzy search range calculation (default: FUZZY_SEARCH_BASE_MULTIPLIER)
+ * @param minDistance Minimum distance for fuzzy search (default: FUZZY_SEARCH_MIN_DISTANCE)
+ * @param maxDistance Maximum distance for fuzzy search (default: FUZZY_SEARCH_MAX_DISTANCE)
  * @returns Array of DOM Ranges representing matches
  */
 export function createTextMatches(
   query: string,
   useRegex: boolean,
   caseSensitive: boolean,
-  useFuzzy = false
+  useFuzzy = false,
+  baseMultiplier: number = FUZZY_SEARCH_BASE_MULTIPLIER,
+  minDistance: number = FUZZY_SEARCH_MIN_DISTANCE,
+  maxDistance: number = FUZZY_SEARCH_MAX_DISTANCE
 ): Range[] {
   // Step 1: Create virtual text layer with character-level mapping
   const { virtualText, charMap } = createVirtualTextAndMap();
@@ -285,7 +315,14 @@ export function createTextMatches(
   if (useFuzzy) {
     // Fuzzy search: normalize text and query, then search
     const normalizedResult = normalizeText(virtualText);
-    matches = performFuzzySearch(query, normalizedResult.normalizedText, normalizedResult.mapping);
+    matches = performFuzzySearch(
+      query,
+      normalizedResult.normalizedText,
+      normalizedResult.mapping,
+      baseMultiplier,
+      minDistance,
+      maxDistance
+    );
   } else {
     // Normal search
     matches = searchInVirtualText(query, virtualText, useRegex, caseSensitive);
@@ -352,6 +389,9 @@ export function createOverlaysFromRanges(
 
 /**
  * Search and highlight text using virtual text layer and overlay
+ * @param baseMultiplier Multiplier for fuzzy search range calculation (default: FUZZY_SEARCH_BASE_MULTIPLIER)
+ * @param minDistance Minimum distance for fuzzy search (default: FUZZY_SEARCH_MIN_DISTANCE)
+ * @param maxDistance Maximum distance for fuzzy search (default: FUZZY_SEARCH_MAX_DISTANCE)
  */
 export function searchText(
   query: string,
@@ -360,10 +400,21 @@ export function searchText(
   stateManager: SearchStateManager,
   useFuzzy = false,
   skipNavigation = false,
-  previousIndex = -1
+  previousIndex = -1,
+  baseMultiplier: number = FUZZY_SEARCH_BASE_MULTIPLIER,
+  minDistance: number = FUZZY_SEARCH_MIN_DISTANCE,
+  maxDistance: number = FUZZY_SEARCH_MAX_DISTANCE
 ): SearchResult {
   // Step 1: Create text matches
-  const ranges = createTextMatches(query, useRegex, caseSensitive, useFuzzy);
+  const ranges = createTextMatches(
+    query,
+    useRegex,
+    caseSensitive,
+    useFuzzy,
+    baseMultiplier,
+    minDistance,
+    maxDistance
+  );
 
   // Step 2: Create overlays from ranges
   const count = createOverlaysFromRanges(ranges, stateManager);

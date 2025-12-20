@@ -1,5 +1,10 @@
 // Import shared type definitions
-import { DEFAULT_RESULTS_LIST_CONTEXT_LENGTH } from '~/lib/constants';
+import {
+  DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+  FUZZY_SEARCH_BASE_MULTIPLIER,
+  FUZZY_SEARCH_MAX_DISTANCE,
+  FUZZY_SEARCH_MIN_DISTANCE,
+} from '~/lib/constants';
 import type { Settings } from '~/lib/types';
 import { getElementById } from '~/lib/utils/domUtils';
 import { initializeI18n } from '~/lib/utils/i18n';
@@ -15,6 +20,9 @@ function loadSettings(): void {
       resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
       autoUpdateSearch: true, // デフォルトで有効
       overrideCtrlF: false, // デフォルトで無効
+      fuzzySearchBaseMultiplier: FUZZY_SEARCH_BASE_MULTIPLIER, // デフォルト倍率
+      fuzzySearchMinDistance: FUZZY_SEARCH_MIN_DISTANCE, // デフォルト最小範囲
+      fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE, // デフォルト最大範囲
     },
     (items) => {
       const settings = items as Settings;
@@ -30,6 +38,11 @@ function loadSettings(): void {
       );
       const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
       const overrideCtrlFEl = getElementById<HTMLInputElement>('overrideCtrlF');
+      const fuzzySearchBaseMultiplierEl = getElementById<HTMLInputElement>(
+        'fuzzySearchBaseMultiplier'
+      );
+      const fuzzySearchMinDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMinDistance');
+      const fuzzySearchMaxDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMaxDistance');
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
@@ -56,6 +69,21 @@ function loadSettings(): void {
       }
       if (overrideCtrlFEl) {
         overrideCtrlFEl.checked = settings.overrideCtrlF ?? false;
+      }
+      if (fuzzySearchBaseMultiplierEl) {
+        fuzzySearchBaseMultiplierEl.value = String(
+          settings.fuzzySearchBaseMultiplier ?? FUZZY_SEARCH_BASE_MULTIPLIER
+        );
+      }
+      if (fuzzySearchMinDistanceEl) {
+        fuzzySearchMinDistanceEl.value = String(
+          settings.fuzzySearchMinDistance ?? FUZZY_SEARCH_MIN_DISTANCE
+        );
+      }
+      if (fuzzySearchMaxDistanceEl) {
+        fuzzySearchMaxDistanceEl.value = String(
+          settings.fuzzySearchMaxDistance ?? FUZZY_SEARCH_MAX_DISTANCE
+        );
       }
 
       // Apply mutual exclusion rules after loading
@@ -139,6 +167,9 @@ function saveSettings(): void {
   const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
   const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
   const overrideCtrlFEl = getElementById<HTMLInputElement>('overrideCtrlF');
+  const fuzzySearchBaseMultiplierEl = getElementById<HTMLInputElement>('fuzzySearchBaseMultiplier');
+  const fuzzySearchMinDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMinDistance');
+  const fuzzySearchMaxDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMaxDistance');
 
   if (
     !defaultRegexEl ||
@@ -148,7 +179,10 @@ function saveSettings(): void {
     !defaultElementSearchModeEl ||
     !resultsListContextLengthEl ||
     !autoUpdateSearchEl ||
-    !overrideCtrlFEl
+    !overrideCtrlFEl ||
+    !fuzzySearchBaseMultiplierEl ||
+    !fuzzySearchMinDistanceEl ||
+    !fuzzySearchMaxDistanceEl
   ) {
     return;
   }
@@ -160,7 +194,32 @@ function saveSettings(): void {
       : DEFAULT_RESULTS_LIST_CONTEXT_LENGTH;
 
   const elementSearchMode = defaultElementSearchModeEl.value as 'css' | 'xpath';
-  const validElementSearchMode = elementSearchMode === 'css' || elementSearchMode === 'xpath' ? elementSearchMode : 'css';
+  const validElementSearchMode =
+    elementSearchMode === 'css' || elementSearchMode === 'xpath' ? elementSearchMode : 'css';
+
+  const fuzzySearchBaseMultiplier = Number.parseInt(fuzzySearchBaseMultiplierEl.value, 10);
+  const validFuzzySearchBaseMultiplier =
+    !Number.isNaN(fuzzySearchBaseMultiplier) &&
+    fuzzySearchBaseMultiplier >= 1 &&
+    fuzzySearchBaseMultiplier <= 20
+      ? fuzzySearchBaseMultiplier
+      : FUZZY_SEARCH_BASE_MULTIPLIER;
+
+  const fuzzySearchMinDistance = Number.parseInt(fuzzySearchMinDistanceEl.value, 10);
+  const validFuzzySearchMinDistance =
+    !Number.isNaN(fuzzySearchMinDistance) &&
+    fuzzySearchMinDistance >= 1 &&
+    fuzzySearchMinDistance <= 100
+      ? fuzzySearchMinDistance
+      : FUZZY_SEARCH_MIN_DISTANCE;
+
+  const fuzzySearchMaxDistance = Number.parseInt(fuzzySearchMaxDistanceEl.value, 10);
+  const validFuzzySearchMaxDistance =
+    !Number.isNaN(fuzzySearchMaxDistance) &&
+    fuzzySearchMaxDistance >= 50 &&
+    fuzzySearchMaxDistance <= 1000
+      ? fuzzySearchMaxDistance
+      : FUZZY_SEARCH_MAX_DISTANCE;
 
   const settings: Settings = {
     defaultRegex: defaultRegexEl.checked,
@@ -171,6 +230,9 @@ function saveSettings(): void {
     resultsListContextLength: validContextLength,
     autoUpdateSearch: autoUpdateSearchEl.checked,
     overrideCtrlF: overrideCtrlFEl.checked,
+    fuzzySearchBaseMultiplier: validFuzzySearchBaseMultiplier,
+    fuzzySearchMinDistance: validFuzzySearchMinDistance,
+    fuzzySearchMaxDistance: validFuzzySearchMaxDistance,
   };
 
   chrome.storage.sync.set(settings, () => {
@@ -228,6 +290,21 @@ if (defaultElementSearchEl) {
 const defaultElementSearchModeEl = getElementById<HTMLSelectElement>('defaultElementSearchMode');
 if (defaultElementSearchModeEl) {
   defaultElementSearchModeEl.addEventListener('change', saveSettings);
+}
+const fuzzySearchBaseMultiplierEl = getElementById<HTMLInputElement>('fuzzySearchBaseMultiplier');
+if (fuzzySearchBaseMultiplierEl) {
+  fuzzySearchBaseMultiplierEl.addEventListener('change', saveSettings);
+  fuzzySearchBaseMultiplierEl.addEventListener('blur', saveSettings);
+}
+const fuzzySearchMinDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMinDistance');
+if (fuzzySearchMinDistanceEl) {
+  fuzzySearchMinDistanceEl.addEventListener('change', saveSettings);
+  fuzzySearchMinDistanceEl.addEventListener('blur', saveSettings);
+}
+const fuzzySearchMaxDistanceEl = getElementById<HTMLInputElement>('fuzzySearchMaxDistance');
+if (fuzzySearchMaxDistanceEl) {
+  fuzzySearchMaxDistanceEl.addEventListener('change', saveSettings);
+  fuzzySearchMaxDistanceEl.addEventListener('blur', saveSettings);
 }
 if (resultsListContextLengthEl) {
   resultsListContextLengthEl.addEventListener('change', saveSettings);

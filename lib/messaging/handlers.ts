@@ -1,3 +1,8 @@
+import {
+  FUZZY_SEARCH_BASE_MULTIPLIER,
+  FUZZY_SEARCH_MAX_DISTANCE,
+  FUZZY_SEARCH_MIN_DISTANCE,
+} from '~/lib/constants';
 import { removeMinimap } from '~/lib/highlight/minimap';
 import { clearHighlights } from '~/lib/highlight/overlay';
 import { navigateToMatch } from '~/lib/navigation/navigator';
@@ -22,6 +27,7 @@ import type {
   SearchResponse,
   SearchResult,
   SearchResultsListResponse,
+  Settings,
   StateResponse,
 } from '~/lib/types';
 import { handleError } from '~/lib/utils/errorHandler';
@@ -43,6 +49,23 @@ export async function handleSearch(
   context: MessageHandlerContext
 ): Promise<SearchResponse> {
   try {
+    // Load settings to get fuzzy search parameters
+    const settings = await new Promise<Settings>((resolve) => {
+      chrome.storage.sync.get(
+        {
+          fuzzySearchBaseMultiplier: FUZZY_SEARCH_BASE_MULTIPLIER,
+          fuzzySearchMinDistance: FUZZY_SEARCH_MIN_DISTANCE,
+          fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE,
+        },
+        (items) => {
+          resolve(items as Settings);
+        }
+      );
+    });
+    const baseMultiplier = settings.fuzzySearchBaseMultiplier ?? FUZZY_SEARCH_BASE_MULTIPLIER;
+    const minDistance = settings.fuzzySearchMinDistance ?? FUZZY_SEARCH_MIN_DISTANCE;
+    const maxDistance = settings.fuzzySearchMaxDistance ?? FUZZY_SEARCH_MAX_DISTANCE;
+
     // Clear previous highlights
     if (context.updateCallback) {
       clearHighlights(context.stateManager, removeMinimap, context.updateCallback);
@@ -91,7 +114,12 @@ export async function handleSearch(
         message.useRegex,
         message.caseSensitive,
         context.stateManager,
-        message.useFuzzy
+        message.useFuzzy,
+        false,
+        -1,
+        baseMultiplier,
+        minDistance,
+        maxDistance
       );
       searchFunction = (query, options, stateManager, updateCallback, skipNavigation) => {
         // Save previous index before clearing
@@ -100,14 +128,31 @@ export async function handleSearch(
         if (updateCallback) {
           clearHighlights(stateManager, removeMinimap, updateCallback);
         }
-        searchText(
-          query,
-          options.useRegex,
-          options.caseSensitive,
-          stateManager,
-          options.useFuzzy,
-          skipNavigation,
-          previousIndex
+        // Load settings for each re-search
+        chrome.storage.sync.get(
+          {
+            fuzzySearchBaseMultiplier: FUZZY_SEARCH_BASE_MULTIPLIER,
+            fuzzySearchMinDistance: FUZZY_SEARCH_MIN_DISTANCE,
+            fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE,
+          },
+          (items) => {
+            const settings = items as Settings;
+            const multiplier = settings.fuzzySearchBaseMultiplier ?? FUZZY_SEARCH_BASE_MULTIPLIER;
+            const minDist = settings.fuzzySearchMinDistance ?? FUZZY_SEARCH_MIN_DISTANCE;
+            const maxDist = settings.fuzzySearchMaxDistance ?? FUZZY_SEARCH_MAX_DISTANCE;
+            searchText(
+              query,
+              options.useRegex,
+              options.caseSensitive,
+              stateManager,
+              options.useFuzzy,
+              skipNavigation,
+              previousIndex,
+              multiplier,
+              minDist,
+              maxDist
+            );
+          }
         );
       };
     }
