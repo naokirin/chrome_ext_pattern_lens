@@ -88,7 +88,9 @@ export type Response =
 export interface Settings {
   defaultRegex: boolean;
   defaultCaseSensitive: boolean;
+  defaultFuzzy: boolean; // あいまい検索をデフォルトで有効化
   defaultElementSearch: boolean;
+  defaultElementSearchMode?: 'css' | 'xpath'; // 要素検索のデフォルトモード（CSSセレクタ or XPath）
   resultsListContextLength?: number;
   autoUpdateSearch?: boolean; // 動的要素の自動検索更新を有効化
   overrideCtrlF?: boolean; // Ctrl+Fで拡張機能を開く（デフォルト: false）

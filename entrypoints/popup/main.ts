@@ -61,14 +61,25 @@ function loadSettings(): void {
     {
       defaultRegex: false,
       defaultCaseSensitive: false,
+      defaultFuzzy: false,
       defaultElementSearch: false,
+      defaultElementSearchMode: 'css',
       resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
     },
     (items) => {
       const settings = items as Settings;
       regexMode.checked = settings.defaultRegex;
-      caseSensitiveMode.checked = settings.defaultCaseSensitive;
+      caseSensitiveMode.checked = settings.defaultCaseSensitive ?? false;
+      fuzzyMode.checked = settings.defaultFuzzy ?? false;
       elementMode.checked = settings.defaultElementSearch;
+
+      // Load element search mode and validate
+      const savedElementSearchMode = settings.defaultElementSearchMode ?? 'css';
+      if (savedElementSearchMode === 'css' || savedElementSearchMode === 'xpath') {
+        searchMode.value = savedElementSearchMode;
+      } else {
+        searchMode.value = 'css';
+      }
 
       // Load context length and validate
       const savedContextLength =

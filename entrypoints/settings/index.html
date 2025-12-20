@@ -34,11 +34,20 @@
       margin-bottom: 10px;
     }
 
+    label.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     input[type="checkbox"] {
       margin-right: 10px;
       width: 18px;
       height: 18px;
       cursor: pointer;
+    }
+
+    input[type="checkbox"]:disabled {
+      cursor: not-allowed;
     }
 
     .description {
@@ -55,6 +64,15 @@
       border-radius: 4px;
       font-size: 14px;
       margin-left: 10px;
+    }
+
+    select {
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-left: 10px;
+      cursor: pointer;
     }
 
     .setting-row {
@@ -92,6 +110,18 @@
       <span data-i18n="options_defaultRegex">正規表現検索をデフォルトで有効にする</span>
     </label>
     <p class="description" data-i18n="options_defaultRegex_desc">チェックすると、拡張機能を開いた際に正規表現検索が有効になります</p>
+    <label>
+      <input type="checkbox" id="defaultCaseSensitive">
+      <span data-i18n="options_defaultCaseSensitive">大文字小文字の区別をデフォルトで有効にする</span>
+    </label>
+    <p class="description" data-i18n="options_defaultCaseSensitive_desc">
+      チェックすると、拡張機能を開いた際に大文字小文字の区別が有効になります（要素検索またはあいまい検索が有効な場合は無効になります）</p>
+    <label>
+      <input type="checkbox" id="defaultFuzzy">
+      <span data-i18n="options_defaultFuzzy">あいまい検索をデフォルトで有効にする</span>
+    </label>
+    <p class="description" data-i18n="options_defaultFuzzy_desc">チェックすると、拡張機能を開いた際にあいまい検索が有効になります（要素検索が有効な場合は無効になります）
+    </p>
   </div>
 
   <div class="setting-group">
@@ -101,6 +131,16 @@
       <span data-i18n="options_defaultElementSearch">要素検索をデフォルトで有効にする</span>
     </label>
     <p class="description" data-i18n="options_defaultElementSearch_desc">CSSセレクタやXPathによる要素検索をデフォルトで有効にします</p>
+    <div class="setting-row">
+      <label>
+        <span data-i18n="options_defaultElementSearchMode">デフォルトの要素検索モード:</span>
+        <select id="defaultElementSearchMode">
+          <option value="css" data-i18n="options_defaultElementSearchMode_css">CSSセレクタ</option>
+          <option value="xpath" data-i18n="options_defaultElementSearchMode_xpath">XPath</option>
+        </select>
+      </label>
+    </div>
+    <p class="description" data-i18n="options_defaultElementSearchMode_desc">要素検索をデフォルトで有効にした場合の検索モードを選択します</p>
   </div>
 
   <div class="setting-group">

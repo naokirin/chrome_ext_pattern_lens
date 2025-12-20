@@ -115,6 +115,22 @@
     "message": "When checked, regex search will be enabled when opening the extension",
     "description": "Description for default regex setting"
   },
+  "options_defaultCaseSensitive": {
+    "message": "Enable case sensitive search by default",
+    "description": "Enable case sensitive search by default setting"
+  },
+  "options_defaultCaseSensitive_desc": {
+    "message": "When checked, case sensitive search will be enabled when opening the extension (disabled when element search or fuzzy search is enabled)",
+    "description": "Description for default case sensitive setting"
+  },
+  "options_defaultFuzzy": {
+    "message": "Enable fuzzy search by default",
+    "description": "Enable fuzzy search by default setting"
+  },
+  "options_defaultFuzzy_desc": {
+    "message": "When checked, fuzzy search will be enabled when opening the extension (disabled when element search is enabled)",
+    "description": "Description for default fuzzy search setting"
+  },
   "options_elementSearchOptions": {
     "message": "Element Search Options",
     "description": "Element search options section title"
@@ -126,6 +142,22 @@
   "options_defaultElementSearch_desc": {
     "message": "Enable element search with CSS selectors or XPath by default",
     "description": "Description for default element search setting"
+  },
+  "options_defaultElementSearchMode": {
+    "message": "Default element search mode:",
+    "description": "Default element search mode selection label"
+  },
+  "options_defaultElementSearchMode_css": {
+    "message": "CSS Selector",
+    "description": "CSS selector mode"
+  },
+  "options_defaultElementSearchMode_xpath": {
+    "message": "XPath",
+    "description": "XPath mode"
+  },
+  "options_defaultElementSearchMode_desc": {
+    "message": "Select the search mode when element search is enabled by default",
+    "description": "Description for default element search mode setting"
   },
   "options_resultsListOptions": {
     "message": "Results List Options",
@@ -148,7 +180,7 @@
     "description": "Auto update search setting"
   },
   "options_autoUpdateSearch_desc": {
-    "message": "Automatically search elements that are dynamically added or modified on the page (supports SPAs and infinite scroll)",
+    "message": "Automatically search elements that are dynamically added or modified on the page (supports SPAs and infinite scroll). Note: Performance may be affected on pages with large amounts of data or frequent dynamic updates",
     "description": "Description for auto update search setting"
   },
   "options_saveStatus": {

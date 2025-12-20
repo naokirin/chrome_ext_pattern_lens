@@ -115,6 +115,22 @@
     "message": "チェックすると、拡張機能を開いた際に正規表現検索が有効になります",
     "description": "正規表現デフォルト設定の説明"
   },
+  "options_defaultCaseSensitive": {
+    "message": "大文字小文字の区別をデフォルトで有効にする",
+    "description": "大文字小文字の区別をデフォルトで有効にする設定"
+  },
+  "options_defaultCaseSensitive_desc": {
+    "message": "チェックすると、拡張機能を開いた際に大文字小文字の区別が有効になります（要素検索またはあいまい検索が有効な場合は無効になります）",
+    "description": "大文字小文字の区別デフォルト設定の説明"
+  },
+  "options_defaultFuzzy": {
+    "message": "あいまい検索をデフォルトで有効にする",
+    "description": "あいまい検索をデフォルトで有効にする設定"
+  },
+  "options_defaultFuzzy_desc": {
+    "message": "チェックすると、拡張機能を開いた際にあいまい検索が有効になります（要素検索が有効な場合は無効になります）",
+    "description": "あいまい検索デフォルト設定の説明"
+  },
   "options_elementSearchOptions": {
     "message": "要素検索オプション",
     "description": "要素検索オプションのセクションタイトル"
@@ -126,6 +142,22 @@
   "options_defaultElementSearch_desc": {
     "message": "CSSセレクタやXPathによる要素検索をデフォルトで有効にします",
     "description": "要素検索デフォルト設定の説明"
+  },
+  "options_defaultElementSearchMode": {
+    "message": "デフォルトの要素検索モード:",
+    "description": "デフォルトの要素検索モード選択ラベル"
+  },
+  "options_defaultElementSearchMode_css": {
+    "message": "CSSセレクタ",
+    "description": "CSSセレクタモード"
+  },
+  "options_defaultElementSearchMode_xpath": {
+    "message": "XPath",
+    "description": "XPathモード"
+  },
+  "options_defaultElementSearchMode_desc": {
+    "message": "要素検索をデフォルトで有効にした場合の検索モードを選択します",
+    "description": "デフォルトの要素検索モード設定の説明"
   },
   "options_resultsListOptions": {
     "message": "検索結果一覧オプション",
@@ -148,7 +180,7 @@
     "description": "動的コンテンツ自動検索設定"
   },
   "options_autoUpdateSearch_desc": {
-    "message": "ページに動的に追加された要素や変更された要素を自動的に検索します（SPAや無限スクロールなどに対応）",
+    "message": "ページに動的に追加された要素や変更された要素を自動的に検索します（SPAや無限スクロールなどに対応）。注意: ページ内のデータ量や動的な更新頻度が多い場合、動作が重くなる可能性があります",
     "description": "動的コンテンツ自動検索設定の説明"
   },
   "options_saveStatus": {
