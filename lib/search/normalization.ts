@@ -359,103 +359,6 @@ function normalizeKatakanaToHiragana(char: string): string | null {
 }
 
 /**
- * Normalize full-width katakana to half-width
- */
-function normalizeFullWidthKatakana(char: string): string | null {
-  if (char >= '\u30A1' && char <= '\u30F6') {
-    const halfWidthKatakanaMap: Record<string, string> = {
-      ァ: 'ｧ',
-      ア: 'ｱ',
-      ィ: 'ｨ',
-      イ: 'ｲ',
-      ゥ: 'ｩ',
-      ウ: 'ｳ',
-      ェ: 'ｪ',
-      エ: 'ｴ',
-      ォ: 'ｫ',
-      オ: 'ｵ',
-      カ: 'ｶ',
-      ガ: 'ｶ',
-      キ: 'ｷ',
-      ギ: 'ｷ',
-      ク: 'ｸ',
-      グ: 'ｸ',
-      ケ: 'ｹ',
-      ゲ: 'ｹ',
-      コ: 'ｺ',
-      ゴ: 'ｺ',
-      サ: 'ｻ',
-      ザ: 'ｻ',
-      シ: 'ｼ',
-      ジ: 'ｼ',
-      ス: 'ｽ',
-      ズ: 'ｽ',
-      セ: 'ｾ',
-      ゼ: 'ｾ',
-      ソ: 'ｿ',
-      ゾ: 'ｿ',
-      タ: 'ﾀ',
-      ダ: 'ﾀ',
-      チ: 'ﾁ',
-      ヂ: 'ﾁ',
-      ツ: 'ﾂ',
-      ヅ: 'ﾂ',
-      テ: 'ﾃ',
-      デ: 'ﾃ',
-      ト: 'ﾄ',
-      ド: 'ﾄ',
-      ナ: 'ﾅ',
-      ニ: 'ﾆ',
-      ヌ: 'ﾇ',
-      ネ: 'ﾈ',
-      ノ: 'ﾉ',
-      ハ: 'ﾊ',
-      バ: 'ﾊ',
-      パ: 'ﾊ',
-      ヒ: 'ﾋ',
-      ビ: 'ﾋ',
-      ピ: 'ﾋ',
-      フ: 'ﾌ',
-      ブ: 'ﾌ',
-      プ: 'ﾌ',
-      ヘ: 'ﾍ',
-      ベ: 'ﾍ',
-      ペ: 'ﾍ',
-      ホ: 'ﾎ',
-      ボ: 'ﾎ',
-      ポ: 'ﾎ',
-      マ: 'ﾏ',
-      ミ: 'ﾐ',
-      ム: 'ﾑ',
-      メ: 'ﾒ',
-      モ: 'ﾓ',
-      ヤ: 'ﾔ',
-      ユ: 'ﾕ',
-      ヨ: 'ﾖ',
-      ラ: 'ﾗ',
-      リ: 'ﾘ',
-      ル: 'ﾙ',
-      レ: 'ﾚ',
-      ロ: 'ﾛ',
-      ワ: 'ﾜ',
-      ヲ: 'ｦ',
-      ン: 'ﾝ',
-      ヴ: 'ｳ', // ヴ → 半角ウ（濁点は除去）
-      ヸ: 'ｳ', // ヸ → 半角ウ（濁点は除去、元の文字がヰなので）
-      ヹ: 'ｳ', // ヹ → 半角ウ（濁点は除去、元の文字がヱなので）
-      ゔ: 'ｳ', // ゔ → 半角ウ（濁点は除去）
-      ッ: 'ｯ',
-      ャ: 'ｬ',
-      ュ: 'ｭ',
-      ョ: 'ｮ',
-      ー: 'ｰ',
-    };
-    return halfWidthKatakanaMap[char] || char;
-  }
-  return null;
-}
-
-/**
  * Normalize symbols
  */
 function normalizeSymbols(char: string): string | null {
@@ -545,12 +448,6 @@ function normalizeSingleChar(char: string): string {
   const normalizedKatakanaToHiragana = normalizeKatakanaToHiragana(char);
   if (normalizedKatakanaToHiragana !== null) {
     return normalizedKatakanaToHiragana;
-  }
-
-  // Fallback: convert full-width katakana to half-width (for backward compatibility)
-  const normalizedKatakana = normalizeFullWidthKatakana(char);
-  if (normalizedKatakana !== null) {
-    return normalizedKatakana;
   }
 
   const normalizedSymbol = normalizeSymbols(char);
