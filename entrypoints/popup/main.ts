@@ -435,6 +435,8 @@ function handleCheckboxChange(): void {
   if (query) {
     performSearch();
   }
+  // Return focus to search input after chip click
+  searchInput.focus();
 }
 
 // Event listeners
@@ -451,6 +453,8 @@ resultsListMode.addEventListener('change', () => {
     resultsList.classList.remove('visible');
     document.body.classList.remove('has-results-list');
   }
+  // Return focus to search input after chip click
+  searchInput.focus();
 });
 searchMode.addEventListener('change', () => {
   // Element search mode selector change
