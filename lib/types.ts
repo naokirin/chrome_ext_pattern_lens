@@ -33,13 +33,18 @@ export interface JumpToMatchMessage {
   index: number;
 }
 
+export interface OpenPopupMessage {
+  action: 'open-popup';
+}
+
 export type Message =
   | SearchMessage
   | ClearMessage
   | NavigateMessage
   | GetStateMessage
   | GetResultsListMessage
-  | JumpToMatchMessage;
+  | JumpToMatchMessage
+  | OpenPopupMessage;
 
 // Response types
 export interface SearchResponse {
@@ -86,6 +91,7 @@ export interface Settings {
   defaultElementSearch: boolean;
   resultsListContextLength?: number;
   autoUpdateSearch?: boolean; // 動的要素の自動検索更新を有効化
+  overrideCtrlF?: boolean; // Ctrl+Fで拡張機能を開く（デフォルト: false）
 }
 
 export interface SearchState {

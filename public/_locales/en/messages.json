@@ -154,5 +154,17 @@
   "options_saveStatus": {
     "message": "Settings saved",
     "description": "Settings save success message"
+  },
+  "options_keyboardShortcutOptions": {
+    "message": "Keyboard Shortcut Options",
+    "description": "Keyboard shortcut options section title"
+  },
+  "options_overrideCtrlF": {
+    "message": "Open extension with Ctrl+F (Cmd+F)",
+    "description": "Open extension with Ctrl+F setting"
+  },
+  "options_overrideCtrlF_desc": {
+    "message": "When checked, pressing Ctrl+F (Cmd+F on macOS) will open this extension's popup instead of Chrome's default find function",
+    "description": "Description for Ctrl+F override setting"
   }
 }

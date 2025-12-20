@@ -154,5 +154,17 @@
   "options_saveStatus": {
     "message": "設定を保存しました",
     "description": "設定保存完了メッセージ"
+  },
+  "options_keyboardShortcutOptions": {
+    "message": "キーボードショートカットオプション",
+    "description": "キーボードショートカットオプションのセクションタイトル"
+  },
+  "options_overrideCtrlF": {
+    "message": "Ctrl+F（Cmd+F）で拡張機能を開く",
+    "description": "Ctrl+Fで拡張機能を開く設定"
+  },
+  "options_overrideCtrlF_desc": {
+    "message": "チェックすると、Ctrl+F（macOSではCmd+F）を押したときに、Chromeの標準検索機能の代わりにこの拡張機能のポップアップが開きます",
+    "description": "Ctrl+Fオーバーライド設定の説明"
   }
 }

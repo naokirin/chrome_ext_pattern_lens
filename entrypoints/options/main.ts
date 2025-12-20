@@ -13,6 +13,7 @@ function loadSettings(): void {
       defaultElementSearch: false,
       resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
       autoUpdateSearch: true, // デフォルトで有効
+      overrideCtrlF: false, // デフォルトで無効
     },
     (items) => {
       const settings = items as Settings;
@@ -22,6 +23,7 @@ function loadSettings(): void {
         'resultsListContextLength'
       );
       const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
+      const overrideCtrlFEl = getElementById<HTMLInputElement>('overrideCtrlF');
 
       if (defaultRegexEl) {
         defaultRegexEl.checked = settings.defaultRegex;
@@ -37,6 +39,9 @@ function loadSettings(): void {
       if (autoUpdateSearchEl) {
         autoUpdateSearchEl.checked = settings.autoUpdateSearch ?? true;
       }
+      if (overrideCtrlFEl) {
+        overrideCtrlFEl.checked = settings.overrideCtrlF ?? false;
+      }
       // Note: defaultCaseSensitive is not shown in options page UI
     }
   );
@@ -48,12 +53,14 @@ function saveSettings(): void {
   const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
   const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
   const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
+  const overrideCtrlFEl = getElementById<HTMLInputElement>('overrideCtrlF');
 
   if (
     !defaultRegexEl ||
     !defaultElementSearchEl ||
     !resultsListContextLengthEl ||
-    !autoUpdateSearchEl
+    !autoUpdateSearchEl ||
+    !overrideCtrlFEl
   ) {
     return;
   }
@@ -70,6 +77,7 @@ function saveSettings(): void {
     defaultElementSearch: defaultElementSearchEl.checked,
     resultsListContextLength: validContextLength,
     autoUpdateSearch: autoUpdateSearchEl.checked,
+    overrideCtrlF: overrideCtrlFEl.checked,
   };
 
   chrome.storage.sync.set(settings, () => {
@@ -96,6 +104,7 @@ const defaultRegexEl = getElementById<HTMLInputElement>('defaultRegex');
 const defaultElementSearchEl = getElementById<HTMLInputElement>('defaultElementSearch');
 const resultsListContextLengthEl = getElementById<HTMLInputElement>('resultsListContextLength');
 const autoUpdateSearchEl = getElementById<HTMLInputElement>('autoUpdateSearch');
+const overrideCtrlFEl = getElementById<HTMLInputElement>('overrideCtrlF');
 
 if (defaultRegexEl) {
   defaultRegexEl.addEventListener('change', saveSettings);
@@ -109,4 +118,7 @@ if (resultsListContextLengthEl) {
 }
 if (autoUpdateSearchEl) {
   autoUpdateSearchEl.addEventListener('change', saveSettings);
+}
+if (overrideCtrlFEl) {
+  overrideCtrlFEl.addEventListener('change', saveSettings);
 }
