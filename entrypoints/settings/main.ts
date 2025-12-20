@@ -42,7 +42,7 @@ function loadSettings(): void {
       if (overrideCtrlFEl) {
         overrideCtrlFEl.checked = settings.overrideCtrlF ?? false;
       }
-      // Note: defaultCaseSensitive is not shown in options page UI
+      // Note: defaultCaseSensitive is not shown in settings page UI
     }
   );
 }
@@ -73,7 +73,7 @@ function saveSettings(): void {
 
   const settings: Settings = {
     defaultRegex: defaultRegexEl.checked,
-    defaultCaseSensitive: false, // Options page doesn't have this setting
+    defaultCaseSensitive: false, // Settings page doesn't have this setting
     defaultElementSearch: defaultElementSearchEl.checked,
     resultsListContextLength: validContextLength,
     autoUpdateSearch: autoUpdateSearchEl.checked,

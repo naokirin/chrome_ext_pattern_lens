@@ -14,9 +14,9 @@
 2. **Popup** ([popup/](popup/)): ユーザーインターフェース
    - [popup.html](popup/popup.html): 検索UI
    - [popup.js](popup/popup.js): UI制御とメッセージング
-3. **Options** ([options/](options/)): 設定ページ
-   - [options.html](options/options.html): 設定UI
-   - [options.js](options/options.js): 設定の保存/読み込み
+3. **Settings** ([settings/](entrypoints/settings/)): 設定ページ（独立した設定ページ）
+   - [index.html](entrypoints/settings/index.html): 設定UI
+   - [main.ts](entrypoints/settings/main.ts): 設定の保存/読み込み
 4. **Content Script** ([content_scripts/main.js](content_scripts/main.js)): ページ内での検索とハイライト処理
 
 ### データフロー
@@ -124,7 +124,7 @@ Gemini MCPの助言に基づき、**テキストノード置換方式**を採用
 
 ### chrome.storage.sync
 
-- [entrypoints/options/main.ts](entrypoints/options/main.ts): 設定の保存/読み込み（正規表現、要素検索、前後文脈文字数など）
+- [entrypoints/settings/main.ts](entrypoints/settings/main.ts): 設定の保存/読み込み（正規表現、要素検索、前後文脈文字数など）
 - [entrypoints/popup/main.ts](entrypoints/popup/main.ts): デフォルト設定の読み込み、設定変更の監視
 
 ### chrome.tabs
@@ -140,7 +140,7 @@ Gemini MCPの助言に基づき、**テキストノード置換方式**を採用
 
 - [lib/utils/i18n.ts](lib/utils/i18n.ts): 多言語化ユーティリティ
 - [entrypoints/popup/main.ts](entrypoints/popup/main.ts): UIテキストの国際化
-- [entrypoints/options/main.ts](entrypoints/options/main.ts): 設定ページの国際化
+- [entrypoints/settings/main.ts](entrypoints/settings/main.ts): 設定ページの国際化
 
 ## 実装済みの機能
 

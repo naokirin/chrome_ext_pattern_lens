@@ -16,6 +16,7 @@ export default defineConfig({
         48: '/icons/icon48.png',
         128: '/icons/icon128.png',
       },
+      options_page: 'settings.html',
       content_security_policy: {
         extension_pages: isDevelopment
           ? "script-src 'self' http://localhost:*; object-src 'self';"

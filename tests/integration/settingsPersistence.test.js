@@ -80,8 +80,8 @@ describe('統合テスト: 設定の永続化', () => {
     cleanupDOM();
   });
 
-  it('Optionsページで設定を保存できる', () => {
-    // OptionsページのHTMLを再現
+  it('Settingsページで設定を保存できる', () => {
+    // SettingsページのHTMLを再現
     document.body.innerHTML = `
       <div>
         <input type="checkbox" id="defaultRegex" />
@@ -98,7 +98,7 @@ describe('統合テスト: 設定の永続化', () => {
     defaultRegexEl.checked = true;
     defaultElementSearchEl.checked = true;
 
-    // 設定を保存（options/main.tsのsaveSettings関数を模倣）
+    // 設定を保存（settings/main.tsのsaveSettings関数を模倣）
     const settings = {
       defaultRegex: defaultRegexEl.checked,
       defaultCaseSensitive: false,
@@ -116,8 +116,8 @@ describe('統合テスト: 設定の永続化', () => {
     expect(storedSettings.defaultElementSearch).toBe(true);
   });
 
-  it('Optionsページで保存した設定がPopupに反映される', async () => {
-    // まずOptionsページで設定を保存
+  it('Settingsページで保存した設定がPopupに反映される', async () => {
+    // まずSettingsページで設定を保存
     storedSettings.defaultRegex = true;
     storedSettings.defaultElementSearch = true;
 
@@ -169,7 +169,7 @@ describe('統合テスト: 設定の永続化', () => {
     const defaultElementSearchEl = document.getElementById('defaultElementSearch');
     const saveStatusEl = document.getElementById('saveStatus');
 
-    // イベントリスナーを追加（options/main.tsの動作を模倣）
+    // イベントリスナーを追加（settings/main.tsの動作を模倣）
     defaultRegexEl.addEventListener('change', () => {
       const settings = {
         defaultRegex: defaultRegexEl.checked,
