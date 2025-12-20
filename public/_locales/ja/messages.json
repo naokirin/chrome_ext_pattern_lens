@@ -159,6 +159,54 @@
     "message": "要素検索をデフォルトで有効にした場合の検索モードを選択します",
     "description": "デフォルトの要素検索モード設定の説明"
   },
+  "options_mutualExclusionHelp_title": {
+    "message": "機能の排他制御について",
+    "description": "排他制御ヘルプセクションのタイトル"
+  },
+  "options_mutualExclusionHelp_intro": {
+    "message": "一部の検索機能は同時に使用できません。以下の排他制御が適用されます：",
+    "description": "排他制御の説明の導入文"
+  },
+  "options_mutualExclusionHelp_elementSearch": {
+    "message": "要素検索が有効な場合: あいまい検索、大文字小文字の区別、正規表現検索が自動的に無効になります",
+    "description": "要素検索時の排他制御の説明"
+  },
+  "options_mutualExclusionHelp_fuzzySearch": {
+    "message": "あいまい検索が有効な場合（要素検索が無効な場合）: 大文字小文字の区別と正規表現検索が自動的に無効になります",
+    "description": "あいまい検索時の排他制御の説明"
+  },
+  "options_mutualExclusionHelp_note": {
+    "message": "これらの設定を変更すると、排他制御に基づいて他の設定が自動的に調整されます。",
+    "description": "排他制御に関する注意事項"
+  },
+  "options_fuzzySearchHelp_title": {
+    "message": "あいまい検索の簡易な仕様",
+    "description": "あいまい検索ヘルプセクションのタイトル"
+  },
+  "options_fuzzySearchHelp_multiKeyword": {
+    "message": "複数キーワード検索: 空白で区切られた複数のキーワードが一定範囲内に存在する場合にマッチします",
+    "description": "あいまい検索の複数キーワード検索の説明"
+  },
+  "options_fuzzySearchHelp_symbol": {
+    "message": "記号の表記ゆれ吸収: ハイフン、伸ばし棒などの半角・全角の差異を吸収します（例: -、ー、－ を同一視）",
+    "description": "あいまい検索の記号の表記ゆれ吸収の説明"
+  },
+  "options_fuzzySearchHelp_character": {
+    "message": "文字種の表記ゆれ吸収: アルファベット、数字、カタカナの全角・半角の差異を吸収します（例: ABC と ＡＢＣ を同一視）",
+    "description": "あいまい検索の文字種の表記ゆれ吸収の説明"
+  },
+  "options_fuzzySearchHelp_diacritic": {
+    "message": "濁点・半濁点の結合文字正規化: 別文字の濁点（゛）や半濁点（゜）がある場合に、結合した1文字と同じ判定にします（例: か゛、ｶﾞ を が として扱う）",
+    "description": "あいまい検索の濁点・半濁点の結合文字正規化の説明"
+  },
+  "options_fuzzySearchHelp_date": {
+    "message": "日付フォーマットの差異吸収: 年月日の様々なフォーマットを同一視します（例: 2024/01/01、2024-01-01、2024年1月1日 を同一視）",
+    "description": "あいまい検索の日付フォーマットの差異吸収の説明"
+  },
+  "options_fuzzySearchHelp_note": {
+    "message": "注意: 要素検索モードがONの場合は、あいまい検索は自動的にOFFになります",
+    "description": "あいまい検索の制約に関する注意事項"
+  },
   "options_resultsListOptions": {
     "message": "検索結果一覧オプション",
     "description": "検索結果一覧オプションのセクションタイトル"

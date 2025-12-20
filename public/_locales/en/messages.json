@@ -159,6 +159,54 @@
     "message": "Select the search mode when element search is enabled by default",
     "description": "Description for default element search mode setting"
   },
+  "options_mutualExclusionHelp_title": {
+    "message": "About Feature Mutual Exclusion",
+    "description": "Mutual exclusion help section title"
+  },
+  "options_mutualExclusionHelp_intro": {
+    "message": "Some search features cannot be used simultaneously. The following mutual exclusion rules apply:",
+    "description": "Introduction text for mutual exclusion explanation"
+  },
+  "options_mutualExclusionHelp_elementSearch": {
+    "message": "When element search is enabled: Fuzzy search, case sensitivity, and regex search are automatically disabled",
+    "description": "Explanation of mutual exclusion when element search is enabled"
+  },
+  "options_mutualExclusionHelp_fuzzySearch": {
+    "message": "When fuzzy search is enabled (and element search is disabled): Case sensitivity and regex search are automatically disabled",
+    "description": "Explanation of mutual exclusion when fuzzy search is enabled"
+  },
+  "options_mutualExclusionHelp_note": {
+    "message": "When you change these settings, other settings will be automatically adjusted based on mutual exclusion rules.",
+    "description": "Note about mutual exclusion"
+  },
+  "options_fuzzySearchHelp_title": {
+    "message": "Fuzzy Search Specifications",
+    "description": "Fuzzy search help section title"
+  },
+  "options_fuzzySearchHelp_multiKeyword": {
+    "message": "Multiple keyword search: Matches when multiple keywords separated by spaces exist within a certain range",
+    "description": "Description of fuzzy search multiple keyword search"
+  },
+  "options_fuzzySearchHelp_symbol": {
+    "message": "Symbol variation absorption: Absorbs differences between half-width and full-width symbols (e.g., treats -, ー, － as the same)",
+    "description": "Description of fuzzy search symbol variation absorption"
+  },
+  "options_fuzzySearchHelp_character": {
+    "message": "Character type variation absorption: Absorbs differences between half-width and full-width alphabets, numbers, and katakana (e.g., treats ABC and ＡＢＣ as the same)",
+    "description": "Description of fuzzy search character type variation absorption"
+  },
+  "options_fuzzySearchHelp_diacritic": {
+    "message": "Diacritic mark normalization: Treats separate diacritic marks (゛, ゜) as combined characters (e.g., treats か゛, ｶﾞ as が)",
+    "description": "Description of fuzzy search diacritic mark normalization"
+  },
+  "options_fuzzySearchHelp_date": {
+    "message": "Date format variation absorption: Treats various date formats as the same (e.g., treats 2024/01/01, 2024-01-01, January 1, 2024 as the same)",
+    "description": "Description of fuzzy search date format variation absorption"
+  },
+  "options_fuzzySearchHelp_note": {
+    "message": "Note: Fuzzy search is automatically disabled when element search mode is ON",
+    "description": "Note about fuzzy search constraints"
+  },
   "options_resultsListOptions": {
     "message": "Results List Options",
     "description": "Results list options section title"
