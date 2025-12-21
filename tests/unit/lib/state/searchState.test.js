@@ -12,6 +12,83 @@ describe('SearchStateManager', () => {
     stateManager.clear();
   });
 
+  describe('getCurrentRange', () => {
+    it('rangesが空の場合、nullを返す', () => {
+      const result = stateManager.getCurrentRange();
+      expect(result).toBeNull();
+    });
+
+    it('currentIndexが範囲内の場合、対応するrangeを返す', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.firstChild);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(0);
+
+      const result = stateManager.getCurrentRange();
+      expect(result).toBe(range);
+    });
+
+    it('currentIndexが範囲外の場合、nullを返す', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.firstChild);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(10); // 範囲外
+
+      const result = stateManager.getCurrentRange();
+      expect(result).toBeNull();
+    });
+
+    it('currentIndexが負の場合、nullを返す', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.firstChild);
+      stateManager.addRange(range);
+      stateManager.setCurrentIndex(-1);
+
+      const result = stateManager.getCurrentRange();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getCurrentElement', () => {
+    it('elementsが空の場合、nullを返す', () => {
+      const result = stateManager.getCurrentElement();
+      expect(result).toBeNull();
+    });
+
+    it('currentIndexが範囲内の場合、対応するelementを返す', () => {
+      document.body.innerHTML = '<div class="test">Test</div>';
+      const element = document.body.firstChild;
+      stateManager.addElement(element);
+      stateManager.setCurrentIndex(0);
+
+      const result = stateManager.getCurrentElement();
+      expect(result).toBe(element);
+    });
+
+    it('currentIndexが範囲外の場合、nullを返す', () => {
+      document.body.innerHTML = '<div class="test">Test</div>';
+      const element = document.body.firstChild;
+      stateManager.addElement(element);
+      stateManager.setCurrentIndex(10); // 範囲外
+
+      const result = stateManager.getCurrentElement();
+      expect(result).toBeNull();
+    });
+
+    it('currentIndexが負の場合、nullを返す', () => {
+      document.body.innerHTML = '<div class="test">Test</div>';
+      const element = document.body.firstChild;
+      stateManager.addElement(element);
+      stateManager.setCurrentIndex(-1);
+
+      const result = stateManager.getCurrentElement();
+      expect(result).toBeNull();
+    });
+  });
+
   describe('初期状態', () => {
     it('初期状態でrangesは空配列', () => {
       expect(stateManager.ranges).toEqual([]);

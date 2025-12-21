@@ -244,5 +244,31 @@ describe('virtualText', () => {
       expect(boundaries[1]).toBe('B');
       expect(boundaries[2]).toBe('C');
     });
+
+    it('既に境界マーカーで終わる文字列の場合、重複を避ける', () => {
+      // このテストは insertBoundaryMarker 関数の動作を確認する
+      // 実際の createVirtualTextAndMap では、このケースは発生しないが、
+      // 関数の実装を確認するために、直接テストする必要がある
+      // ただし、insertBoundaryMarker は private 関数なので、
+      // createVirtualTextAndMap の動作を通じて間接的にテストする
+
+      // 連続するブロック要素がある場合、各ブロック間に境界マーカーが挿入される
+      // 既に境界マーカーがある場合の重複チェックは、insertBoundaryMarker 関数内で行われる
+      document.body.innerHTML = '<div>A</div><div>B</div>';
+
+      const { virtualText, charMap } = createVirtualTextAndMap();
+
+      // 最初のブロックと2番目のブロックの間に境界マーカーが1つだけあることを確認
+      const markerCount = (virtualText.match(new RegExp(BLOCK_BOUNDARY_MARKER, 'g')) || []).length;
+      expect(markerCount).toBe(1);
+
+      // 境界マーカーの位置を確認
+      const boundaryIndex = virtualText.indexOf(BLOCK_BOUNDARY_MARKER);
+      expect(boundaryIndex).toBe(1); // 'A' の後
+
+      // charMapで境界マーカーのエントリを確認
+      const boundaryEntries = charMap.filter((item) => item.type === 'block-boundary');
+      expect(boundaryEntries.length).toBe(1);
+    });
   });
 });

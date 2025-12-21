@@ -40,7 +40,7 @@ describe('messaging/handlers', () => {
     global.chrome = {
       storage: {
         sync: {
-          get: vi.fn((keys, callback) => {
+          get: vi.fn((_keys, callback) => {
             callback({
               fuzzySearchBaseMultiplier: FUZZY_SEARCH_BASE_MULTIPLIER,
               fuzzySearchMinDistance: FUZZY_SEARCH_MIN_DISTANCE,

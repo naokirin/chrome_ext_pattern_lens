@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { navigateToMatch } from '~/lib/navigation/navigator';
+import { navigateToMatch, normalizeMatchIndex } from '~/lib/navigation/navigator';
 import { SearchStateManager } from '~/lib/state/searchState';
 import { cleanupDOM } from '../../../helpers/dom-helpers.js';
 
@@ -14,6 +14,23 @@ describe('navigator', () => {
   afterEach(() => {
     stateManager.clear();
     cleanupDOM();
+  });
+
+  describe('normalizeMatchIndex', () => {
+    it('totalMatchesが0の場合、-1を返す', () => {
+      const result = normalizeMatchIndex(0, 0);
+      expect(result).toBe(-1);
+    });
+
+    it('totalMatchesが0の場合、インデックスが負でも-1を返す', () => {
+      const result = normalizeMatchIndex(-1, 0);
+      expect(result).toBe(-1);
+    });
+
+    it('totalMatchesが0の場合、インデックスが正でも-1を返す', () => {
+      const result = normalizeMatchIndex(5, 0);
+      expect(result).toBe(-1);
+    });
   });
 
   describe('navigateToMatch', () => {

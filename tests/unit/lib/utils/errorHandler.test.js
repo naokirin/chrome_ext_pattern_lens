@@ -190,6 +190,23 @@ describe('errorHandler', () => {
         originalError
       );
     });
+
+    it('未知のErrorSeverityの場合、falseを返す', () => {
+      // 未知のseverityを持つエラーを作成（型安全性を無視してテスト）
+      // JavaScriptでは型アサーションが使えないため、オブジェクトを直接操作
+      const error = new PatternLensError('Unknown severity error', ErrorSeverity.LOW);
+      // severity を未知の値に変更
+      Object.defineProperty(error, 'severity', {
+        value: 'unknown',
+        writable: true,
+        configurable: true,
+      });
+
+      const result = handleError(error, 'TestContext');
+
+      // default ケースでは false を返す
+      expect(result).toBe(false);
+    });
   });
 
   describe('safeExecute', () => {

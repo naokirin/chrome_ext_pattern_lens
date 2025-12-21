@@ -1011,7 +1011,6 @@ describe('normalization', () => {
     });
 
     it('ブロック境界マーカーを含むマッピングでの変換', () => {
-      const marker = '\uE000';
       // `か゛${marker}は゛` → `が${marker}ば`
       const mapping = {
         ranges: [
