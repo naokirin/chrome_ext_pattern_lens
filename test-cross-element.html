@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +13,18 @@
       padding: 20px;
       line-height: 1.6;
     }
+
     h1 {
       color: #333;
       border-bottom: 3px solid #4CAF50;
       padding-bottom: 10px;
     }
+
     h2 {
       color: #555;
       margin-top: 30px;
     }
+
     .test-section {
       background-color: #f9f9f9;
       padding: 20px;
@@ -28,18 +32,21 @@
       border-left: 4px solid #2196F3;
       border-radius: 4px;
     }
+
     code {
       background-color: #e8e8e8;
       padding: 2px 6px;
       border-radius: 3px;
       font-family: 'Courier New', monospace;
     }
+
     .info-box {
       background-color: #e3f2fd;
       padding: 15px;
       margin: 20px 0;
       border-radius: 5px;
     }
+
     .example {
       border: 1px dashed #999;
       padding: 10px;
@@ -48,6 +55,7 @@
     }
   </style>
 </head>
+
 <body>
   <h1>要素境界をまたぐ検索テストページ</h1>
 
@@ -85,14 +93,16 @@
   <div class="test-section">
     <h3>テストケース2-1: div要素をまたぐテキスト</h3>
     <div class="example">
-      <div>Hello</div><div>World</div>
+      <div>Hello</div>
+      <div>World</div>
     </div>
     <p><strong>検索文字列:</strong> <code>Hello World</code></p>
     <p><strong>期待結果:</strong> 両方のdivの内容がハイライトされる（ブロック境界にスペースが挿入される）</p>
 
     <h3>テストケース2-2: p要素をまたぐテキスト</h3>
     <div class="example">
-      <p>Lorem ipsum</p><p>dolor sit</p>
+      <p>Lorem ipsum</p>
+      <p>dolor sit</p>
     </div>
     <p><strong>検索文字列:</strong> <code>ipsum dolor</code></p>
     <p><strong>期待結果:</strong> 両方のp要素にまたがってハイライトされる</p>
@@ -168,10 +178,111 @@
 
     <h3>テストケース5-2: 複数のスペース</h3>
     <div class="example">
-      <span>one</span>  <span>two</span>   <span>three</span>
+      <span>one</span> <span>two</span> <span>three</span>
     </div>
     <p><strong>検索文字列:</strong> <code>one two three</code></p>
     <p><strong>期待結果:</strong> スペースの数に関わらずマッチする</p>
+  </div>
+
+  <h2>6. あいまい検索の正規化パターン（要素境界をまたぐ）</h2>
+  <div class="test-section">
+    <h3>テストケース6-1: 全角・半角アルファベットの正規化</h3>
+    <div class="example">
+      <span>ＡＢＣ</span><span>def</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>abc def</code></p>
+    <p><strong>期待結果:</strong> 全角アルファベットが半角に正規化されてマッチする</p>
+
+    <h3>テストケース6-2: 大文字小文字の正規化</h3>
+    <div class="example">
+      <span>Hello</span> <span>WORLD</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>hello world</code></p>
+    <p><strong>期待結果:</strong> 大文字小文字を区別せずにマッチする</p>
+
+    <h3>テストケース6-3: ひらがな・カタカナの相互一致</h3>
+    <div class="example">
+      <span>テスト</span> <span>ページ</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>てすと ページ</code></p>
+    <p><strong>期待結果:</strong> カタカナがひらがなに正規化されてマッチする</p>
+
+    <h3>テストケース6-4: 記号の表記ゆれ吸収</h3>
+    <div class="example">
+      <span>2024</span><span>ー</span><span>01</span><span>ー</span><span>01</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>2024-01-01</code></p>
+    <p><strong>期待結果:</strong> 全角の伸ばし棒（ー）がハイフン（-）に正規化されてマッチする</p>
+
+    <h3>テストケース6-5: 濁点・半濁点の結合文字正規化</h3>
+    <div class="example">
+      <span>か</span><span>゛</span> <span>は</span><span>゜</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>が ぱ</code></p>
+    <p><strong>期待結果:</strong> 別文字の濁点・半濁点が結合文字として正規化されてマッチする</p>
+
+    <h3>テストケース6-6: 日付フォーマットの差異吸収</h3>
+    <div class="example">
+      <span>2024</span><span>／</span><span>01</span><span>／</span><span>01</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>2024/01/01</code></p>
+    <p><strong>期待結果:</strong> 全角スラッシュ（／）が半角スラッシュ（/）に正規化されてマッチする</p>
+
+    <h3>テストケース6-7: アクセント付き文字の正規化（フランス語）</h3>
+    <div class="example">
+      <span>caf</span><span>é</span> <span>fran</span><span>çais</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>cafe francais</code></p>
+    <p><strong>期待結果:</strong> アクセント付き文字（é, ç）が英語アルファベットに正規化されてマッチする</p>
+
+    <h3>テストケース6-8: アクセント付き文字の正規化（スペイン語）</h3>
+    <div class="example">
+      <span>espa</span><span>ñol</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>espanol</code></p>
+    <p><strong>期待結果:</strong> ñがnに正規化されてマッチする</p>
+
+    <h3>テストケース6-9: 代用表記の対応（ドイツ語: ß → ss）</h3>
+    <div class="example">
+      <span>Stra</span><span>ße</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>strasse</code></p>
+    <p><strong>期待結果:</strong> ßがssに正規化されてマッチする</p>
+
+    <h3>テストケース6-10: 代用表記の対応（ドイツ語: ä → ae）</h3>
+    <div class="example">
+      <span>M</span><span>üller</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>mueller</code></p>
+    <p><strong>期待結果:</strong> üがueに正規化されてマッチする</p>
+
+    <h3>テストケース6-11: 代用表記の対応（ドイツ語: ö → oe）</h3>
+    <div class="example">
+      <span>K</span><span>öln</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>koeln</code></p>
+    <p><strong>期待結果:</strong> öがoeに正規化されてマッチする</p>
+
+    <h3>テストケース6-12: 代用表記の対応（フランス語: œ → oe）</h3>
+    <div class="example">
+      <span>c</span><span>œur</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>coeur</code></p>
+    <p><strong>期待結果:</strong> œがoeに正規化されてマッチする</p>
+
+    <h3>テストケース6-13: 複数の正規化パターンの組み合わせ</h3>
+    <div class="example">
+      <span>ＴＥＳＴ</span><span>ー</span><span>２０２４</span><span>／</span><span>０１</span><span>／</span><span>０１</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>test-2024/01/01</code></p>
+    <p><strong>期待結果:</strong> 全角アルファベット、全角数字、全角記号がすべて正規化されてマッチする</p>
+
+    <h3>テストケース6-14: アクセント付き文字と代用表記の組み合わせ</h3>
+    <div class="example">
+      <span>Stra</span><span>ße</span> <span>M</span><span>üller</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>strasse mueller</code></p>
+    <p><strong>期待結果:</strong> ß→ss、ü→ueの両方が正規化されてマッチする</p>
   </div>
 
   <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
@@ -179,4 +290,5 @@
     <p>Chrome標準検索（Ctrl+F または Cmd+F）と比較して、同じ結果が得られることを確認してください。</p>
   </footer>
 </body>
+
 </html>
