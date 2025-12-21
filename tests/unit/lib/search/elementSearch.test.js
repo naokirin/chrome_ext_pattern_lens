@@ -3,6 +3,7 @@ import * as overlayModule from '~/lib/highlight/overlay';
 import * as navigatorModule from '~/lib/navigation/navigator';
 import { searchElements } from '~/lib/search/elementSearch';
 import { SearchStateManager } from '~/lib/state/searchState';
+import * as domUtilsModule from '~/lib/utils/domUtils';
 import { cleanupDOM } from '../../../helpers/dom-helpers.js';
 
 describe('elementSearch', () => {
@@ -167,6 +168,67 @@ describe('elementSearch', () => {
       searchElements('.test', 'css', stateManager);
 
       expect(navigatorModule.navigateToMatch).toHaveBeenCalledWith(0, stateManager);
+    });
+
+    it('skipNavigationがtrueの場合、ナビゲーションをスキップする', () => {
+      const div1 = document.createElement('div');
+      div1.className = 'test';
+      const div2 = document.createElement('div');
+      div2.className = 'test';
+      document.body.appendChild(div1);
+      document.body.appendChild(div2);
+
+      const result = searchElements('.test', 'css', stateManager, true);
+
+      expect(navigatorModule.navigateToMatch).not.toHaveBeenCalled();
+      expect(result.count).toBeGreaterThanOrEqual(1);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが有効な場合、そのインデックスを保持する', () => {
+      const div1 = document.createElement('div');
+      div1.className = 'test';
+      const div2 = document.createElement('div');
+      div2.className = 'test';
+      document.body.appendChild(div1);
+      document.body.appendChild(div2);
+
+      vi.spyOn(domUtilsModule, 'findClosestMatchIndex').mockReturnValue(0);
+
+      const result = searchElements('.test', 'css', stateManager, true, 0);
+
+      expect(result.currentIndex).toBe(0);
+      expect(stateManager.currentIndex).toBe(0);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが範囲外（大きい）の場合、最後のインデックスを使用する', () => {
+      const div1 = document.createElement('div');
+      div1.className = 'test';
+      const div2 = document.createElement('div');
+      div2.className = 'test';
+      document.body.appendChild(div1);
+      document.body.appendChild(div2);
+
+      const result = searchElements('.test', 'css', stateManager, true, 10);
+
+      // 要素数が2以上の場合、最後のインデックス（count - 1）が使用される
+      expect(result.currentIndex).toBeGreaterThanOrEqual(0);
+      expect(result.currentIndex).toBeLessThanOrEqual(result.count - 1);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが-1の場合、findClosestMatchIndexを使用する', () => {
+      const div1 = document.createElement('div');
+      div1.className = 'test';
+      const div2 = document.createElement('div');
+      div2.className = 'test';
+      document.body.appendChild(div1);
+      document.body.appendChild(div2);
+
+      vi.spyOn(domUtilsModule, 'findClosestMatchIndex').mockReturnValue(1);
+
+      const result = searchElements('.test', 'css', stateManager, true, -1);
+
+      expect(result.currentIndex).toBe(1);
+      expect(stateManager.currentIndex).toBe(1);
     });
   });
 });

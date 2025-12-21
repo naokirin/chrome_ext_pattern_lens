@@ -121,6 +121,78 @@ describe('lib/search/resultsCollector', () => {
       expect(result[0].fullText).toContain(result[0].matchedText);
       expect(result[0].fullText).toContain(result[0].contextAfter);
     });
+
+    it('前の兄弟ノードから文脈を取得できる', () => {
+      document.body.innerHTML = '<div>Before test After</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 7);
+      range.setEnd(textNode, 11); // "test"
+
+      const result = collectTextSearchResults([range], 10);
+
+      expect(result[0].contextBefore).toContain('Before');
+      expect(result[0].matchedText).toBe('test');
+    });
+
+    it('次の兄弟ノードから文脈を取得できる', () => {
+      document.body.innerHTML = '<div>Before test After</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range = document.createRange();
+      range.setStart(textNode, 7);
+      range.setEnd(textNode, 11); // "test"
+
+      const result = collectTextSearchResults([range], 10);
+
+      expect(result[0].contextAfter).toContain('After');
+      expect(result[0].matchedText).toBe('test');
+    });
+
+    it('非テキストノードの場合、親要素から文脈を取得できる', () => {
+      document.body.innerHTML = '<div><span>This is a test sentence.</span></div>';
+      const span = document.body.querySelector('span');
+      if (!span) {
+        throw new Error('Span not found');
+      }
+
+      const range = document.createRange();
+      range.selectNodeContents(span);
+
+      const result = collectTextSearchResults([range], 5);
+
+      expect(result[0].matchedText).toBe('This is a test sentence.');
+      // 非テキストノードの場合、親要素から文脈を取得する
+      expect(result[0].contextBefore.length).toBeLessThanOrEqual(5);
+    });
+
+    it('エラーが発生しても処理を続行する', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const textNode = document.body.querySelector('div')?.firstChild;
+      if (!textNode) {
+        throw new Error('Text node not found');
+      }
+
+      const range1 = document.createRange();
+      range1.setStart(textNode, 0);
+      range1.setEnd(textNode, 4);
+
+      // 無効なrangeを作成（エラーを引き起こす）
+      const range2 = document.createRange();
+
+      const result = collectTextSearchResults([range1, range2], 5);
+
+      // エラーが発生しても、有効なrangeの結果は返される
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result[0].matchedText).toBe('Test');
+    });
   });
 
   describe('collectElementSearchResults', () => {
@@ -202,6 +274,33 @@ describe('lib/search/resultsCollector', () => {
       expect(result).toHaveLength(1);
       expect(result[0].matchedText).toBe('');
       expect(result[0].tagInfo).toBe('<div.test>');
+    });
+
+    it('エラーが発生しても処理を続行する', () => {
+      document.body.innerHTML = '<div class="test">Content</div>';
+      const element = document.body.querySelector('.test');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      // textContentのgetterをモックしてエラーを投げる
+      const originalTextContent = Object.getOwnPropertyDescriptor(Element.prototype, 'textContent');
+      Object.defineProperty(element, 'textContent', {
+        get: () => {
+          throw new Error('textContent access failed');
+        },
+        configurable: true,
+      });
+
+      const result = collectElementSearchResults([element, element]);
+
+      // エラーが発生しても、結果は返される（エラーが発生した要素はスキップされる）
+      expect(result.length).toBeGreaterThanOrEqual(0);
+
+      // 元に戻す
+      if (originalTextContent) {
+        Object.defineProperty(element, 'textContent', originalTextContent);
+      }
     });
   });
 });

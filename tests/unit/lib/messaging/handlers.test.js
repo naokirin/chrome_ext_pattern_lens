@@ -190,6 +190,76 @@ describe('messaging/handlers', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Search failed');
     });
+
+    it('DOM observerが設定されている場合、observerを開始する', async () => {
+      const mockObserver = {
+        stopObserving: vi.fn(),
+        startObserving: vi.fn(),
+      };
+      const contextWithObserver = {
+        ...context,
+        domObserver: mockObserver,
+      };
+
+      const message = {
+        action: 'search',
+        query: 'test',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: false,
+        elementSearchMode: 'css',
+        useFuzzy: false,
+      };
+
+      await handleSearch(message, contextWithObserver);
+
+      expect(mockObserver.stopObserving).toHaveBeenCalled();
+      expect(mockObserver.startObserving).toHaveBeenCalledWith(
+        'test',
+        expect.objectContaining({
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+        }),
+        expect.any(Function),
+        updateCallback
+      );
+    });
+
+    it('要素検索モードでDOM observerが設定されている場合、observerを開始する', async () => {
+      const mockObserver = {
+        stopObserving: vi.fn(),
+        startObserving: vi.fn(),
+      };
+      const contextWithObserver = {
+        ...context,
+        domObserver: mockObserver,
+      };
+
+      const message = {
+        action: 'search',
+        query: '.test-class',
+        useRegex: false,
+        caseSensitive: false,
+        useElementSearch: true,
+        elementSearchMode: 'css',
+      };
+
+      await handleSearch(message, contextWithObserver);
+
+      expect(mockObserver.stopObserving).toHaveBeenCalled();
+      expect(mockObserver.startObserving).toHaveBeenCalledWith(
+        '.test-class',
+        expect.objectContaining({
+          query: '.test-class',
+          useElementSearch: true,
+          elementSearchMode: 'css',
+        }),
+        expect.any(Function),
+        updateCallback
+      );
+    });
   });
 
   describe('handleClear', () => {
@@ -424,6 +494,24 @@ describe('messaging/handlers', () => {
         stateManager.ranges,
         undefined
       );
+    });
+
+    it('エラーが発生した場合、エラーレスポンスを返す', () => {
+      document.body.innerHTML = '<div>Test</div>';
+      const range = document.createRange();
+      range.selectNodeContents(document.body.querySelector('div')?.firstChild || document.body);
+      stateManager.addRange(range);
+
+      const error = new Error('Collection failed');
+      vi.spyOn(resultsCollectorModule, 'collectTextSearchResults').mockImplementation(() => {
+        throw error;
+      });
+
+      const message = { action: 'get-results-list' };
+      const result = handleGetResultsList(message, context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Collection failed');
     });
   });
 

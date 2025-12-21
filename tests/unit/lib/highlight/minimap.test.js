@@ -118,6 +118,33 @@ describe('minimap', () => {
         updateMinimap(stateManager);
       }).not.toThrow();
     });
+
+    it('要素検索でgetBoundingClientRectがエラーを投げても処理を続行する', () => {
+      cleanupDOM();
+      const element = document.createElement('div');
+      element.textContent = 'Test element';
+      document.body.appendChild(element);
+
+      // getBoundingClientRectをモックしてエラーを投げる
+      const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = () => {
+        throw new Error('getBoundingClientRect failed');
+      };
+
+      stateManager.addElement(element);
+      stateManager.setCurrentIndex(0);
+
+      const container = getMinimapContainer();
+      expect(() => {
+        updateMinimap(stateManager);
+      }).not.toThrow();
+
+      // エラーが発生してもコンテナは表示される（要素検索のマッチがあるため）
+      expect(container.style.display).toBe('block');
+
+      // 元に戻す
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect;
+    });
   });
 
   describe('removeMinimap', () => {
