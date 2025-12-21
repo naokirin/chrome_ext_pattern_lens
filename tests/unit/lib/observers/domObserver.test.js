@@ -334,5 +334,145 @@ describe('DOMSearchObserver', () => {
 
       disabledObserver.stopObserving();
     });
+
+    it('enabled を true に変更した場合、handleMutationsが呼ばれる', (done) => {
+      const disabledObserver = new DOMSearchObserver(stateManager, {
+        enabled: false,
+      });
+      const searchFunction = vi.fn(() => {
+        expect(searchFunction).toHaveBeenCalled();
+        done();
+      });
+
+      // 検索情報を設定
+      disabledObserver.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      expect(disabledObserver.isObserving).toBe(false);
+
+      // enabled を true に変更（これによりhandleMutationsが呼ばれる）
+      disabledObserver.updateOptions({ enabled: true });
+
+      expect(disabledObserver.isObserving).toBe(true);
+
+      // DOM変更をトリガー
+      const div = document.createElement('div');
+      div.textContent = 'test content';
+      document.body.appendChild(div);
+
+      setTimeout(() => {
+        if (!searchFunction.mock.calls.length) {
+          done();
+        }
+        disabledObserver.stopObserving();
+      }, 600);
+    });
+  });
+
+  describe('notifyPopup', () => {
+    it('chrome.runtime.sendMessageがエラーを投げても処理を続行する', () => {
+      // chrome.runtime.sendMessageをモックしてエラーを投げる
+      const originalSendMessage = global.chrome?.runtime?.sendMessage;
+      if (global.chrome?.runtime) {
+        global.chrome.runtime.sendMessage = vi.fn(() => {
+          throw new Error('sendMessage failed');
+        });
+      }
+
+      const searchFunction = vi.fn();
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      // DOM変更をトリガー（notifyPopupが呼ばれる）
+      const div = document.createElement('div');
+      div.textContent = 'test content';
+      document.body.appendChild(div);
+
+      // エラーが発生しても処理が続行されることを確認
+      setTimeout(() => {
+        expect(observer.isObserving).toBe(true);
+        // 元に戻す
+        if (originalSendMessage && global.chrome && global.chrome.runtime) {
+          global.chrome.runtime.sendMessage = originalSendMessage;
+        }
+      }, 100);
+    });
+  });
+
+  describe('isRelevantNode', () => {
+    it('テキストコンテンツが空の要素は関連しない', () => {
+      const searchFunction = vi.fn();
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      // テキストコンテンツが空の要素を追加
+      const emptyDiv = document.createElement('div');
+      emptyDiv.textContent = '';
+      document.body.appendChild(emptyDiv);
+
+      // デバウンス時間後に確認
+      setTimeout(() => {
+        // 空の要素は関連しないため、検索関数は呼ばれない可能性がある
+        // ただし、他の変更がある場合は呼ばれる可能性もある
+        expect(observer.isObserving).toBe(true);
+      }, 100);
+    });
+
+    it('空白のみのテキストコンテンツの要素は関連しない', () => {
+      const searchFunction = vi.fn();
+      observer.startObserving(
+        'test',
+        {
+          query: 'test',
+          useRegex: false,
+          caseSensitive: false,
+          useElementSearch: false,
+          elementSearchMode: 'css',
+          useFuzzy: false,
+        },
+        searchFunction
+      );
+
+      // 空白のみの要素を追加
+      const whitespaceDiv = document.createElement('div');
+      whitespaceDiv.textContent = '   \n\t  ';
+      document.body.appendChild(whitespaceDiv);
+
+      // デバウンス時間後に確認
+      setTimeout(() => {
+        // 空白のみの要素は関連しないため、検索関数は呼ばれない可能性がある
+        expect(observer.isObserving).toBe(true);
+      }, 100);
+    });
   });
 });

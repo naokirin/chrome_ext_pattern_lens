@@ -6,6 +6,7 @@ import {
   searchText,
 } from '~/lib/search/textSearch';
 import { SearchStateManager } from '~/lib/state/searchState';
+import * as domUtilsModule from '~/lib/utils/domUtils';
 import { cleanupDOM } from '../../../helpers/dom-helpers.js';
 
 describe('textSearch', () => {
@@ -332,6 +333,71 @@ describe('textSearch', () => {
         expect(result.currentIndex).toBe(0);
         expect(stateManager.currentIndex).toBe(0);
       }
+    });
+
+    it('skipNavigationがtrueの場合、ナビゲーションをスキップする', () => {
+      document.body.innerHTML = '<div>test test test</div>';
+
+      const result = searchText('test', false, false, stateManager, false, true);
+
+      // skipNavigationがtrueの場合、ナビゲーションはスキップされる
+      expect(result.count).toBe(3);
+      // previousIndexが-1の場合、findClosestMatchIndexが使用される
+      expect(result.currentIndex).toBeGreaterThanOrEqual(0);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが有効な場合、そのインデックスを保持する', () => {
+      document.body.innerHTML = '<div>test test test</div>';
+
+      const result = searchText('test', false, false, stateManager, false, true, 1);
+
+      // previousIndexが有効な場合、そのインデックスが保持される
+      expect(result.count).toBe(3);
+      expect(result.currentIndex).toBe(1);
+      expect(stateManager.currentIndex).toBe(1);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが範囲外（大きい）の場合、最後のインデックスを使用する', () => {
+      document.body.innerHTML = '<div>test test test</div>';
+
+      const result = searchText('test', false, false, stateManager, false, true, 10);
+
+      // previousIndexが範囲外の場合、最後のインデックス（count - 1）が使用される
+      expect(result.count).toBe(3);
+      expect(result.currentIndex).toBe(2);
+      expect(stateManager.currentIndex).toBe(2);
+    });
+
+    it('skipNavigationがtrueでpreviousIndexが-1の場合、findClosestMatchIndexを使用する', () => {
+      document.body.innerHTML = '<div>test test test</div>';
+
+      vi.spyOn(domUtilsModule, 'findClosestMatchIndex').mockReturnValue(1);
+
+      const result = searchText('test', false, false, stateManager, false, true, -1);
+
+      // previousIndexが-1の場合、findClosestMatchIndexが使用される
+      expect(result.count).toBe(3);
+      expect(result.currentIndex).toBe(1);
+      expect(stateManager.currentIndex).toBe(1);
+    });
+
+    it('createOverlaysFromRangesでエラーが発生しても処理を続行する', () => {
+      document.body.innerHTML = '<div>test test</div>';
+
+      // getClientRectsをモックしてエラーを投げる
+      const originalGetClientRects = Range.prototype.getClientRects;
+      Range.prototype.getClientRects = vi.fn(() => {
+        throw new Error('getClientRects failed');
+      });
+
+      const result = searchText('test', false, false, stateManager);
+
+      // エラーが発生しても処理は続行される
+      expect(result).toBeDefined();
+      expect(result.count).toBeGreaterThanOrEqual(0);
+
+      // 元に戻す
+      Range.prototype.getClientRects = originalGetClientRects;
     });
   });
 });

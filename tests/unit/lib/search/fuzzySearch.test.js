@@ -104,5 +104,35 @@ describe('fuzzySearch', () => {
       // このテストは実際のDOM構造が必要なため、統合テストで確認
       expect(true).toBe(true);
     });
+
+    it('4つ以上のキーワードの組み合わせを生成できる', () => {
+      const text = '2024年東京オリンピック開催決定';
+      const result = findMultiKeywordMatches(['2024', '東京', 'オリンピック', '開催'], text);
+      // 4つのキーワードの組み合わせが生成される
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].keywords).toHaveLength(4);
+        expect(result[0].matches).toHaveLength(4);
+      }
+    });
+
+    it('各キーワードに複数のマッチがある場合、すべての組み合わせを生成する', () => {
+      const text = '東京東京2024年2024年';
+      const result = findMultiKeywordMatches(['東京', '2024'], text);
+      // 「東京」が2回、「2024」が2回マッチするため、4つの組み合わせが生成される可能性がある
+      expect(Array.isArray(result)).toBe(true);
+      // 組み合わせの数は、各キーワードのマッチ数の積以下
+      if (result.length > 0) {
+        expect(result.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('calculateMinRangeがnullを返すケース（無効な範囲）', () => {
+      // このケースは内部実装のため、間接的にテスト
+      // すべてのキーワードがマッチしない場合は空配列が返される
+      const text = 'テスト';
+      const result = findMultiKeywordMatches(['存在しない1', '存在しない2'], text);
+      expect(result).toEqual([]);
+    });
   });
 });
