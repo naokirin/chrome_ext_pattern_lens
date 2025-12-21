@@ -211,6 +211,14 @@
     "message": "Date format variation absorption: Treats various date formats as the same (e.g., treats 2024/01/01, 2024-01-01, January 1, 2024 as the same)",
     "description": "Description of fuzzy search date format variation absorption"
   },
+  "options_fuzzySearchHelp_accentedChars": {
+    "message": "Accented character normalization: Normalizes special characters from non-English alphabets to English alphabet equivalents (e.g., ç → c, é → e, ñ → n)",
+    "description": "Description of fuzzy search accented character normalization"
+  },
+  "options_fuzzySearchHelp_substitutionSpelling": {
+    "message": "Substitution spelling support: Supports substitution spellings for German and other languages (e.g., ß → ss, ä → ae, ö → oe, ü → ue, œ → oe)",
+    "description": "Description of fuzzy search substitution spelling support"
+  },
   "options_fuzzySearchHelp_note": {
     "message": "Note: Fuzzy search is automatically disabled when element search mode is ON",
     "description": "Note about fuzzy search constraints"

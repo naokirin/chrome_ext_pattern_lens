@@ -861,6 +861,293 @@ describe('normalization', () => {
       expect(result.normalizedText).toBe('てすととてすと');
       expect(result.mapping.ranges.length).toBe(7);
     });
+
+    describe('アクセント付き文字の正規化', () => {
+      describe('フランス語', () => {
+        it('ç → c', () => {
+          const result = normalizeText('ç');
+          expect(result.normalizedText).toBe('c');
+          expect(result.mapping.ranges.length).toBe(1);
+        });
+
+        it('é → e', () => {
+          const result = normalizeText('é');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('è → e', () => {
+          const result = normalizeText('è');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('ê → e', () => {
+          const result = normalizeText('ê');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('ë → e', () => {
+          const result = normalizeText('ë');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('à → a', () => {
+          const result = normalizeText('à');
+          expect(result.normalizedText).toBe('a');
+        });
+
+        it('â → a', () => {
+          const result = normalizeText('â');
+          expect(result.normalizedText).toBe('a');
+        });
+
+        it('î → i', () => {
+          const result = normalizeText('î');
+          expect(result.normalizedText).toBe('i');
+        });
+
+        it('ï → i', () => {
+          const result = normalizeText('ï');
+          expect(result.normalizedText).toBe('i');
+        });
+
+        it('ô → o', () => {
+          const result = normalizeText('ô');
+          expect(result.normalizedText).toBe('o');
+        });
+
+        it('ù → u', () => {
+          const result = normalizeText('ù');
+          expect(result.normalizedText).toBe('u');
+        });
+
+        it('û → u', () => {
+          const result = normalizeText('û');
+          expect(result.normalizedText).toBe('u');
+        });
+
+        it('ÿ → y', () => {
+          const result = normalizeText('ÿ');
+          expect(result.normalizedText).toBe('y');
+        });
+
+        it('大文字のアクセント付き文字も正規化', () => {
+          const result = normalizeText('ÇÉÈÊËÀÂÎÏÔÙÛŸ');
+          expect(result.normalizedText).toBe('ceeeeaaiiouuy');
+        });
+
+        it('フランス語の単語全体を正規化', () => {
+          const result = normalizeText('café');
+          expect(result.normalizedText).toBe('cafe');
+        });
+
+        it('フランス語の複合語を正規化', () => {
+          const result = normalizeText('français');
+          expect(result.normalizedText).toBe('francais');
+        });
+      });
+
+      describe('ドイツ語', () => {
+        it('ß → ss (代用表記)', () => {
+          const result = normalizeText('ß');
+          expect(result.normalizedText).toBe('ss');
+          expect(result.mapping.ranges.length).toBe(2);
+          expect(result.mapping.ranges[0]).toEqual({ start: 0, end: 1 });
+          expect(result.mapping.ranges[1]).toEqual({ start: 0, end: 1 });
+        });
+
+        it('ä → ae (代用表記)', () => {
+          const result = normalizeText('ä');
+          expect(result.normalizedText).toBe('ae');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('ö → oe (代用表記)', () => {
+          const result = normalizeText('ö');
+          expect(result.normalizedText).toBe('oe');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('ü → ue (代用表記)', () => {
+          const result = normalizeText('ü');
+          expect(result.normalizedText).toBe('ue');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('大文字のウムラウトも正規化', () => {
+          const result = normalizeText('ÄÖÜ');
+          expect(result.normalizedText).toBe('aeoeue');
+          expect(result.mapping.ranges.length).toBe(6);
+        });
+
+        it('ドイツ語の単語全体を正規化', () => {
+          const result = normalizeText('Straße');
+          expect(result.normalizedText).toBe('strasse');
+        });
+
+        it('ドイツ語の複合語を正規化', () => {
+          const result = normalizeText('Müller');
+          expect(result.normalizedText).toBe('mueller');
+        });
+
+        it('ドイツ語の複合語（Köln）を正規化', () => {
+          const result = normalizeText('Köln');
+          expect(result.normalizedText).toBe('koeln');
+        });
+
+        it('ドイツ語の複合語（Bär）を正規化', () => {
+          const result = normalizeText('Bär');
+          expect(result.normalizedText).toBe('baer');
+        });
+      });
+
+      describe('イタリア語', () => {
+        it('à → a', () => {
+          const result = normalizeText('à');
+          expect(result.normalizedText).toBe('a');
+        });
+
+        it('è → e', () => {
+          const result = normalizeText('è');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('é → e', () => {
+          const result = normalizeText('é');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('ì → i', () => {
+          const result = normalizeText('ì');
+          expect(result.normalizedText).toBe('i');
+        });
+
+        it('ò → o', () => {
+          const result = normalizeText('ò');
+          expect(result.normalizedText).toBe('o');
+        });
+
+        it('ù → u', () => {
+          const result = normalizeText('ù');
+          expect(result.normalizedText).toBe('u');
+        });
+
+        it('イタリア語の単語全体を正規化', () => {
+          const result = normalizeText('caffè');
+          expect(result.normalizedText).toBe('caffe');
+        });
+      });
+
+      describe('スペイン語', () => {
+        it('á → a', () => {
+          const result = normalizeText('á');
+          expect(result.normalizedText).toBe('a');
+        });
+
+        it('é → e', () => {
+          const result = normalizeText('é');
+          expect(result.normalizedText).toBe('e');
+        });
+
+        it('í → i', () => {
+          const result = normalizeText('í');
+          expect(result.normalizedText).toBe('i');
+        });
+
+        it('ñ → n', () => {
+          const result = normalizeText('ñ');
+          expect(result.normalizedText).toBe('n');
+        });
+
+        it('ó → o', () => {
+          const result = normalizeText('ó');
+          expect(result.normalizedText).toBe('o');
+        });
+
+        it('ú → u', () => {
+          const result = normalizeText('ú');
+          expect(result.normalizedText).toBe('u');
+        });
+
+        it('スペイン語の単語全体を正規化', () => {
+          const result = normalizeText('español');
+          expect(result.normalizedText).toBe('espanol');
+        });
+      });
+
+      describe('その他の言語', () => {
+        it('スカンジナビア語: å → a', () => {
+          const result = normalizeText('å');
+          expect(result.normalizedText).toBe('a');
+        });
+
+        it('スカンジナビア語: æ → ae', () => {
+          const result = normalizeText('æ');
+          expect(result.normalizedText).toBe('ae');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('スカンジナビア語: ø → o', () => {
+          const result = normalizeText('ø');
+          expect(result.normalizedText).toBe('o');
+        });
+
+        it('フランス語のリガチャ: œ → oe', () => {
+          const result = normalizeText('œ');
+          expect(result.normalizedText).toBe('oe');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('フランス語のリガチャ（大文字）: Œ → oe', () => {
+          const result = normalizeText('Œ');
+          expect(result.normalizedText).toBe('oe');
+          expect(result.mapping.ranges.length).toBe(2);
+        });
+
+        it('ポーランド語: ł → l', () => {
+          const result = normalizeText('ł');
+          expect(result.normalizedText).toBe('l');
+        });
+
+        it('チェコ語: č → c', () => {
+          const result = normalizeText('č');
+          expect(result.normalizedText).toBe('c');
+        });
+
+        it('ルーマニア語: ă → a', () => {
+          const result = normalizeText('ă');
+          expect(result.normalizedText).toBe('a');
+        });
+      });
+
+      describe('複数文字への変換のマッピング', () => {
+        it('ß → ss のマッピング範囲', () => {
+          const result = normalizeText('ß');
+          expect(result.mapping.ranges[0]).toEqual({ start: 0, end: 1 });
+          expect(result.mapping.ranges[1]).toEqual({ start: 0, end: 1 });
+        });
+
+        it('ä → ae のマッピング範囲', () => {
+          const result = normalizeText('ä');
+          expect(result.mapping.ranges[0]).toEqual({ start: 0, end: 1 });
+          expect(result.mapping.ranges[1]).toEqual({ start: 0, end: 1 });
+        });
+
+        it('複数の代用表記を含む文字列', () => {
+          const result = normalizeText('Straße');
+          expect(result.normalizedText).toBe('strasse');
+          // S(1) + t(1) + r(1) + a(1) + ß(1→2) + e(1) = 7文字
+          expect(result.mapping.ranges.length).toBe(7);
+        });
+
+        it('代用表記と通常文字の混在', () => {
+          const result = normalizeText('Müller');
+          expect(result.normalizedText).toBe('mueller');
+          // M(1) + ü(1→2) + l(1) + l(1) + e(1) + r(1) = 7文字（正規化後）
+          // マッピング範囲: M(1) + ü→u(1) + ü→e(1) + l(1) + l(1) + e(1) + r(1) = 7範囲
+          expect(result.mapping.ranges.length).toBe(7);
+        });
+      });
+    });
   });
 
   describe('convertNormalizedMatchToOriginal', () => {
@@ -1023,6 +1310,66 @@ describe('normalization', () => {
       const result = convertNormalizedMatchToOriginal(normalizedMatch, mapping);
       // startRange=ranges[0], endRange=ranges[2]なので、{ start: 0, end: 5 }が返される
       expect(result).toEqual({ start: 0, end: 5 });
+    });
+
+    it('代用表記を含むマッピングでの変換（ß → ss）', () => {
+      // "Straße" → "strasse" (6文字 → 7文字)
+      // S(1) + t(1) + r(1) + a(1) + ß(1→2) + e(1)
+      const mapping = {
+        ranges: [
+          { start: 0, end: 1 }, // s
+          { start: 1, end: 2 }, // t
+          { start: 2, end: 3 }, // r
+          { start: 3, end: 4 }, // a
+          { start: 4, end: 5 }, // s (ßの1文字目)
+          { start: 4, end: 5 }, // s (ßの2文字目、同じ範囲)
+          { start: 5, end: 6 }, // e
+        ],
+      };
+      const normalizedMatch = { start: 4, end: 6 }; // "ss" (ranges[4]とranges[5])
+      const result = convertNormalizedMatchToOriginal(normalizedMatch, mapping);
+      // startRange=ranges[4]={start:4,end:5}, endRange=ranges[5]={start:4,end:5}
+      // 両方とも同じ範囲なので、{ start: 4, end: 5 }が返される
+      expect(result).toEqual({ start: 4, end: 5 });
+    });
+
+    it('代用表記を含むマッピングでの変換（ü → ue）', () => {
+      // "Müller" → "mueller" (6文字 → 7文字)
+      // M(1) + ü(1→2) + l(1) + l(1) + e(1) + r(1)
+      const mapping = {
+        ranges: [
+          { start: 0, end: 1 }, // m
+          { start: 1, end: 2 }, // u (üの1文字目)
+          { start: 1, end: 2 }, // e (üの2文字目、同じ範囲)
+          { start: 2, end: 3 }, // l
+          { start: 3, end: 4 }, // l
+          { start: 4, end: 5 }, // e
+          { start: 5, end: 6 }, // r
+        ],
+      };
+      const normalizedMatch = { start: 1, end: 3 }; // "ue" (ranges[1]とranges[2])
+      const result = convertNormalizedMatchToOriginal(normalizedMatch, mapping);
+      // startRange=ranges[1]={start:1,end:2}, endRange=ranges[2]={start:1,end:2}
+      // 両方とも同じ範囲なので、{ start: 1, end: 2 }が返される
+      expect(result).toEqual({ start: 1, end: 2 });
+    });
+
+    it('代用表記を含む文字列全体の変換', () => {
+      // "Straße" → "strasse"
+      const mapping = {
+        ranges: [
+          { start: 0, end: 1 }, // s
+          { start: 1, end: 2 }, // t
+          { start: 2, end: 3 }, // r
+          { start: 3, end: 4 }, // a
+          { start: 4, end: 5 }, // s
+          { start: 4, end: 5 }, // s
+          { start: 5, end: 6 }, // e
+        ],
+      };
+      const normalizedMatch = { start: 0, end: 7 }; // "strasse"全体
+      const result = convertNormalizedMatchToOriginal(normalizedMatch, mapping);
+      expect(result).toEqual({ start: 0, end: 6 });
     });
   });
 });

@@ -211,6 +211,14 @@
     "message": "日付フォーマットの差異吸収: 年月日の様々なフォーマットを同一視します（例: 2024/01/01、2024-01-01、2024年1月1日 を同一視）",
     "description": "あいまい検索の日付フォーマットの差異吸収の説明"
   },
+  "options_fuzzySearchHelp_accentedChars": {
+    "message": "アクセント付き文字の正規化: 英語以外のアルファベットの特殊文字を英語のアルファベットに正規化します（例: ç → c、é → e、ñ → n）",
+    "description": "あいまい検索のアクセント付き文字の正規化の説明"
+  },
+  "options_fuzzySearchHelp_substitutionSpelling": {
+    "message": "代用表記の対応: ドイツ語などの代用表記に対応します（例: ß → ss、ä → ae、ö → oe、ü → ue、œ → oe）",
+    "description": "あいまい検索の代用表記の対応の説明"
+  },
   "options_fuzzySearchHelp_note": {
     "message": "注意: 要素検索モードがONの場合は、あいまい検索は自動的にOFFになります",
     "description": "あいまい検索の制約に関する注意事項"

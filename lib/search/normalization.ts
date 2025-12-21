@@ -30,6 +30,7 @@ function processCombinedCharacter(
 
 /**
  * Process single character
+ * Handles cases where one character normalizes to multiple characters (e.g., ß → ss)
  */
 function processSingleCharacter(
   char: string,
@@ -38,8 +39,11 @@ function processSingleCharacter(
   ranges: Array<{ start: number; end: number }>
 ): number {
   const normalized = normalizeSingleChar(char);
-  normalizedText.push(normalized);
-  ranges.push({ start: originalIndex, end: originalIndex + 1 });
+  // If normalized to multiple characters, add each character separately with the same range
+  for (const normalizedChar of normalized) {
+    normalizedText.push(normalizedChar);
+    ranges.push({ start: originalIndex, end: originalIndex + 1 });
+  }
   return originalIndex + 1;
 }
 
@@ -430,6 +434,113 @@ function normalizeCase(char: string): string | null {
 }
 
 /**
+ * Normalize accented characters to their base English alphabet equivalents
+ * Supports French, German, Italian, Spanish, and other European languages
+ */
+function normalizeAccentedCharacters(char: string): string | null {
+  const accentedCharMap: Record<string, string> = {
+    // French
+    à: 'a',
+    â: 'a',
+    ç: 'c',
+    é: 'e',
+    è: 'e',
+    ê: 'e',
+    ë: 'e',
+    î: 'i',
+    ï: 'i',
+    ô: 'o',
+    ù: 'u',
+    û: 'u',
+    ÿ: 'y',
+    // French uppercase
+    À: 'a',
+    Â: 'a',
+    Ç: 'c',
+    É: 'e',
+    È: 'e',
+    Ê: 'e',
+    Ë: 'e',
+    Î: 'i',
+    Ï: 'i',
+    Ô: 'o',
+    Ù: 'u',
+    Û: 'u',
+    Ÿ: 'y',
+    œ: 'oe', // French ligature → oe (substitution spelling)
+    Œ: 'oe', // French ligature uppercase → oe
+    // German (with substitution spelling)
+    ä: 'ae', // German umlaut → ae (substitution spelling)
+    ö: 'oe', // German umlaut → oe (substitution spelling)
+    ü: 'ue', // German umlaut → ue (substitution spelling)
+    Ä: 'ae', // German umlaut uppercase → ae
+    Ö: 'oe', // German umlaut uppercase → oe
+    Ü: 'ue', // German umlaut uppercase → ue
+    ß: 'ss', // German sharp S → ss (substitution spelling)
+    // Italian
+    ì: 'i',
+    ò: 'o',
+    Ì: 'i',
+    Ò: 'o',
+    // Spanish
+    á: 'a',
+    í: 'i',
+    ñ: 'n',
+    ó: 'o',
+    ú: 'u',
+    Á: 'a',
+    Í: 'i',
+    Ñ: 'n',
+    Ó: 'o',
+    Ú: 'u',
+    // Portuguese
+    ã: 'a',
+    õ: 'o',
+    Ã: 'a',
+    Õ: 'o',
+    // Scandinavian
+    å: 'a',
+    æ: 'ae',
+    ø: 'o',
+    Å: 'a',
+    Æ: 'ae',
+    Ø: 'o',
+    // Other European languages
+    č: 'c',
+    ć: 'c',
+    đ: 'd',
+    š: 's',
+    ž: 'z',
+    Č: 'c',
+    Ć: 'c',
+    Đ: 'd',
+    Š: 's',
+    Ž: 'z',
+    ł: 'l',
+    Ł: 'l',
+    ń: 'n',
+    ś: 's',
+    ź: 'z',
+    ż: 'z',
+    Ń: 'n',
+    Ś: 's',
+    Ź: 'z',
+    Ż: 'z',
+    // Romanian
+    ă: 'a',
+    ș: 's',
+    ț: 't',
+    Ă: 'a',
+    Ș: 's',
+    Ț: 't',
+    // Czech/Slovak
+    ý: 'y',
+    Ý: 'y',
+  };
+  return accentedCharMap[char] || null;
+}
+
+/**
  * Normalize single character
  */
 function normalizeSingleChar(char: string): string {
@@ -458,6 +569,12 @@ function normalizeSingleChar(char: string): string {
   const normalizedCase = normalizeCase(char);
   if (normalizedCase !== null) {
     return normalizedCase;
+  }
+
+  // Normalize accented characters to base English alphabet
+  const normalizedAccented = normalizeAccentedCharacters(char);
+  if (normalizedAccented !== null) {
+    return normalizedAccented;
   }
 
   // Keep as-is if no normalization needed
