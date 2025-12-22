@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { convertNormalizedMatchToOriginal, normalizeText } from '~/lib/search/normalization';
+import {
+  convertNormalizedMatchToOriginal,
+  expandQueryForAccentedChars,
+  normalizeText,
+} from '~/lib/search/normalization';
 
 describe('normalization', () => {
   describe('normalizeText', () => {
@@ -1370,6 +1374,61 @@ describe('normalization', () => {
       const normalizedMatch = { start: 0, end: 7 }; // "strasse"全体
       const result = convertNormalizedMatchToOriginal(normalizedMatch, mapping);
       expect(result).toEqual({ start: 0, end: 6 });
+    });
+  });
+
+  describe('expandQueryForAccentedChars', () => {
+    it('アクセント付き文字がクエリに含まれている場合は展開しない（ä → aeのみ）', () => {
+      const result = expandQueryForAccentedChars('ä');
+      // 'ä' は 'ae' に正規化されるが、'a' には展開されない
+      expect(result).toEqual(['ae']);
+      expect(result.length).toBe(1);
+    });
+
+    it('アクセント付き文字を含むクエリは展開しない', () => {
+      const result = expandQueryForAccentedChars('Mäuse');
+      // 'ä' は 'ae' に正規化されるが、展開はされない
+      expect(result).toEqual(['maeuse']);
+      expect(result.length).toBe(1);
+    });
+
+    it('アクセント付き文字がない場合は展開する（a → [a, ae]）', () => {
+      const result = expandQueryForAccentedChars('a');
+      // 'a' は 'a' と 'ae' に展開される（'ä' にマッチするため）
+      expect(result).toContain('a');
+      expect(result).toContain('ae');
+      expect(result.length).toBe(2);
+    });
+
+    it('通常文字のみのクエリは展開する', () => {
+      const result = expandQueryForAccentedChars('hello');
+      // 'o' が 'o' と 'oe' に展開されるため、['hello', 'helloe'] になる
+      expect(result).toContain('hello');
+      expect(result).toContain('helloe');
+      expect(result.length).toBe(2);
+    });
+
+    it('空文字列を処理する', () => {
+      const result = expandQueryForAccentedChars('');
+      expect(result).toEqual(['']);
+    });
+
+    it('複数の通常文字を展開する', () => {
+      const result = expandQueryForAccentedChars('ao');
+      // 'a' → ['a', 'ae'], 'o' → ['o', 'oe']
+      // 組み合わせ: ['ao', 'aoe', 'aeo', 'aeoe']
+      expect(result.length).toBe(4);
+      expect(result).toContain('ao');
+      expect(result).toContain('aoe');
+      expect(result).toContain('aeo');
+      expect(result).toContain('aeoe');
+    });
+
+    it('アクセント付き文字と通常文字が混在する場合は展開しない', () => {
+      const result = expandQueryForAccentedChars('Mäuse');
+      // 'ä' が含まれているので、展開せずに正規化のみ（'ä' → 'ae'）
+      expect(result).toEqual(['maeuse']);
+      expect(result.length).toBe(1);
     });
   });
 });

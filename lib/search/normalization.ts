@@ -84,6 +84,7 @@ export function normalizeText(originalText: string): NormalizationResult {
   return {
     normalizedText: normalizedText.join(''),
     mapping: { ranges },
+    originalText,
   };
 }
 
@@ -434,6 +435,34 @@ function normalizeCase(char: string): string | null {
 }
 
 /**
+ * Get query expansion options for accented characters
+ * Returns array of possible search patterns for a given accented character
+ * For example, 'ä' can match both 'a' and 'ae'
+ */
+function getAccentedCharQueryExpansions(char: string): string[] | null {
+  const expansionMap: Record<string, string[]> = {
+    // German umlauts: can match both base letter and substitution spelling
+    ä: ['a', 'ae'],
+    ö: ['o', 'oe'],
+    ü: ['u', 'ue'],
+    Ä: ['a', 'ae'],
+    Ö: ['o', 'oe'],
+    Ü: ['u', 'ue'],
+    ß: ['ss'], // ß only matches 'ss', not 's'
+    // French ligatures
+    œ: ['oe'],
+    Œ: ['oe'],
+    // Scandinavian
+    æ: ['ae'],
+    Æ: ['ae'],
+    // Other characters that normalize to multiple characters
+    // Note: Characters that normalize to single characters (like à → a) don't need expansion
+    // because they will match through the normalization process
+  };
+  return expansionMap[char] || null;
+}
+
+/**
  * Normalize accented characters to their base English alphabet equivalents
  * Supports French, German, Italian, Spanish, and other European languages
  */
@@ -579,6 +608,116 @@ function normalizeSingleChar(char: string): string {
 
   // Keep as-is if no normalization needed
   return char;
+}
+
+/**
+ * Get reverse mapping: base characters that can match accented characters
+ * For example, 'a' can match 'ä' (which normalizes to 'ae')
+ * Returns the normalized form of accented characters that match this base character
+ */
+function getBaseCharExpansions(char: string): string[] | null {
+  // Map base characters to their accented character normalizations
+  // For example, 'a' can match 'ä' (→ 'ae'), 'à' (→ 'a'), 'â' (→ 'a'), etc.
+  // But we only need the substitution spellings (like 'ae' for 'ä')
+  const baseCharMap: Record<string, string[]> = {
+    a: ['a', 'ae'], // 'a' can match 'a' and 'ä' (→ 'ae')
+    o: ['o', 'oe'], // 'o' can match 'o' and 'ö' (→ 'oe')
+    u: ['u', 'ue'], // 'u' can match 'u' and 'ü' (→ 'ue')
+    s: ['s', 'ss'], // 's' can match 's' and 'ß' (→ 'ss')
+  };
+  return baseCharMap[char] || null;
+}
+
+/**
+ * Check if a character is an accented character that should not be expanded
+ * (i.e., if the query contains accented characters, they should match only accented characters)
+ */
+export function isAccentedCharInQuery(char: string): boolean {
+  // Check if this character has a query expansion (meaning it's an accented character)
+  // If it has expansions, it means it's an accented character that should match base characters
+  // But if it's in the query, we don't want to expand it
+  return getAccentedCharQueryExpansions(char) !== null;
+}
+
+/**
+ * Expand query to handle accented characters with multiple matching patterns
+ * For example, 'a' expands to ['a', 'ae'] to match both 'a' and 'ä' (which normalizes to 'ae')
+ * But if query contains 'ä', it only matches 'ä' (not 'a' or 'ae')
+ * @param query Original query string
+ * @returns Array of expanded query patterns
+ */
+export function expandQueryForAccentedChars(query: string): string[] {
+  if (query.length === 0) {
+    return [query];
+  }
+
+  // Check if query contains any accented characters
+  // If it does, don't expand - just normalize and return as-is
+  let hasAccentedChar = false;
+  for (let i = 0; i < query.length; i++) {
+    if (isAccentedCharInQuery(query[i])) {
+      hasAccentedChar = true;
+      break;
+    }
+  }
+
+  if (hasAccentedChar) {
+    // Query contains accented characters - don't expand, just normalize
+    const normalized = normalizeText(query).normalizedText;
+    return [normalized];
+  }
+
+  // Query doesn't contain accented characters - expand to match accented characters
+  // Generate all combinations of expanded characters
+  const expansions: string[][] = [];
+  for (let i = 0; i < query.length; i++) {
+    const char = query[i];
+    const normalized = normalizeSingleChar(char);
+
+    // Check if this base character can match accented characters
+    const baseExpansions = getBaseCharExpansions(normalized);
+    if (baseExpansions && baseExpansions.length > 0) {
+      // This character can match accented characters - expand it
+      expansions.push(baseExpansions);
+    } else {
+      // No expansion, use the normalized character as-is
+      expansions.push([normalized]);
+    }
+  }
+
+  // Generate cartesian product of all expansions
+  if (expansions.length === 0) {
+    return [query];
+  }
+
+  const results: string[] = [];
+  const indices = new Array(expansions.length).fill(0);
+
+  while (true) {
+    // Build query from current indices
+    let expandedQuery = '';
+    for (let i = 0; i < expansions.length; i++) {
+      expandedQuery += expansions[i][indices[i]];
+    }
+    results.push(expandedQuery);
+
+    // Increment indices
+    let i = expansions.length - 1;
+    while (i >= 0) {
+      indices[i]++;
+      if (indices[i] < expansions[i].length) {
+        break;
+      }
+      indices[i] = 0;
+      i--;
+    }
+
+    if (i < 0) {
+      break; // All combinations generated
+    }
+  }
+
+  return results;
 }
 
 /**

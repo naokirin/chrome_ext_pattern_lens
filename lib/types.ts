@@ -146,6 +146,7 @@ export interface NormalizationMapping {
 export interface NormalizationResult {
   normalizedText: string; // 正規化後のテキスト
   mapping: NormalizationMapping; // 位置マッピング
+  originalText?: string; // 元のテキスト（アクセント付き文字の検証用）
 }
 
 export interface MultiKeywordMatch {

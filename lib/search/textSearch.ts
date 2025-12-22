@@ -25,7 +25,12 @@ import {
 } from '../utils/domUtils';
 import { handleError } from '../utils/errorHandler';
 import { findMultiKeywordMatches, splitQueryIntoKeywords } from './fuzzySearch';
-import { convertNormalizedMatchToOriginal, normalizeText } from './normalization';
+import {
+  convertNormalizedMatchToOriginal,
+  expandQueryForAccentedChars,
+  isAccentedCharInQuery,
+  normalizeText,
+} from './normalization';
 import { BLOCK_BOUNDARY_MARKER, createVirtualTextAndMap } from './virtualText';
 
 /**
@@ -214,25 +219,422 @@ export function createRangeFromVirtualMatch(
 }
 
 /**
- * Perform single keyword fuzzy search
+ * Merge adjacent matches that refer to the same original range
+ * This handles cases where a single character (like 'ä') normalizes to multiple characters ('ae')
+ * and we want to match the entire original character, not just parts of it
+ *
+ * Also handles cases where query 'a' matches 'ae' (from 'ä') - we want to match the entire 'ae'
+ */
+function mergeAdjacentMatchesWithSameRange(
+  matches: VirtualMatch[],
+  textMapping: { ranges: Array<{ start: number; end: number }> }
+): VirtualMatch[] {
+  if (matches.length === 0) {
+    return matches;
+  }
+
+  // Sort matches by start position
+  const sortedMatches = [...matches].sort((a, b) => {
+    if (a.start !== b.start) {
+      return a.start - b.start;
+    }
+    return a.end - b.end;
+  });
+
+  // Remove exact duplicates
+  const uniqueMatches: VirtualMatch[] = [];
+  for (let i = 0; i < sortedMatches.length; i++) {
+    const match = sortedMatches[i];
+    if (
+      i === 0 ||
+      match.start !== sortedMatches[i - 1].start ||
+      match.end !== sortedMatches[i - 1].end
+    ) {
+      uniqueMatches.push(match);
+    }
+  }
+
+  // Group matches by their original range
+  // Matches that refer to the same original range should be merged
+  const rangeGroups = new Map<string, VirtualMatch[]>();
+  for (const match of uniqueMatches) {
+    const rangeKey = `${match.start}-${match.end}`;
+    if (!rangeGroups.has(rangeKey)) {
+      rangeGroups.set(rangeKey, []);
+    }
+    const group = rangeGroups.get(rangeKey);
+    if (group) {
+      group.push(match);
+    }
+  }
+
+  // For each group, if there are multiple matches, check if they should be merged
+  // This happens when 'a' matches part of 'ae' (from 'ä'), and we want to match the entire 'ae'
+  const merged: VirtualMatch[] = [];
+  const processed = new Set<string>();
+
+  for (const match of uniqueMatches) {
+    const rangeKey = `${match.start}-${match.end}`;
+    if (processed.has(rangeKey)) {
+      continue;
+    }
+
+    // Check if this match is part of a larger range that should be matched
+    // Look for adjacent matches that refer to the same original character
+    let expandedMatch: VirtualMatch | null = null;
+
+    // Check if there are matches immediately after this one that refer to the same original range
+    // This happens when 'ä' → 'ae': 'a' matches, and 'e' also refers to the same original range
+    for (const otherMatch of uniqueMatches) {
+      if (
+        otherMatch.start === match.end &&
+        otherMatch.start < textMapping.ranges.length &&
+        match.start < textMapping.ranges.length
+      ) {
+        // Check if they refer to the same original range
+        const matchRange = textMapping.ranges[match.start];
+        const otherMatchRange = textMapping.ranges[otherMatch.start];
+
+        if (
+          matchRange &&
+          otherMatchRange &&
+          matchRange.start === otherMatchRange.start &&
+          matchRange.end === otherMatchRange.end
+        ) {
+          // They refer to the same original character (like 'ä' → 'ae')
+          // Merge them to match the entire original character
+          expandedMatch = {
+            start: match.start,
+            end: otherMatch.end,
+          };
+          processed.add(`${otherMatch.start}-${otherMatch.end}`);
+          break;
+        }
+      }
+    }
+
+    if (expandedMatch) {
+      merged.push(expandedMatch);
+    } else {
+      merged.push(match);
+    }
+
+    processed.add(rangeKey);
+  }
+
+  return merged;
+}
+
+/**
+ * Expand matches to include adjacent characters that refer to the same original range
+ * This handles cases where 'a' matches part of 'ae' (from 'ä'), and we want to match the entire 'ae'
+ */
+function expandMatchesToSameRange(
+  normalizedMatches: VirtualMatch[],
+  normalizedText: string,
+  textMapping: { ranges: Array<{ start: number; end: number }> }
+): VirtualMatch[] {
+  const expanded: VirtualMatch[] = [];
+
+  for (const match of normalizedMatches) {
+    const expandedMatch = { ...match };
+
+    // Check if there are adjacent characters in normalized text that refer to the same original range
+    // This happens when 'ä' → 'ae': 'a' matches, and 'e' also refers to the same original range
+    let currentPos = match.end;
+    while (currentPos < normalizedText.length && currentPos < textMapping.ranges.length) {
+      const currentRange = textMapping.ranges[currentPos];
+      const matchRange = textMapping.ranges[match.start];
+
+      if (
+        currentRange &&
+        matchRange &&
+        currentRange.start === matchRange.start &&
+        currentRange.end === matchRange.end
+      ) {
+        // This character refers to the same original range, expand the match
+        expandedMatch.end = currentPos + 1;
+        currentPos++;
+      } else {
+        break;
+      }
+    }
+
+    expanded.push(expandedMatch);
+  }
+
+  return expanded;
+}
+
+/**
+ * Get accented characters from query and their normalized positions
+ * Returns a map of normalized position to original accented character
+ */
+function getQueryAccentedChars(query: string): Map<number, string> {
+  const accentedChars = new Map<number, string>();
+  const normalizedResult = normalizeText(query);
+
+  // Map each normalized position back to the original query character
+  // When a character normalizes to multiple characters (e.g., ä → ae), all positions should map to the original char
+  for (let i = 0; i < query.length; i++) {
+    const char = query[i];
+    if (isAccentedCharInQuery(char)) {
+      // Find all normalized positions that correspond to this original character
+      for (let j = 0; j < normalizedResult.mapping.ranges.length; j++) {
+        const range = normalizedResult.mapping.ranges[j];
+        // Check if this normalized position corresponds to the original character at position i
+        if (range.start === i && range.end === i + 1) {
+          accentedChars.set(j, char);
+        }
+      }
+    }
+  }
+
+  return accentedChars;
+}
+
+/**
+ * Case-insensitive mapping for accented characters
+ * Maps both uppercase and lowercase versions to a canonical form (lowercase)
+ */
+const ACCENTED_CHAR_CASE_MAPPING = new Map<string, string>([
+  // German umlauts
+  ['ä', 'ä'],
+  ['Ä', 'ä'],
+  ['ö', 'ö'],
+  ['Ö', 'ö'],
+  ['ü', 'ü'],
+  ['Ü', 'ü'],
+  // French
+  ['à', 'à'],
+  ['À', 'à'],
+  ['â', 'â'],
+  ['Â', 'â'],
+  ['ç', 'ç'],
+  ['Ç', 'ç'],
+  ['é', 'é'],
+  ['É', 'é'],
+  ['è', 'è'],
+  ['È', 'è'],
+  ['ê', 'ê'],
+  ['Ê', 'ê'],
+  ['ë', 'ë'],
+  ['Ë', 'ë'],
+  ['î', 'î'],
+  ['Î', 'î'],
+  ['ï', 'ï'],
+  ['Ï', 'ï'],
+  ['ô', 'ô'],
+  ['Ô', 'ô'],
+  ['ù', 'ù'],
+  ['Ù', 'ù'],
+  ['û', 'û'],
+  ['Û', 'û'],
+  ['ÿ', 'ÿ'],
+  ['Ÿ', 'ÿ'],
+  ['œ', 'œ'],
+  ['Œ', 'œ'],
+  // Italian
+  ['ì', 'ì'],
+  ['Ì', 'ì'],
+  ['ò', 'ò'],
+  ['Ò', 'ò'],
+  // Spanish
+  ['á', 'á'],
+  ['Á', 'á'],
+  ['í', 'í'],
+  ['Í', 'í'],
+  ['ñ', 'ñ'],
+  ['Ñ', 'ñ'],
+  ['ó', 'ó'],
+  ['Ó', 'ó'],
+  ['ú', 'ú'],
+  ['Ú', 'ú'],
+  // Portuguese
+  ['ã', 'ã'],
+  ['Ã', 'ã'],
+  ['õ', 'õ'],
+  ['Õ', 'õ'],
+  // Scandinavian
+  ['å', 'å'],
+  ['Å', 'å'],
+  ['æ', 'æ'],
+  ['Æ', 'æ'],
+  ['ø', 'ø'],
+  ['Ø', 'ø'],
+  // Other European languages
+  ['č', 'č'],
+  ['Č', 'č'],
+  ['ć', 'ć'],
+  ['Ć', 'ć'],
+  ['đ', 'đ'],
+  ['Đ', 'đ'],
+  ['š', 'š'],
+  ['Š', 'š'],
+  ['ž', 'ž'],
+  ['Ž', 'ž'],
+  ['ł', 'ł'],
+  ['Ł', 'ł'],
+  ['ń', 'ń'],
+  ['Ń', 'ń'],
+  ['ś', 'ś'],
+  ['Ś', 'ś'],
+  ['ź', 'ź'],
+  ['Ź', 'ź'],
+  ['ż', 'ż'],
+  ['Ż', 'ż'],
+  // Romanian
+  ['ă', 'ă'],
+  ['Ă', 'ă'],
+  ['ș', 'ș'],
+  ['Ș', 'ș'],
+  ['ț', 'ț'],
+  ['Ț', 'ț'],
+  // Czech/Slovak
+  ['ý', 'ý'],
+  ['Ý', 'ý'],
+]);
+
+/**
+ * Check if two accented characters match case-insensitively
+ */
+function accentedCharsMatchCaseInsensitive(char1: string, char2: string): boolean {
+  const canonical1 = ACCENTED_CHAR_CASE_MAPPING.get(char1) || char1.toLowerCase();
+  const canonical2 = ACCENTED_CHAR_CASE_MAPPING.get(char2) || char2.toLowerCase();
+  return canonical1 === canonical2;
+}
+
+/**
+ * Check if the original character at the given position matches the query accented character
+ */
+function doesOriginalCharMatchQueryAccentedChar(
+  normalizedPos: number,
+  queryNormalizedPos: number,
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  originalText: string | undefined,
+  queryAccentedChars: Map<number, string>
+): boolean {
+  if (!originalText || normalizedPos >= textMapping.ranges.length) {
+    return false;
+  }
+
+  const range = textMapping.ranges[normalizedPos];
+  if (!range || range.start >= originalText.length) {
+    return false;
+  }
+
+  const originalChar = originalText[range.start];
+  const queryAccentedChar = queryAccentedChars.get(queryNormalizedPos);
+
+  // If query has an accented char at this position, original char must match (case-insensitive)
+  if (queryAccentedChar) {
+    return accentedCharsMatchCaseInsensitive(originalChar, queryAccentedChar);
+  }
+
+  // If query doesn't have an accented char at this position, allow any character
+  return true;
+}
+
+/**
+ * Filter matches to only include those where original characters match query accented characters exactly
+ */
+function filterMatchesByAccentedChars(
+  normalizedMatches: VirtualMatch[],
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  originalText: string | undefined,
+  queryHasAccentedChars: boolean,
+  queryAccentedChars: Map<number, string>,
+  normalizedQuery: string
+): VirtualMatch[] {
+  if (!queryHasAccentedChars || !originalText) {
+    return normalizedMatches;
+  }
+
+  // If query has accented characters, only match positions where original text has the same accented characters
+  return normalizedMatches.filter((match) => {
+    // Check if all characters in the match correspond to the same accented characters in the query
+    const matchLength = match.end - match.start;
+    const queryLength = normalizedQuery.length;
+
+    // For each position in the match, check if it corresponds to the same position in the query
+    for (let i = 0; i < matchLength && i < queryLength; i++) {
+      const matchPos = match.start + i;
+      const queryPos = i;
+
+      if (!doesOriginalCharMatchQueryAccentedChar(
+        matchPos,
+        queryPos,
+        textMapping,
+        originalText,
+        queryAccentedChars
+      )) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+/**
+ * Perform single keyword fuzzy search with accented character expansion
  */
 function performSingleKeywordFuzzySearch(
   query: string,
   normalizedText: string,
-  textMapping: { ranges: Array<{ start: number; end: number }> }
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  originalText?: string
 ): VirtualMatch[] {
-  const normalizedQuery = normalizeText(query).normalizedText;
-  const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
-
-  // Convert normalized matches to original virtual text positions
-  const matches: VirtualMatch[] = [];
-  for (const normalizedMatch of normalizedMatches) {
-    const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
-    if (originalMatch) {
-      matches.push(originalMatch);
+  // Check if query contains accented characters
+  let queryHasAccentedChars = false;
+  for (let i = 0; i < query.length; i++) {
+    if (isAccentedCharInQuery(query[i])) {
+      queryHasAccentedChars = true;
+      break;
     }
   }
-  return matches;
+
+  // Get accented characters from query for exact matching
+  const queryAccentedChars = getQueryAccentedChars(query);
+
+  // Expand query to handle accented characters (e.g., 'ä' → ['a', 'ae'])
+  const expandedQueries = expandQueryForAccentedChars(query);
+
+  // Search with each expanded query pattern
+  const allMatches: VirtualMatch[] = [];
+  for (const expandedQuery of expandedQueries) {
+    const normalizedQuery = normalizeText(expandedQuery).normalizedText;
+    const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+
+    // Filter matches: if query has accented chars, only match positions where original text has the same accented chars
+    const filteredMatches = filterMatchesByAccentedChars(
+      normalizedMatches,
+      textMapping,
+      originalText,
+      queryHasAccentedChars,
+      queryAccentedChars,
+      normalizedQuery
+    );
+
+    // Expand matches to include adjacent characters that refer to the same original range
+    const expandedNormalizedMatches = expandMatchesToSameRange(
+      filteredMatches,
+      normalizedText,
+      textMapping
+    );
+
+    // Convert normalized matches to original virtual text positions
+    for (const normalizedMatch of expandedNormalizedMatches) {
+      const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
+      if (originalMatch) {
+        allMatches.push(originalMatch);
+      }
+    }
+  }
+
+  // Remove duplicates and merge adjacent matches with same range
+  const uniqueMatches = mergeAdjacentMatchesWithSameRange(allMatches, textMapping);
+
+  return uniqueMatches;
 }
 
 /**
@@ -274,7 +676,8 @@ function performFuzzySearch(
   textMapping: { ranges: Array<{ start: number; end: number }> },
   baseMultiplier: number,
   minDistance: number,
-  maxDistance: number
+  maxDistance: number,
+  originalText?: string
 ): VirtualMatch[] {
   const keywords = splitQueryIntoKeywords(query);
   if (keywords.length > 1) {
@@ -287,7 +690,7 @@ function performFuzzySearch(
       maxDistance
     );
   }
-  return performSingleKeywordFuzzySearch(query, normalizedText, textMapping);
+  return performSingleKeywordFuzzySearch(query, normalizedText, textMapping, originalText);
 }
 
 /**
@@ -321,7 +724,8 @@ export function createTextMatches(
       normalizedResult.mapping,
       baseMultiplier,
       minDistance,
-      maxDistance
+      maxDistance,
+      normalizedResult.originalText
     );
   } else {
     // Normal search
