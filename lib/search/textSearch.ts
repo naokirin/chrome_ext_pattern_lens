@@ -369,23 +369,24 @@ function expandMatchesToSameRange(
 /**
  * Get accented characters from query and their normalized positions
  * Returns a map of normalized position to original accented character
+ * Optimized version that uses the normalized result directly
  */
-function getQueryAccentedChars(query: string): Map<number, string> {
+function getQueryAccentedChars(
+  query: string,
+  normalizedResult: { normalizedText: string; mapping: { ranges: Array<{ start: number; end: number }> } }
+): Map<number, string> {
   const accentedChars = new Map<number, string>();
-  const normalizedResult = normalizeText(query);
 
   // Map each normalized position back to the original query character
   // When a character normalizes to multiple characters (e.g., ä → ae), all positions should map to the original char
-  for (let i = 0; i < query.length; i++) {
-    const char = query[i];
-    if (isAccentedCharInQuery(char)) {
-      // Find all normalized positions that correspond to this original character
-      for (let j = 0; j < normalizedResult.mapping.ranges.length; j++) {
-        const range = normalizedResult.mapping.ranges[j];
-        // Check if this normalized position corresponds to the original character at position i
-        if (range.start === i && range.end === i + 1) {
-          accentedChars.set(j, char);
-        }
+  // Optimize by iterating through ranges once instead of nested loops
+  for (let j = 0; j < normalizedResult.mapping.ranges.length; j++) {
+    const range = normalizedResult.mapping.ranges[j];
+    const originalIndex = range.start;
+    if (originalIndex < query.length) {
+      const char = query[originalIndex];
+      if (isAccentedCharInQuery(char)) {
+        accentedChars.set(j, char);
       }
     }
   }
@@ -505,25 +506,37 @@ function accentedCharsMatchCaseInsensitive(char1: string, char2: string): boolea
 }
 
 /**
+ * Pre-compute original character lookup map for faster access
+ */
+function buildOriginalCharMap(
+  textMapping: { ranges: Array<{ start: number; end: number }> },
+  originalText: string
+): Map<number, string> {
+  const charMap = new Map<number, string>();
+  for (let i = 0; i < textMapping.ranges.length; i++) {
+    const range = textMapping.ranges[i];
+    if (range && range.start < originalText.length) {
+      charMap.set(i, originalText[range.start]);
+    }
+  }
+  return charMap;
+}
+
+/**
  * Check if the original character at the given position matches the query accented character
+ * Optimized version using pre-computed character map
  */
 function doesOriginalCharMatchQueryAccentedChar(
   normalizedPos: number,
   queryNormalizedPos: number,
-  textMapping: { ranges: Array<{ start: number; end: number }> },
-  originalText: string | undefined,
+  originalCharMap: Map<number, string>,
   queryAccentedChars: Map<number, string>
 ): boolean {
-  if (!originalText || normalizedPos >= textMapping.ranges.length) {
+  const originalChar = originalCharMap.get(normalizedPos);
+  if (!originalChar) {
     return false;
   }
 
-  const range = textMapping.ranges[normalizedPos];
-  if (!range || range.start >= originalText.length) {
-    return false;
-  }
-
-  const originalChar = originalText[range.start];
   const queryAccentedChar = queryAccentedChars.get(queryNormalizedPos);
 
   // If query has an accented char at this position, original char must match (case-insensitive)
@@ -540,32 +553,39 @@ function doesOriginalCharMatchQueryAccentedChar(
  */
 function filterMatchesByAccentedChars(
   normalizedMatches: VirtualMatch[],
-  textMapping: { ranges: Array<{ start: number; end: number }> },
-  originalText: string | undefined,
+  originalCharMap: Map<number, string>,
   queryHasAccentedChars: boolean,
   queryAccentedChars: Map<number, string>,
   normalizedQuery: string
 ): VirtualMatch[] {
-  if (!queryHasAccentedChars || !originalText) {
+  if (!queryHasAccentedChars || queryAccentedChars.size === 0) {
     return normalizedMatches;
   }
 
   // If query has accented characters, only match positions where original text has the same accented characters
+  // Optimize by pre-checking if match length matches query length
+  const queryLength = normalizedQuery.length;
+  const accentedPositions = Array.from(queryAccentedChars.keys());
+
   return normalizedMatches.filter((match) => {
-    // Check if all characters in the match correspond to the same accented characters in the query
     const matchLength = match.end - match.start;
-    const queryLength = normalizedQuery.length;
 
-    // For each position in the match, check if it corresponds to the same position in the query
-    for (let i = 0; i < matchLength && i < queryLength; i++) {
-      const matchPos = match.start + i;
-      const queryPos = i;
+    // Quick check: match length must match query length
+    if (matchLength !== queryLength) {
+      return false;
+    }
 
+    // Only check positions where query has accented characters
+    for (const queryPos of accentedPositions) {
+      if (queryPos >= matchLength) {
+        continue;
+      }
+
+      const matchPos = match.start + queryPos;
       if (!doesOriginalCharMatchQueryAccentedChar(
         matchPos,
         queryPos,
-        textMapping,
-        originalText,
+        originalCharMap,
         queryAccentedChars
       )) {
         return false;
@@ -584,6 +604,11 @@ function performSingleKeywordFuzzySearch(
   textMapping: { ranges: Array<{ start: number; end: number }> },
   originalText?: string
 ): VirtualMatch[] {
+  // Early return if query is empty
+  if (query.length === 0) {
+    return [];
+  }
+
   // Check if query contains accented characters
   let queryHasAccentedChars = false;
   for (let i = 0; i < query.length; i++) {
@@ -593,27 +618,73 @@ function performSingleKeywordFuzzySearch(
     }
   }
 
-  // Get accented characters from query for exact matching
-  const queryAccentedChars = getQueryAccentedChars(query);
-
   // Expand query to handle accented characters (e.g., 'ä' → ['a', 'ae'])
   const expandedQueries = expandQueryForAccentedChars(query);
 
+  // Fast path: if only one expanded query and no accented chars in query, use simple search
+  if (expandedQueries.length === 1 && !queryHasAccentedChars) {
+    const normalizedQuery = normalizeText(expandedQueries[0]).normalizedText;
+    const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+
+    // Expand matches to include adjacent characters that refer to the same original range
+    const expandedNormalizedMatches = expandMatchesToSameRange(
+      normalizedMatches,
+      normalizedText,
+      textMapping
+    );
+
+    // Convert normalized matches to original virtual text positions
+    const allMatches: VirtualMatch[] = [];
+    for (const normalizedMatch of expandedNormalizedMatches) {
+      const originalMatch = convertNormalizedMatchToOriginal(normalizedMatch, textMapping);
+      if (originalMatch) {
+        allMatches.push(originalMatch);
+      }
+    }
+
+    return mergeAdjacentMatchesWithSameRange(allMatches, textMapping);
+  }
+
+  // Pre-compute query normalized result and accented chars once to avoid redundant calculations
+  const queryNormalizedResult = queryHasAccentedChars ? normalizeText(query) : null;
+  const queryAccentedChars = queryHasAccentedChars && queryNormalizedResult
+    ? getQueryAccentedChars(query, queryNormalizedResult)
+    : new Map<number, string>();
+
+  // Pre-compute original character map for faster lookups
+  const originalCharMap = originalText ? buildOriginalCharMap(textMapping, originalText) : new Map<number, string>();
+
+  // Pre-compute normalized results for expanded queries to avoid redundant calculations
+  const expandedQueryResults = expandedQueries.map((expandedQuery) => {
+    const normalizedResult = normalizeText(expandedQuery);
+    return {
+      normalizedQuery: normalizedResult.normalizedText,
+    };
+  });
+
   // Search with each expanded query pattern
   const allMatches: VirtualMatch[] = [];
-  for (const expandedQuery of expandedQueries) {
-    const normalizedQuery = normalizeText(expandedQuery).normalizedText;
+  for (const { normalizedQuery } of expandedQueryResults) {
     const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+
+    // Early return if no matches found
+    if (normalizedMatches.length === 0) {
+      continue;
+    }
 
     // Filter matches: if query has accented chars, only match positions where original text has the same accented chars
     const filteredMatches = filterMatchesByAccentedChars(
       normalizedMatches,
-      textMapping,
-      originalText,
+      originalCharMap,
       queryHasAccentedChars,
       queryAccentedChars,
       normalizedQuery
     );
+
+    // Early return if no filtered matches
+    if (filteredMatches.length === 0) {
+      continue;
+    }
 
     // Expand matches to include adjacent characters that refer to the same original range
     const expandedNormalizedMatches = expandMatchesToSameRange(
