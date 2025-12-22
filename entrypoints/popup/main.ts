@@ -68,7 +68,7 @@ function loadSettings(): void {
       defaultResultsList: false,
     },
     (items) => {
-      const settings = items as Settings;
+      const settings = items as unknown as Settings;
       regexMode.checked = settings.defaultRegex;
       caseSensitiveMode.checked = settings.defaultCaseSensitive ?? false;
       fuzzyMode.checked = settings.defaultFuzzy ?? false;
@@ -717,7 +717,7 @@ async function restoreSearchState(): Promise<void> {
 
         // Restore results list mode from settings
         chrome.storage.sync.get({ defaultResultsList: false }, (items) => {
-          const settings = items as Settings;
+          const settings = items as unknown as Settings;
           resultsListMode.checked = settings.defaultResultsList ?? false;
 
           // Update UI visibility

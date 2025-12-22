@@ -58,7 +58,7 @@ export async function handleSearch(
           fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE,
         },
         (items) => {
-          resolve(items as Settings);
+          resolve(items as unknown as Settings);
         }
       );
     });
@@ -136,7 +136,7 @@ export async function handleSearch(
             fuzzySearchMaxDistance: FUZZY_SEARCH_MAX_DISTANCE,
           },
           (items) => {
-            const settings = items as Settings;
+            const settings = items as unknown as Settings;
             const multiplier = settings.fuzzySearchBaseMultiplier ?? FUZZY_SEARCH_BASE_MULTIPLIER;
             const minDist = settings.fuzzySearchMinDistance ?? FUZZY_SEARCH_MIN_DISTANCE;
             const maxDist = settings.fuzzySearchMaxDistance ?? FUZZY_SEARCH_MAX_DISTANCE;
