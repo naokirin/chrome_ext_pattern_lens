@@ -85,6 +85,16 @@
     "message": "ページに接続できませんでした",
     "description": "ページ接続失敗時のエラーメッセージ"
   },
+  "popup_error_contentScriptInjection": {
+    "message": "コンテンツスクリプトの読み込みに失敗しました: $ERROR$",
+    "description": "コンテンツスクリプト注入失敗時のエラーメッセージ",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Failed to inject content script"
+      }
+    }
+  },
   "popup_error_searchFailed": {
     "message": "検索に失敗しました",
     "description": "検索失敗時のエラーメッセージ"

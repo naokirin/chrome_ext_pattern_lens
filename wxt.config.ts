@@ -10,7 +10,7 @@ export default defineConfig({
       version: '1.1.0',
       description: '__MSG_extDescription__',
       default_locale: 'ja',
-      permissions: ['storage', 'activeTab'],
+      permissions: ['storage', 'activeTab', 'scripting'],
       icons: {
         16: '/icons/icon16.png',
         48: '/icons/icon48.png',

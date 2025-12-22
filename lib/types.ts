@@ -37,6 +37,10 @@ export interface OpenPopupMessage {
   action: 'open-popup';
 }
 
+export interface PingMessage {
+  action: 'ping';
+}
+
 export type Message =
   | SearchMessage
   | ClearMessage
@@ -44,7 +48,8 @@ export type Message =
   | GetStateMessage
   | GetResultsListMessage
   | JumpToMatchMessage
-  | OpenPopupMessage;
+  | OpenPopupMessage
+  | PingMessage;
 
 // Response types
 export interface SearchResponse {

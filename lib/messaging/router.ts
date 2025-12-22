@@ -62,11 +62,21 @@ export async function routeMessage(
         const result = handleJumpToMatch(message as JumpToMatchMessage, context);
         return result;
       }
+      case 'ping': {
+        // Ping handler - just return success to confirm content script is loaded
+        return { success: true };
+      }
+      case 'open-popup': {
+        // This action is handled by background script, not content script
+        // Return undefined to indicate this action is not handled here
+        return undefined;
+      }
       default: {
         // Exhaustiveness check - TypeScript will error if a new action is added but not handled
-        const _exhaustive: never = message;
+        // This should never be reached if all message types are handled above
+        const _exhaustive: never = message as never;
         handleError(
-          new Error(`Unknown action: ${(_exhaustive as Message).action}`),
+          new Error(`Unknown action: ${(message as Message).action}`),
           'routeMessage: Unknown action',
           undefined
         );

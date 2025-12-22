@@ -22,7 +22,12 @@ import type {
 import { getRequiredElementById } from '~/lib/utils/domUtils';
 import { handleError } from '~/lib/utils/errorHandler';
 import { getMessage, initializeI18n } from '~/lib/utils/i18n';
-import { getActiveTab, isSpecialPage } from '~/lib/utils/tabUtils';
+import {
+  getActiveTab,
+  injectContentScript,
+  isContentScriptLoaded,
+  isSpecialPage,
+} from '~/lib/utils/tabUtils';
 
 // DOM elements - these are required elements in popup.html
 const searchInput = getRequiredElementById<HTMLInputElement>('searchInput');
@@ -203,6 +208,44 @@ function hideNavigation(): void {
   navigation.style.display = 'none';
 }
 
+/**
+ * Ensure content script is loaded in the tab, inject if necessary
+ * @param tabId - The tab ID to check and inject
+ * @returns Promise that resolves to true if content script is ready, false on error
+ */
+async function ensureContentScriptLoaded(tabId: number): Promise<boolean> {
+  try {
+    // Check if content script is already loaded
+    const isLoaded = await isContentScriptLoaded(tabId);
+    if (isLoaded) {
+      return true;
+    }
+
+    // Content script is not loaded, try to inject it
+    try {
+      await injectContentScript(tabId);
+      // Wait a bit for the script to initialize
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Verify it's loaded now
+      const isLoadedAfterInjection = await isContentScriptLoaded(tabId);
+      return isLoadedAfterInjection;
+    } catch (injectionError) {
+      // Injection failed, show error message
+      const error =
+        injectionError instanceof Error ? injectionError.message : String(injectionError);
+      showResult(getMessage('popup_error_contentScriptInjection', error), true);
+      return false;
+    }
+  } catch (error) {
+    handleError(
+      error,
+      'ensureContentScriptLoaded: Failed to check/inject content script',
+      undefined
+    );
+    return false;
+  }
+}
+
 // Send search request to content script
 async function performSearch(): Promise<void> {
   const query = searchInput.value.trim();
@@ -226,6 +269,12 @@ async function performSearch(): Promise<void> {
     // Check if the page is a special page where content scripts cannot run
     if (isSpecialPage(tab.url)) {
       showResult(getMessage('popup_error_specialPage'), true);
+      return;
+    }
+
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
       return;
     }
 
@@ -310,6 +359,12 @@ async function clearHighlights(): Promise<void> {
       return;
     }
 
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
+      return;
+    }
+
     const message: ClearMessage = { action: 'clear' };
     chrome.tabs.sendMessage(tab.id, message, (response: Response | undefined) => {
       if (chrome.runtime.lastError) {
@@ -348,6 +403,12 @@ async function navigateNext(): Promise<void> {
       return;
     }
 
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
+      return;
+    }
+
     const message: NavigateMessage = { action: 'navigate-next' };
     chrome.tabs.sendMessage(tab.id, message, (response: SearchResponse | undefined) => {
       if (chrome.runtime.lastError) {
@@ -379,6 +440,12 @@ async function navigatePrev(): Promise<void> {
     const tab = await getActiveTab();
 
     if (!tab) {
+      return;
+    }
+
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
       return;
     }
 
@@ -546,6 +613,12 @@ async function fetchAndDisplayResultsList(): Promise<void> {
       return;
     }
 
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
+      return;
+    }
+
     const message: GetResultsListMessage = {
       action: 'get-results-list',
       contextLength: contextLength,
@@ -646,6 +719,12 @@ async function jumpToMatch(index: number): Promise<void> {
       return;
     }
 
+    // Ensure content script is loaded
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
+      return;
+    }
+
     const message: JumpToMatchMessage = {
       action: 'jump-to-match',
       index,
@@ -693,6 +772,13 @@ async function restoreSearchState(): Promise<void> {
 
     // Check if the page is a special page
     if (isSpecialPage(tab.url)) {
+      return;
+    }
+
+    // Ensure content script is loaded (silently fail if not available)
+    const isReady = await ensureContentScriptLoaded(tab.id);
+    if (!isReady) {
+      // Content script not available, silently return (non-critical)
       return;
     }
 

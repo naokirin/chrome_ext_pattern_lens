@@ -85,6 +85,16 @@
     "message": "Could not connect to page",
     "description": "Error message when connection to page fails"
   },
+  "popup_error_contentScriptInjection": {
+    "message": "Failed to load content script: $ERROR$",
+    "description": "Error message when content script injection fails",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Failed to inject content script"
+      }
+    }
+  },
   "popup_error_searchFailed": {
     "message": "Search failed",
     "description": "Error message when search fails"

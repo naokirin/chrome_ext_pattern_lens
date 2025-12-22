@@ -24,3 +24,43 @@ export async function getActiveTab(): Promise<(chrome.tabs.Tab & { id: number })
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab?.id ? (tab as chrome.tabs.Tab & { id: number }) : null;
 }
+
+/**
+ * Check if content script is loaded by sending a ping message
+ * @param tabId - The tab ID to check
+ * @returns Promise that resolves to true if content script is loaded, false otherwise
+ */
+export function isContentScriptLoaded(tabId: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, { action: 'ping' }, (_response) => {
+      if (chrome.runtime.lastError) {
+        // Content script is not loaded
+        resolve(false);
+      } else {
+        // Content script is loaded
+        resolve(true);
+      }
+    });
+  });
+}
+
+/**
+ * Inject content script into a tab
+ * @param tabId - The tab ID to inject the script into
+ * @returns Promise that resolves when injection is complete
+ */
+export async function injectContentScript(tabId: number): Promise<void> {
+  try {
+    // WXT builds entrypoints/content.ts to content-scripts/content.js
+    // Use chrome.scripting.executeScript to inject the content script
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content-scripts/content.js'],
+    });
+  } catch (error) {
+    // If injection fails, throw the error
+    throw new Error(
+      `Failed to inject content script: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
