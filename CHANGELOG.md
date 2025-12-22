@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-12-XX
+
+### 追加 (Added)
+
+#### 国際化対応
+- **英語対応**: 英語と日本語の2言語に対応（ブラウザの言語設定に基づいて自動切り替え）
+
+#### 検索機能
+- **Ctrl+Fオーバーライド機能**: ブラウザの標準検索（Ctrl+F）を拡張機能の検索に置き換える機能（デフォルトOFF、設定ページで有効化可能）
+- **あいまい検索の機能拡張**:
+  - アクセント付き文字と代用表記に対応（例: `é`と`e`、`à`と`a`の相互マッチ）
+  - アクセント付き文字の双方向マッチングと大文字小文字の区別なし検索を実装
+  - ひらがな・カタカナと大文字小文字の相互一致を追加
+  - あいまい検索の範囲設定を追加（設定ページで調整可能）
+
+#### 設定機能
+- **独立した設定ページ**: オプションページを独立した設定ページ（settings）に変更
+- **デフォルト検索オプションの設定**: 設定ページでデフォルトの検索オプションを設定可能
+- **あいまい検索の仕様説明**: 設定ページにあいまい検索の仕様と排他制御の説明を追加
+
+### 修正 (Fixed)
+
+- **検索結果一覧のON/OFF状態保持**: 検索結果一覧のON/OFF状態を保持するように修正
+- **lintエラーの修正**: Biomeのlintエラーを修正
+
+### 改善 (Improved)
+
+- **アクセント付き文字検索のパフォーマンス**: アクセント付き文字検索のパフォーマンスを最適化
+- **設定画面のUI改善**:
+  - 自動保存表示をビューポート下部に固定表示
+  - labelと仕様説明文のフォントサイズを大きくする
+- **UX改善**: chipクリック時にテキスト入力欄にフォーカスを戻すように修正
+
+### テスト
+
+- **テストケースの追加**: 優先度の高いテストケースを追加
+- **テストケースの拡充**: 優先度: 中・低のテストケースを実装
+- **あいまい検索のテスト**: あいまい検索の正規化パターンのテストケースを追加
+
+---
+
 ## [1.0.0] - 2024-12-XX
 
 ### 追加 (Added)
@@ -112,4 +153,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.0
 [1.0.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.0.0
