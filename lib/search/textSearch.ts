@@ -373,7 +373,10 @@ function expandMatchesToSameRange(
  */
 function getQueryAccentedChars(
   query: string,
-  normalizedResult: { normalizedText: string; mapping: { ranges: Array<{ start: number; end: number }> } }
+  normalizedResult: {
+    normalizedText: string;
+    mapping: { ranges: Array<{ start: number; end: number }> };
+  }
 ): Map<number, string> {
   const accentedChars = new Map<number, string>();
 
@@ -582,12 +585,14 @@ function filterMatchesByAccentedChars(
       }
 
       const matchPos = match.start + queryPos;
-      if (!doesOriginalCharMatchQueryAccentedChar(
-        matchPos,
-        queryPos,
-        originalCharMap,
-        queryAccentedChars
-      )) {
+      if (
+        !doesOriginalCharMatchQueryAccentedChar(
+          matchPos,
+          queryPos,
+          originalCharMap,
+          queryAccentedChars
+        )
+      ) {
         return false;
       }
     }
@@ -647,12 +652,15 @@ function performSingleKeywordFuzzySearch(
 
   // Pre-compute query normalized result and accented chars once to avoid redundant calculations
   const queryNormalizedResult = queryHasAccentedChars ? normalizeText(query) : null;
-  const queryAccentedChars = queryHasAccentedChars && queryNormalizedResult
-    ? getQueryAccentedChars(query, queryNormalizedResult)
-    : new Map<number, string>();
+  const queryAccentedChars =
+    queryHasAccentedChars && queryNormalizedResult
+      ? getQueryAccentedChars(query, queryNormalizedResult)
+      : new Map<number, string>();
 
   // Pre-compute original character map for faster lookups
-  const originalCharMap = originalText ? buildOriginalCharMap(textMapping, originalText) : new Map<number, string>();
+  const originalCharMap = originalText
+    ? buildOriginalCharMap(textMapping, originalText)
+    : new Map<number, string>();
 
   // Pre-compute normalized results for expanded queries to avoid redundant calculations
   const expandedQueryResults = expandedQueries.map((expandedQuery) => {
