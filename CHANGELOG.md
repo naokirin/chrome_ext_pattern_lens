@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2024-12-XX
+
+### 修正 (Fixed)
+
+- **インストール時点で既に開いているページでの動作**: 拡張機能をインストールした時点で既に開いているページでも、ページをリロードせずにcontent scriptを自動注入して動作するように修正
+  - `scripting`権限を追加してcontent scriptの動的注入を可能に
+  - content scriptの存在確認と自動注入機能を実装
+  - すべてのメッセージ送信前にcontent scriptの読み込みを確認
+  - WXTのビルド後の正しいファイルパス（`content-scripts/content.js`）を使用
+  - エラーメッセージの国際化対応を追加
+
 ## [1.1.0] - 2024-12-XX
 
 ### 追加 (Added)
@@ -153,5 +164,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.1
 [1.1.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.0
 [1.0.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.0.0
