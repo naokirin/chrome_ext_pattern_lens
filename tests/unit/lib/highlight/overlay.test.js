@@ -79,10 +79,10 @@ describe('overlay', () => {
 
       // padding (2px) を考慮
       // position: fixed を使用するため、スクロール位置は加算しない
-      expect(Number.parseInt(overlay.style.left)).toBe(10 - 2);
-      expect(Number.parseInt(overlay.style.top)).toBe(20 - 2);
-      expect(Number.parseInt(overlay.style.width)).toBe(100 + 4); // padding * 2
-      expect(Number.parseInt(overlay.style.height)).toBe(30 + 4);
+      expect(Number.parseInt(overlay.style.left, 10)).toBe(10 - 2);
+      expect(Number.parseInt(overlay.style.top, 10)).toBe(20 - 2);
+      expect(Number.parseInt(overlay.style.width, 10)).toBe(100 + 4); // padding * 2
+      expect(Number.parseInt(overlay.style.height, 10)).toBe(30 + 4);
     });
 
     it('現在のマッチは異なる色で表示される', () => {

@@ -6,7 +6,7 @@
  * 2. updateOverlayPositions が呼ばれ、オーバーレイの位置が正しく更新されることを確認
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createChromeMock } from '../helpers/chrome-mock.js';
 import { cleanupDOM } from '../helpers/dom-helpers.js';
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [".output/**", ".wxt/**", "node_modules/**", "dist/**", "build/**", "coverage/**"]
+    "includes": [
+      "**",
+      "!**/.output",
+      "!**/.wxt",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/coverage"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -17,9 +25,7 @@
     "lineWidth": 100,
     "formatWithErrors": false
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -47,7 +53,7 @@
   },
   "overrides": [
     {
-      "include": ["tests/**/*"],
+      "includes": ["**/tests/**/*"],
       "linter": {
         "rules": {
           "correctness": {

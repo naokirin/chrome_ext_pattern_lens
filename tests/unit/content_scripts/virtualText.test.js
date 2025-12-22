@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanupDOM, createDOMFromHTML, visualizeBoundaries } from '../../helpers/dom-helpers.js';
+import { cleanupDOM, visualizeBoundaries } from '../../helpers/dom-helpers.js';
 
 // Since content_scripts/main.js is not a module, we need to test it by loading it in the global scope
 // For now, we'll manually extract and test the key functions

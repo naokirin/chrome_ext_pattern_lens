@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  ErrorSeverity,
-  PatternLensError,
   createHighSeverityError,
   createLowSeverityError,
   createMediumSeverityError,
+  ErrorSeverity,
   handleError,
+  PatternLensError,
   safeExecute,
   safeExecuteAsync,
 } from '~/lib/utils/errorHandler';

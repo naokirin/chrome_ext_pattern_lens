@@ -9,7 +9,6 @@ import type { SearchStateManager } from '~/lib/state/searchState';
  * Text search functionality using virtual text layer
  */
 import type { CharMapEntry, SearchResult, VirtualMatch } from '~/lib/types';
-import { updateMinimap } from '../highlight/minimap';
 import {
   createOverlay,
   initializeOverlayContainer,

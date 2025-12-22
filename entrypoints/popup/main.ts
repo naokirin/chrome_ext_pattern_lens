@@ -1,9 +1,9 @@
-import { SEARCH_DEBOUNCE_DELAY_MS } from '~/lib/constants';
 // Import shared type definitions
 import {
   DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
   MAX_RESULTS_LIST_CONTEXT_LENGTH,
   MIN_RESULTS_LIST_CONTEXT_LENGTH,
+  SEARCH_DEBOUNCE_DELAY_MS,
 } from '~/lib/constants';
 import type {
   ClearMessage,

@@ -133,7 +133,9 @@ describe('navigator', () => {
       document.body.innerHTML =
         '<div class="test">1</div><div class="test">2</div><div class="test">3</div>';
       const elements = document.querySelectorAll('.test');
-      elements.forEach((el) => stateManager.addElement(el));
+      for (const el of elements) {
+        stateManager.addElement(el);
+      }
 
       const result1 = navigateToMatch(1, stateManager);
       expect(result1.currentIndex).toBe(1);

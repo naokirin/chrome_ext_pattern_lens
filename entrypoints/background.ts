@@ -1,5 +1,3 @@
-import type { OpenPopupMessage } from '~/lib/types';
-
 // WXT Background Script
 export default defineBackground(() => {
   // Handle messages from content script
