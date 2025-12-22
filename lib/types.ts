@@ -92,6 +92,7 @@ export interface Settings {
   defaultElementSearch: boolean;
   defaultElementSearchMode?: 'css' | 'xpath'; // 要素検索のデフォルトモード（CSSセレクタ or XPath）
   resultsListContextLength?: number;
+  defaultResultsList?: boolean; // 検索結果一覧をデフォルトで有効化（デフォルト: false）
   autoUpdateSearch?: boolean; // 動的要素の自動検索更新を有効化
   overrideCtrlF?: boolean; // Ctrl+Fで拡張機能を開く（デフォルト: false）
   fuzzySearchBaseMultiplier?: number; // あいまい検索の範囲計算倍率（デフォルト: 6）

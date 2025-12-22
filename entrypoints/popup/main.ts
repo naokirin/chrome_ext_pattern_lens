@@ -65,6 +65,7 @@ function loadSettings(): void {
       defaultElementSearch: false,
       defaultElementSearchMode: 'css',
       resultsListContextLength: DEFAULT_RESULTS_LIST_CONTEXT_LENGTH,
+      defaultResultsList: false,
     },
     (items) => {
       const settings = items as Settings;
@@ -72,6 +73,7 @@ function loadSettings(): void {
       caseSensitiveMode.checked = settings.defaultCaseSensitive ?? false;
       fuzzyMode.checked = settings.defaultFuzzy ?? false;
       elementMode.checked = settings.defaultElementSearch;
+      resultsListMode.checked = settings.defaultResultsList ?? false;
 
       // Load element search mode and validate
       const savedElementSearchMode = settings.defaultElementSearchMode ?? 'css';
@@ -457,6 +459,8 @@ caseSensitiveMode.addEventListener('change', handleCheckboxChange);
 fuzzyMode.addEventListener('change', handleCheckboxChange);
 resultsListMode.addEventListener('change', () => {
   updateSearchModeVisibility();
+  // Save results list mode state
+  chrome.storage.sync.set({ defaultResultsList: resultsListMode.checked });
   if (resultsListMode.checked) {
     fetchAndDisplayResultsList();
   } else {
@@ -711,19 +715,25 @@ async function restoreSearchState(): Promise<void> {
         elementMode.checked = state.useElementSearch;
         searchMode.value = state.elementSearchMode;
 
-        // Update UI visibility
-        updateSearchModeVisibility();
+        // Restore results list mode from settings
+        chrome.storage.sync.get({ defaultResultsList: false }, (items) => {
+          const settings = items as Settings;
+          resultsListMode.checked = settings.defaultResultsList ?? false;
 
-        // Show results and navigation if there are matches
-        // 検索状態復元時も件数メッセージは表示せず、ナビゲーションのみ更新する
-        const totalMatches = response.totalMatches ?? 0;
-        const currentIndex = response.currentIndex ?? 0;
-        updateNavigation(currentIndex, totalMatches);
+          // Update UI visibility
+          updateSearchModeVisibility();
 
-        // 検索結果一覧を復元
-        if (resultsListMode.checked) {
-          fetchAndDisplayResultsList();
-        }
+          // Show results and navigation if there are matches
+          // 検索状態復元時も件数メッセージは表示せず、ナビゲーションのみ更新する
+          const totalMatches = response.totalMatches ?? 0;
+          const currentIndex = response.currentIndex ?? 0;
+          updateNavigation(currentIndex, totalMatches);
+
+          // 検索結果一覧を復元
+          if (resultsListMode.checked) {
+            fetchAndDisplayResultsList();
+          }
+        });
 
         _lastSearchQuery = state.query;
       }
