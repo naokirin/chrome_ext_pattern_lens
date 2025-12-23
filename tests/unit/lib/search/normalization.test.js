@@ -49,6 +49,91 @@ describe('normalization', () => {
       expect(result.mapping.ranges.length).toBe(3);
     });
 
+    describe('上付き・下付き・丸数字の正規化', () => {
+      describe('上付き数字', () => {
+        it('¹ → 1', () => {
+          const result = normalizeText('¹');
+          expect(result.normalizedText).toBe('1');
+          expect(result.mapping.ranges.length).toBe(1);
+        });
+
+        it('² → 2', () => {
+          const result = normalizeText('²');
+          expect(result.normalizedText).toBe('2');
+        });
+
+        it('³ → 3', () => {
+          const result = normalizeText('³');
+          expect(result.normalizedText).toBe('3');
+        });
+
+        it('⁰-⁹ → 0-9', () => {
+          const result = normalizeText('⁰¹²³⁴⁵⁶⁷⁸⁹');
+          expect(result.normalizedText).toBe('0123456789');
+          expect(result.mapping.ranges.length).toBe(10);
+        });
+
+        it('上付き数字を含む文字列', () => {
+          const result = normalizeText('x² + y² = z²');
+          expect(result.normalizedText).toBe('x2 + y2 = z2');
+        });
+      });
+
+      describe('下付き数字', () => {
+        it('₀-₉ → 0-9', () => {
+          const result = normalizeText('₀₁₂₃₄₅₆₇₈₉');
+          expect(result.normalizedText).toBe('0123456789');
+          expect(result.mapping.ranges.length).toBe(10);
+        });
+
+        it('下付き数字を含む文字列', () => {
+          const result = normalizeText('H₂O');
+          expect(result.normalizedText).toBe('h2o'); // 大文字小文字の正規化により小文字になる
+        });
+      });
+
+      describe('丸数字', () => {
+        it('①-⑳ → 1-20', () => {
+          const result = normalizeText('①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳');
+          expect(result.normalizedText).toBe('1234567891011121314151617181920');
+          // ①-⑨は1文字、⑩-⑳は2文字になるので、マッピング範囲は9+11*2=31個
+          expect(result.mapping.ranges.length).toBe(31);
+        });
+
+        it('⓫-⓴ → 11-20', () => {
+          const result = normalizeText('⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴');
+          expect(result.normalizedText).toBe('11121314151617181920');
+        });
+
+        it('⓵-⓿ → 1-10, 0', () => {
+          const result = normalizeText('⓵⓶⓷⓸⓹⓺⓻⓼⓽⓾⓿');
+          expect(result.normalizedText).toBe('123456789100');
+        });
+
+        it('丸数字を含む文字列', () => {
+          const result = normalizeText('第①章');
+          expect(result.normalizedText).toBe('第1章');
+        });
+      });
+
+      describe('混在パターン', () => {
+        it('上付き・下付き・丸数字の混在', () => {
+          const result = normalizeText('¹₂③');
+          expect(result.normalizedText).toBe('123');
+        });
+
+        it('通常数字と特殊数字の混在', () => {
+          const result = normalizeText('1¹2²3³');
+          expect(result.normalizedText).toBe('112233');
+        });
+
+        it('全角数字と特殊数字の混在', () => {
+          const result = normalizeText('１¹２²３³');
+          expect(result.normalizedText).toBe('112233');
+        });
+      });
+    });
+
     it('大文字小文字の正規化', () => {
       const result = normalizeText('ABC');
       expect(result.normalizedText).toBe('abc');

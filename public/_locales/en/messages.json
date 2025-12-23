@@ -229,6 +229,10 @@
     "message": "Substitution spelling support: Supports substitution spellings for German and other languages (e.g., ß → ss, ä → ae, ö → oe, ü → ue, œ → oe)",
     "description": "Description of fuzzy search substitution spelling support"
   },
+  "options_fuzzySearchHelp_specialNumbers": {
+    "message": "Superscript, subscript, and circled number normalization: Treats superscript numbers (¹, ², ³, ⁰-⁹), subscript numbers (₀-₉), and circled numbers (①-⑳, ⓫-⓴, ⓵-⓿) as regular numbers (e.g., treats ¹, ₁, ① as 1)",
+    "description": "Description of fuzzy search superscript, subscript, and circled number normalization"
+  },
   "options_fuzzySearchHelp_note": {
     "message": "Note: Fuzzy search is automatically disabled when element search mode is ON",
     "description": "Note about fuzzy search constraints"

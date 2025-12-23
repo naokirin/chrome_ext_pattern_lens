@@ -281,6 +281,52 @@ function normalizeFullWidthNumbers(char: string): string | null {
 }
 
 /**
+ * Normalize superscript, subscript, and circled numbers to regular numbers
+ * Converts:
+ * - Superscript numbers (¹, ², ³, ⁰-⁹) → 1, 2, 3, 0-9
+ * - Subscript numbers (₁, ₂, ₃, ₀-₉) → 1, 2, 3, 0-9
+ * - Circled numbers (①-⑳, ⓫-⓴, ⓵-⓿) → 1-20, 11-20, 1-10
+ */
+function normalizeSpecialNumbers(char: string): string | null {
+  const codePoint = char.charCodeAt(0);
+
+  // Superscript numbers: U+2070-U+2079 (⁰-⁹), U+00B9 (¹), U+00B2 (²), U+00B3 (³)
+  if (codePoint >= 0x2070 && codePoint <= 0x2079) {
+    // ⁰-⁹ → 0-9
+    return String.fromCharCode(codePoint - 0x2070 + 0x30);
+  }
+  if (codePoint === 0x00b9) return '1'; // ¹ → 1
+  if (codePoint === 0x00b2) return '2'; // ² → 2
+  if (codePoint === 0x00b3) return '3'; // ³ → 3
+
+  // Subscript numbers: U+2080-U+2089 (₀-₉)
+  if (codePoint >= 0x2080 && codePoint <= 0x2089) {
+    // ₀-₉ → 0-9
+    return String.fromCharCode(codePoint - 0x2080 + 0x30);
+  }
+
+  // Circled numbers: U+2460-U+2473 (①-⑳), U+24EB-U+24F4 (⓫-⓴), U+24F5-U+24FF (⓵-⓿)
+  if (codePoint >= 0x2460 && codePoint <= 0x2473) {
+    // ①-⑳ → 1-20
+    const num = codePoint - 0x2460 + 1;
+    return num.toString();
+  }
+  if (codePoint >= 0x24eb && codePoint <= 0x24f4) {
+    // ⓫-⓴ → 11-20
+    const num = codePoint - 0x24eb + 11;
+    return num.toString();
+  }
+  if (codePoint >= 0x24f5 && codePoint <= 0x24ff) {
+    // ⓵-⓿ → 1-10 (but ⓿ is 0)
+    if (codePoint === 0x24ff) return '0'; // ⓿ → 0
+    const num = codePoint - 0x24f5 + 1;
+    return num.toString();
+  }
+
+  return null;
+}
+
+/**
  * Normalize katakana to hiragana
  * Converts full-width katakana (U+30A1-U+30F6) to hiragana (U+3041-U+3096)
  * Also converts half-width katakana (U+FF66-U+FF9F) to hiragana
@@ -582,6 +628,11 @@ function normalizeSingleChar(char: string): string {
   const normalizedNumber = normalizeFullWidthNumbers(char);
   if (normalizedNumber !== null) {
     return normalizedNumber;
+  }
+
+  const normalizedSpecialNumber = normalizeSpecialNumbers(char);
+  if (normalizedSpecialNumber !== null) {
+    return normalizedSpecialNumber;
   }
 
   // Convert katakana to hiragana (for fuzzy matching between hiragana and katakana)
