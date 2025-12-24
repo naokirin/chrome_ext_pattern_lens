@@ -49,6 +49,129 @@ describe('normalization', () => {
       expect(result.mapping.ranges.length).toBe(3);
     });
 
+    describe('数字の区切り文字と小数点の正規化', () => {
+      it('カンマ区切りの数字（1,000 → 1000）', () => {
+        const result = normalizeText('1,000');
+        expect(result.normalizedText).toBe('1000');
+        // 1(1) + ,(削除) + 0(1) + 0(1) + 0(1) = 4文字
+        expect(result.mapping.ranges.length).toBe(4);
+      });
+
+      it('ピリオド区切りの数字（1.000 → 1000）', () => {
+        const result = normalizeText('1.000');
+        expect(result.normalizedText).toBe('1000');
+        expect(result.mapping.ranges.length).toBe(4);
+      });
+
+      it('小数点を含む数字（1,234.56 → 1234.56）', () => {
+        const result = normalizeText('1,234.56');
+        expect(result.normalizedText).toBe('1234.56');
+        // 1(1) + ,(削除) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 8文字
+        expect(result.mapping.ranges.length).toBe(8);
+      });
+
+      it('ヨーロッパ形式の小数点（1.234,56 → 1234.56）', () => {
+        const result = normalizeText('1.234,56');
+        expect(result.normalizedText).toBe('1234.56');
+        // 1(1) + .(削除) + 2(1) + 3(1) + 4(1) + ,(小数点として.) + 5(1) + 6(1) = 8文字
+        expect(result.mapping.ranges.length).toBe(8);
+      });
+
+      it('複数の区切り文字（1,234,567 → 1234567）', () => {
+        const result = normalizeText('1,234,567');
+        expect(result.normalizedText).toBe('1234567');
+        expect(result.mapping.ranges.length).toBe(7);
+      });
+
+      it('小数点のみ（123.45 → 123.45）', () => {
+        const result = normalizeText('123.45');
+        expect(result.normalizedText).toBe('123.45');
+        expect(result.mapping.ranges.length).toBe(6);
+      });
+
+      it('カンマのみ（123,45 → 123.45、小数点として扱う）', () => {
+        const result = normalizeText('123,45');
+        expect(result.normalizedText).toBe('123.45');
+        expect(result.mapping.ranges.length).toBe(6);
+      });
+
+      it('全角カンマ区切りの数字（１，０００ → 1000）', () => {
+        const result = normalizeText('１，０００');
+        expect(result.normalizedText).toBe('1000');
+        expect(result.mapping.ranges.length).toBe(4);
+      });
+
+      it('全角ピリオド区切りの数字（１．０００ → 1000）', () => {
+        const result = normalizeText('１．０００');
+        expect(result.normalizedText).toBe('1000');
+        expect(result.mapping.ranges.length).toBe(4);
+      });
+
+      it('全角小数点を含む数字（１，２３４．５６ → 1234.56）', () => {
+        const result = normalizeText('１，２３４．５６');
+        expect(result.normalizedText).toBe('1234.56');
+        expect(result.mapping.ranges.length).toBe(8);
+      });
+
+      it('数字と文字の混在（価格1,000円）', () => {
+        const result = normalizeText('価格1,000円');
+        expect(result.normalizedText).toBe('価格1000円');
+        // 価(1) + 格(1) + 1(1) + ,(削除) + 0(1) + 0(1) + 0(1) + 円(1) = 8文字
+        expect(result.mapping.ranges.length).toBe(8);
+      });
+
+      it('複数の数字文字列（1,000と2,000）', () => {
+        const result = normalizeText('1,000と2,000');
+        expect(result.normalizedText).toBe('1000と2000');
+        expect(result.mapping.ranges.length).toBe(9);
+      });
+
+      it('小数点が最後の区切り文字でない場合（1,234.567.89 → 1234567.89）', () => {
+        const result = normalizeText('1,234.567.89');
+        // 最後の区切り文字（.89）が小数点として扱われる
+        expect(result.normalizedText).toBe('1234567.89');
+        expect(result.mapping.ranges.length).toBe(10);
+      });
+
+      it('小数点が最後の区切り文字でない場合（1.234,567,89 → 1234567.89）', () => {
+        const result = normalizeText('1.234,567,89');
+        // 最後の区切り文字（,89）が小数点として扱われる
+        expect(result.normalizedText).toBe('1234567.89');
+        expect(result.mapping.ranges.length).toBe(10);
+      });
+
+      it('区切り文字のみの数字（1,2,3 → 123）', () => {
+        const result = normalizeText('1,2,3');
+        expect(result.normalizedText).toBe('123');
+        expect(result.mapping.ranges.length).toBe(3);
+      });
+
+      it('小数点が1桁の数字の後（1.2 → 1.2）', () => {
+        const result = normalizeText('1.2');
+        expect(result.normalizedText).toBe('1.2');
+        expect(result.mapping.ranges.length).toBe(3);
+      });
+
+      it('小数点が2桁の数字の後（1.23 → 1.23）', () => {
+        const result = normalizeText('1.23');
+        expect(result.normalizedText).toBe('1.23');
+        expect(result.mapping.ranges.length).toBe(4);
+      });
+
+      it('小数点が3桁の数字の後（1.234 → 1.234）', () => {
+        const result = normalizeText('1.234');
+        expect(result.normalizedText).toBe('1.234');
+        expect(result.mapping.ranges.length).toBe(5);
+      });
+
+      it('小数点が4桁以上の数字の後（1.2345 → 12345、区切り文字として扱う）', () => {
+        const result = normalizeText('1.2345');
+        // 最後の区切り文字の後に4桁あるので、区切り文字として扱われる
+        expect(result.normalizedText).toBe('12345');
+        expect(result.mapping.ranges.length).toBe(5);
+      });
+    });
+
     describe('上付き・下付き・丸数字の正規化', () => {
       describe('上付き数字', () => {
         it('¹ → 1', () => {

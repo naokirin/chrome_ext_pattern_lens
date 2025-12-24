@@ -29,6 +29,247 @@ function processCombinedCharacter(
 }
 
 /**
+ * Check if character is a digit (0-9, full-width, or kanji number)
+ */
+function isDigit(char: string): boolean {
+  // Half-width digits
+  if (char >= '0' && char <= '9') {
+    return true;
+  }
+  // Full-width digits
+  if (char >= '\uFF10' && char <= '\uFF19') {
+    return true;
+  }
+  // Kanji numbers
+  const kanjiNumbers = [
+    '一',
+    '二',
+    '三',
+    '四',
+    '五',
+    '六',
+    '七',
+    '八',
+    '九',
+    '十',
+    '百',
+    '千',
+    '万',
+    '零',
+    '〇',
+  ];
+  if (kanjiNumbers.includes(char)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Check if character is a number separator (comma or period)
+ */
+function isNumberSeparator(char: string): boolean {
+  return char === ',' || char === '.' || char === '，' || char === '。' || char === '．';
+}
+
+/**
+ * Find and normalize a number sequence starting at the given index
+ * Returns the normalized number string and the new index after processing
+ * Normalizes number separators (commas and periods) to allow matching between different formats
+ * Strategy: Remove all separators, but keep the last separator as decimal point if it's followed by 1-3 digits
+ */
+function processNumberSequence(
+  text: string,
+  startIndex: number,
+  normalizedText: string[],
+  ranges: Array<{ start: number; end: number }>
+): number {
+  let i = startIndex;
+  const originalStart = startIndex;
+  const digitsOnly: string[] = [];
+  const separatorPositions: number[] = [];
+  const separatorTypes: Array<'comma' | 'period'> = [];
+
+  // Collect digits and track separator positions and types
+  while (i < text.length) {
+    const char = text[i];
+
+    if (isDigit(char)) {
+      const normalized = normalizeSingleChar(char);
+      digitsOnly.push(normalized);
+      i++;
+    } else if (isNumberSeparator(char)) {
+      separatorPositions.push(digitsOnly.length);
+      // Determine separator type: comma (,) or period (.)
+      const isComma = char === ',' || char === '，';
+      separatorTypes.push(isComma ? 'comma' : 'period');
+      i++;
+    } else {
+      // End of number sequence
+      break;
+    }
+  }
+
+  if (digitsOnly.length === 0) {
+    return startIndex;
+  }
+
+  // Determine if the last separator is a decimal point
+  // Rule: The last separator is a decimal point if:
+  // 1. It's followed by 1-3 digits
+  // 2. AND it's NOT part of a thousands separator pattern
+  // Thousands separator pattern: 3 digits before separator, or consistent 3-digit groups
+  let decimalPointPos = -1;
+  if (separatorPositions.length > 0) {
+    const lastSepPos = separatorPositions[separatorPositions.length - 1];
+    const digitsAfterLastSep = digitsOnly.length - lastSepPos;
+    const digitsBeforeLastSep = lastSepPos;
+
+    // If there are 1-3 digits after the last separator
+    if (digitsAfterLastSep > 0 && digitsAfterLastSep <= 3) {
+      // Check if it's a thousands separator pattern
+      // Pattern 1: Exactly 3 digits after the separator AND (1-3 digits before OR consistent pattern)
+      // Pattern 2: Multiple separators with 3 digits between them (e.g., 1,234,567)
+      let isThousandsSeparator = false;
+
+      // Check separator type to help distinguish between thousands separator and decimal point
+      const lastSepType = separatorTypes[separatorTypes.length - 1];
+
+      if (digitsAfterLastSep === 3) {
+        // Exactly 3 digits after - check if it's part of thousands pattern
+        if (lastSepType === 'period' && digitsBeforeLastSep < 3) {
+          // Period with less than 3 digits before and 3 digits after - likely decimal point (e.g., 1.234)
+          // Exception: if digitsBeforeLastSep === 1 and all digits after are 0, it might be thousands separator (e.g., 1.000)
+          // Check if all digits after separator are 0
+          const allZeros = digitsOnly.slice(lastSepPos, lastSepPos + 3).every((d) => d === '0');
+          if (allZeros && digitsBeforeLastSep === 1) {
+            // 1.000 - likely thousands separator
+            isThousandsSeparator = true;
+          } else {
+            // 1.234 - likely decimal point
+            isThousandsSeparator = false;
+          }
+        } else if (digitsBeforeLastSep <= 3) {
+          // 1-3 digits before and 3 digits after - likely thousands separator (e.g., 1,000 or 12,000)
+          isThousandsSeparator = true;
+        } else if (separatorPositions.length > 1) {
+          // Multiple separators - check if pattern is consistent
+          // If previous separators also have 3 digits after them, it's thousands separator
+          const prevSepPos = separatorPositions[separatorPositions.length - 2];
+          const digitsBetween = lastSepPos - prevSepPos;
+          if (digitsBetween === 3) {
+            isThousandsSeparator = true;
+          }
+        }
+      } else if (digitsAfterLastSep < 3) {
+        // Less than 3 digits after - check if it's a decimal point or thousands separator
+        if (digitsBeforeLastSep >= 3) {
+          // 3+ digits before and less than 3 digits after - likely decimal point (e.g., 123.45)
+          isThousandsSeparator = false;
+        } else if (separatorPositions.length > 1) {
+          // Multiple separators with less than 3 digits after last separator
+          // Check if previous separators have consistent pattern
+          const prevSepPos = separatorPositions[separatorPositions.length - 2];
+          const digitsBetween = lastSepPos - prevSepPos;
+          if (digitsBetween === 3) {
+            // Previous separator has 3 digits after it - likely thousands separator pattern
+            // But last separator has less than 3 digits after it - might be decimal point
+            // However, if there are multiple separators, treat as thousands separator
+            isThousandsSeparator = true;
+          } else if (digitsBetween < 3) {
+            // Less than 3 digits between separators - likely not thousands separator (e.g., 1,2,3)
+            // All separators should be removed (not decimal point)
+            isThousandsSeparator = true;
+          } else {
+            // Inconsistent pattern - likely not thousands separator
+            isThousandsSeparator = false;
+          }
+          // Additional check: if any separator has less than 3 digits before or after it,
+          // and it's not the last separator, then all separators are likely not thousands separators
+          let hasInvalidPattern = false;
+          for (let k = 0; k < separatorPositions.length; k++) {
+            const sepPos = separatorPositions[k];
+            const digitsBefore = sepPos;
+            const digitsAfter =
+              k < separatorPositions.length - 1
+                ? separatorPositions[k + 1] - sepPos
+                : digitsOnly.length - sepPos;
+            if (digitsBefore < 3 && digitsAfter < 3 && k < separatorPositions.length - 1) {
+              hasInvalidPattern = true;
+              break;
+            }
+          }
+          if (hasInvalidPattern) {
+            // Pattern like 1,2,3 - all separators should be removed
+            isThousandsSeparator = true;
+          }
+        } else {
+          // Single separator with less than 3 digits after - likely decimal point
+          isThousandsSeparator = false;
+        }
+      } else if (separatorPositions.length > 1) {
+        // Multiple separators - check if pattern is consistent
+        // All separators should have 3 digits after them (except the last one)
+        let allHaveThreeDigits = true;
+        for (let k = 0; k < separatorPositions.length - 1; k++) {
+          const nextSepPos = separatorPositions[k + 1];
+          const digitsBetween = nextSepPos - separatorPositions[k];
+          if (digitsBetween !== 3) {
+            allHaveThreeDigits = false;
+            break;
+          }
+        }
+        // Also check digits before first separator
+        if (separatorPositions[0] > 0 && separatorPositions[0] !== 3) {
+          // If first separator doesn't have exactly 3 digits before it,
+          // check if it's part of a pattern (e.g., 12,345,678)
+          const digitsBeforeFirst = separatorPositions[0];
+          if (digitsBeforeFirst > 3 && digitsBeforeFirst % 3 !== 0) {
+            allHaveThreeDigits = false;
+          }
+        }
+        if (allHaveThreeDigits) {
+          isThousandsSeparator = true;
+        }
+      }
+
+      // If it's not a thousands separator, treat it as decimal point
+      if (!isThousandsSeparator) {
+        decimalPointPos = lastSepPos;
+      }
+    }
+  }
+
+  // Build normalized number: digits only, with decimal point if applicable
+  const normalizedNumber: string[] = [];
+  for (let j = 0; j < digitsOnly.length; j++) {
+    if (j === decimalPointPos) {
+      normalizedNumber.push('.');
+    }
+    normalizedNumber.push(digitsOnly[j]);
+  }
+
+  // Add normalized number to output
+  const normalizedStr = normalizedNumber.join('');
+  // Calculate the number of characters in the original text (excluding separators that are removed)
+  // This is: digitsOnly.length + (1 if decimal point is added, 0 otherwise)
+  const originalCharCount = digitsOnly.length + (decimalPointPos >= 0 ? 1 : 0);
+
+  for (let j = 0; j < normalizedStr.length; j++) {
+    normalizedText.push(normalizedStr[j]);
+    // Each character in normalized string gets its own range mapping to the entire original number sequence
+    ranges.push({ start: originalStart, end: i });
+  }
+
+  // If the normalized string is shorter than the original character count, add additional ranges
+  // This happens when separators are removed but we still want to map to the original positions
+  while (ranges.length < originalCharCount) {
+    ranges.push({ start: originalStart, end: i });
+  }
+
+  return i;
+}
+
+/**
  * Process single character
  * Handles cases where one character normalizes to multiple characters (e.g., ß → ss)
  */
@@ -66,6 +307,12 @@ export function normalizeText(originalText: string): NormalizationResult {
     // Skip block boundary markers (keep as-is)
     if (char === BLOCK_BOUNDARY_MARKER) {
       originalIndex = processBlockBoundaryMarker(originalIndex, normalizedText, ranges);
+      continue;
+    }
+
+    // Check if this is the start of a number sequence
+    if (isDigit(char)) {
+      originalIndex = processNumberSequence(originalText, originalIndex, normalizedText, ranges);
       continue;
     }
 
