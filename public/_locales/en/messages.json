@@ -217,10 +217,6 @@
     "message": "Diacritic mark normalization: Treats separate diacritic marks (゛, ゜) as combined characters (e.g., treats か゛, ｶﾞ as が)",
     "description": "Description of fuzzy search diacritic mark normalization"
   },
-  "options_fuzzySearchHelp_date": {
-    "message": "Date format variation absorption: Treats various date formats as the same (e.g., treats 2024/01/01, 2024-01-01, January 1, 2024 as the same)",
-    "description": "Description of fuzzy search date format variation absorption"
-  },
   "options_fuzzySearchHelp_accentedChars": {
     "message": "Accented character normalization: Normalizes special characters from non-English alphabets to English alphabet equivalents (e.g., ç → c, é → e, ñ → n)",
     "description": "Description of fuzzy search accented character normalization"

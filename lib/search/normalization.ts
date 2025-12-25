@@ -341,7 +341,6 @@ function processSingleCharacter(
  * - Full-width to half-width conversion (alphabet, numbers, katakana)
  * - Symbol normalization (hyphens, long vowels, etc.)
  * - Combining diacritical marks (e.g., "か゛" → "が")
- * - Date format normalization
  */
 export function normalizeText(originalText: string): NormalizationResult {
   const normalizedText: string[] = [];
