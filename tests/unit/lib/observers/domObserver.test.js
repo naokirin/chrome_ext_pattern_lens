@@ -96,12 +96,8 @@ describe('DOMSearchObserver', () => {
   });
 
   describe('DOM変更の検知', () => {
-    it('要素が追加されたときに検知する', (done) => {
-      const searchFunction = vi.fn(() => {
-        // 検索関数が呼ばれたことを確認
-        expect(searchFunction).toHaveBeenCalled();
-        done();
-      });
+    it('要素が追加されたときに検知する', async () => {
+      const searchFunction = vi.fn();
 
       observer.startObserving(
         'test',
@@ -122,18 +118,13 @@ describe('DOMSearchObserver', () => {
       document.body.appendChild(div);
 
       // デバウンス時間を待つ（テスト環境では短縮）
-      setTimeout(() => {
-        if (!searchFunction.mock.calls.length) {
-          done();
-        }
-      }, 600);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      // 検索関数が呼ばれたことを確認
+      expect(searchFunction).toHaveBeenCalled();
     });
 
-    it('要素が削除されたときに検知する', (done) => {
-      const searchFunction = vi.fn(() => {
-        expect(searchFunction).toHaveBeenCalled();
-        done();
-      });
+    it('要素が削除されたときに検知する', async () => {
+      const searchFunction = vi.fn();
 
       // 最初に要素を追加
       const div = document.createElement('div');
@@ -156,18 +147,12 @@ describe('DOMSearchObserver', () => {
       // 要素を削除
       div.remove();
 
-      setTimeout(() => {
-        if (!searchFunction.mock.calls.length) {
-          done();
-        }
-      }, 600);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(searchFunction).toHaveBeenCalled();
     });
 
-    it('テキストノードが変更されたときに検知する', (done) => {
-      const searchFunction = vi.fn(() => {
-        expect(searchFunction).toHaveBeenCalled();
-        done();
-      });
+    it('テキストノードが変更されたときに検知する', async () => {
+      const searchFunction = vi.fn();
 
       const div = document.createElement('div');
       div.textContent = 'initial';
@@ -189,16 +174,13 @@ describe('DOMSearchObserver', () => {
       // テキストを変更
       div.textContent = 'updated';
 
-      setTimeout(() => {
-        if (!searchFunction.mock.calls.length) {
-          done();
-        }
-      }, 600);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(searchFunction).toHaveBeenCalled();
     });
   });
 
   describe('デバウンス', () => {
-    it('複数の変更をデバウンスする', (done) => {
+    it('複数の変更をデバウンスする', async () => {
       let callCount = 0;
       const searchFunction = vi.fn(() => {
         callCount++;
@@ -225,16 +207,14 @@ describe('DOMSearchObserver', () => {
       }
 
       // デバウンス時間後に確認
-      setTimeout(() => {
-        // デバウンスにより、複数の変更が1回の検索にまとめられる
-        expect(callCount).toBeGreaterThan(0);
-        done();
-      }, 600);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      // デバウンスにより、複数の変更が1回の検索にまとめられる
+      expect(callCount).toBeGreaterThan(0);
     });
   });
 
   describe('レート制限', () => {
-    it('レート制限を超えた場合は検索をスキップする', (done) => {
+    it('レート制限を超えた場合は検索をスキップする', async () => {
       let callCount = 0;
       const searchFunction = vi.fn(() => {
         callCount++;
@@ -265,12 +245,10 @@ describe('DOMSearchObserver', () => {
         document.body.appendChild(div);
       }
 
-      setTimeout(() => {
-        // レート制限により、一部の変更がスキップされる
-        expect(callCount).toBeLessThan(10);
-        limitedObserver.stopObserving();
-        done();
-      }, 200);
+      // レート制限により、一部の変更がスキップされる
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(callCount).toBeLessThan(10);
+      limitedObserver.stopObserving();
     });
   });
 
@@ -335,14 +313,11 @@ describe('DOMSearchObserver', () => {
       disabledObserver.stopObserving();
     });
 
-    it('enabled を true に変更した場合、handleMutationsが呼ばれる', (done) => {
+    it('enabled を true に変更した場合、handleMutationsが呼ばれる', async () => {
       const disabledObserver = new DOMSearchObserver(stateManager, {
         enabled: false,
       });
-      const searchFunction = vi.fn(() => {
-        expect(searchFunction).toHaveBeenCalled();
-        done();
-      });
+      const searchFunction = vi.fn();
 
       // 検索情報を設定
       disabledObserver.startObserving(
@@ -370,17 +345,14 @@ describe('DOMSearchObserver', () => {
       div.textContent = 'test content';
       document.body.appendChild(div);
 
-      setTimeout(() => {
-        if (!searchFunction.mock.calls.length) {
-          done();
-        }
-        disabledObserver.stopObserving();
-      }, 600);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(searchFunction).toHaveBeenCalled();
+      disabledObserver.stopObserving();
     });
   });
 
   describe('notifyPopup', () => {
-    it('chrome.runtime.sendMessageがエラーを投げても処理を続行する', () => {
+    it('chrome.runtime.sendMessageがエラーを投げても処理を続行する', async () => {
       // chrome.runtime.sendMessageをモックしてエラーを投げる
       const originalSendMessage = global.chrome?.runtime?.sendMessage;
       if (global.chrome?.runtime) {
@@ -409,13 +381,12 @@ describe('DOMSearchObserver', () => {
       document.body.appendChild(div);
 
       // エラーが発生しても処理が続行されることを確認
-      setTimeout(() => {
-        expect(observer.isObserving).toBe(true);
-        // 元に戻す
-        if (originalSendMessage && global.chrome && global.chrome.runtime) {
-          global.chrome.runtime.sendMessage = originalSendMessage;
-        }
-      }, 100);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(observer.isObserving).toBe(true);
+      // 元に戻す
+      if (originalSendMessage && global.chrome && global.chrome.runtime) {
+        global.chrome.runtime.sendMessage = originalSendMessage;
+      }
     });
   });
 

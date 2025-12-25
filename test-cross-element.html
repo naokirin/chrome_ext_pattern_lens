@@ -283,6 +283,62 @@
     </div>
     <p><strong>検索文字列（あいまい検索ON）:</strong> <code>strasse mueller</code></p>
     <p><strong>期待結果:</strong> ß→ss、ü→ueの両方が正規化されてマッチする</p>
+
+    <h3>テストケース6-15: カンマ区切りの数字（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>1</span><span>,</span><span>234</span><span>.</span><span>56</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1234.56</code></p>
+    <p><strong>期待結果:</strong> カンマが削除され、小数点のみが残ってマッチする</p>
+
+    <h3>テストケース6-16: ヨーロッパ形式の小数点（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>1</span><span>.</span><span>234</span><span>,</span><span>56</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1234.56</code></p>
+    <p><strong>期待結果:</strong> ピリオドが削除され、カンマが小数点としてピリオドに変換されてマッチする</p>
+
+    <h3>テストケース6-17: 全角区切り文字を含む数字（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>１</span><span>，</span><span>２３４</span><span>．</span><span>５６</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1234.56</code></p>
+    <p><strong>期待結果:</strong> 全角数字が半角に変換され、全角カンマが削除、全角ピリオドが半角ピリオドに変換されてマッチする</p>
+
+    <h3>テストケース6-18: 数字と文字の混在（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>価格</span><span>1</span><span>,</span><span>000</span><span>円</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>価格1000円</code></p>
+    <p><strong>期待結果:</strong> カンマが削除され、数字部分が正規化されてマッチする</p>
+
+    <h3>テストケース6-19: 複数の区切り文字を含む数字（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>1</span><span>,</span><span>234</span><span>,</span><span>567</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1234567</code></p>
+    <p><strong>期待結果:</strong> すべてのカンマが削除されてマッチする</p>
+
+    <h3>テストケース6-20: ピリオド区切りの数字（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>1</span><span>.</span><span>000</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1000</code></p>
+    <p><strong>期待結果:</strong> ピリオドが削除されてマッチする（小数点として扱われない）</p>
+
+    <h3>テストケース6-21: 全角ピリオド区切りの数字（要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>１</span><span>．</span><span>０００</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>1000</code></p>
+    <p><strong>期待結果:</strong> 全角数字が半角に変換され、全角ピリオドが削除されてマッチする</p>
+
+    <h3>テストケース6-22: カンマのみの数字（小数点として扱う、要素境界をまたぐ）</h3>
+    <div class="example">
+      <span>123</span><span>,</span><span>45</span>
+    </div>
+    <p><strong>検索文字列（あいまい検索ON）:</strong> <code>123.45</code></p>
+    <p><strong>期待結果:</strong> カンマが小数点としてピリオドに変換されてマッチする</p>
   </div>
 
   <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">

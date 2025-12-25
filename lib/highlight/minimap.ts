@@ -68,7 +68,58 @@ export function updateMinimap(stateManager: SearchStateManager): void {
       const marker = document.createElement('div');
 
       try {
-        const rect = range.getBoundingClientRect();
+        // Range.getBoundingClientRect() may not be available in test environments
+        // Try multiple fallback strategies
+        let rect: DOMRect | null = null;
+
+        // Strategy 1: Try Range.getBoundingClientRect() (available in real browsers)
+        if (typeof range.getBoundingClientRect === 'function') {
+          try {
+            rect = range.getBoundingClientRect();
+          } catch {
+            // Fall through to next strategy
+          }
+        }
+
+        // Strategy 2: Try Range.getClientRects() (available in real browsers)
+        if (!rect && typeof range.getClientRects === 'function') {
+          try {
+            const rects = range.getClientRects();
+            if (rects.length > 0) {
+              // Use the first rect, or calculate bounding box from all rects
+              const firstRect = rects[0];
+              let minTop = firstRect.top;
+              let maxBottom = firstRect.bottom;
+              for (let i = 1; i < rects.length; i++) {
+                minTop = Math.min(minTop, rects[i].top);
+                maxBottom = Math.max(maxBottom, rects[i].bottom);
+              }
+              rect = new DOMRect(firstRect.left, minTop, firstRect.width, maxBottom - minTop);
+            }
+          } catch {
+            // Fall through to next strategy
+          }
+        }
+
+        // Strategy 3: Get element from range and use its getBoundingClientRect()
+        if (!rect) {
+          const startElement =
+            range.startContainer.nodeType === Node.TEXT_NODE
+              ? range.startContainer.parentElement
+              : (range.startContainer as Element);
+          if (startElement && typeof startElement.getBoundingClientRect === 'function') {
+            try {
+              rect = startElement.getBoundingClientRect();
+            } catch {
+              // Fall through
+            }
+          }
+        }
+
+        if (!rect) {
+          throw new Error('Unable to get bounding rect from range');
+        }
+
         const { scrollY } = getScrollPosition();
         const absoluteTop = rect.top + scrollY;
         const relativeTop = (absoluteTop / pageHeight) * 100;

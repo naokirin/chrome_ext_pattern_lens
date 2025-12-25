@@ -66,15 +66,15 @@ describe('normalization', () => {
       it('小数点を含む数字（1,234.56 → 1234.56）', () => {
         const result = normalizeText('1,234.56');
         expect(result.normalizedText).toBe('1234.56');
-        // 1(1) + ,(削除) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 8文字
-        expect(result.mapping.ranges.length).toBe(8);
+        // 1(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 7文字（カンマは削除される）
+        expect(result.mapping.ranges.length).toBe(7);
       });
 
       it('ヨーロッパ形式の小数点（1.234,56 → 1234.56）', () => {
         const result = normalizeText('1.234,56');
         expect(result.normalizedText).toBe('1234.56');
-        // 1(1) + .(削除) + 2(1) + 3(1) + 4(1) + ,(小数点として.) + 5(1) + 6(1) = 8文字
-        expect(result.mapping.ranges.length).toBe(8);
+        // 1(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 7文字（ピリオドは削除、カンマは小数点として.に変換）
+        expect(result.mapping.ranges.length).toBe(7);
       });
 
       it('複数の区切り文字（1,234,567 → 1234567）', () => {
@@ -110,14 +110,15 @@ describe('normalization', () => {
       it('全角小数点を含む数字（１，２３４．５６ → 1234.56）', () => {
         const result = normalizeText('１，２３４．５６');
         expect(result.normalizedText).toBe('1234.56');
-        expect(result.mapping.ranges.length).toBe(8);
+        // 1(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 7文字（全角が半角に変換、カンマは削除）
+        expect(result.mapping.ranges.length).toBe(7);
       });
 
       it('数字と文字の混在（価格1,000円）', () => {
         const result = normalizeText('価格1,000円');
         expect(result.normalizedText).toBe('価格1000円');
-        // 価(1) + 格(1) + 1(1) + ,(削除) + 0(1) + 0(1) + 0(1) + 円(1) = 8文字
-        expect(result.mapping.ranges.length).toBe(8);
+        // 価(1) + 格(1) + 1(1) + 0(1) + 0(1) + 0(1) + 円(1) = 7文字（カンマは削除される）
+        expect(result.mapping.ranges.length).toBe(7);
       });
 
       it('複数の数字文字列（1,000と2,000）', () => {

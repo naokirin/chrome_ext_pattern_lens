@@ -48,7 +48,7 @@ export function scrollToMatch(stateManager: SearchStateManager): void {
     if (currentRange) {
       try {
         const element = currentRange.startContainer.parentElement;
-        if (element) {
+        if (element && typeof element.scrollIntoView === 'function') {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       } catch (error) {
@@ -61,7 +61,9 @@ export function scrollToMatch(stateManager: SearchStateManager): void {
     const currentElement = stateManager.getCurrentElement();
     if (currentElement) {
       try {
-        currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof currentElement.scrollIntoView === 'function') {
+          currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       } catch (error) {
         // Failed to scroll to element
         handleError(error, 'scrollToMatch: Failed to scroll to element', undefined);
