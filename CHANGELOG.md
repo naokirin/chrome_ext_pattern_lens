@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-25
+
+### 追加 (Added)
+
+#### あいまい検索の機能拡張
+- **上付き・下付き・丸数字の正規化**: 上付き数字（¹、²、³、⁰-⁹）、下付き数字（₀-₉）、丸数字（①-⑳、⓫-⓴、⓵-⓿）を通常の数字に正規化して検索可能に
+- **数字の区切り文字と小数点の違いを吸収**: カンマ区切り（1,000）とピリオド区切り（1.000）の数字を統一して検索可能に
+  - 小数点を含む数字（1,234.56）の正規化に対応
+  - ヨーロッパ形式の小数点（1.234,56）にも対応
+  - 千の区切り文字と小数点を自動判別するロジックを実装
+
+### 修正 (Fixed)
+
+- **あいまい検索の数字マッチング**: あいまい検索で1,234,56が1,234,567にマッチするように修正
+
+### 改善 (Improved)
+
+- **ドキュメントの更新**: README.mdと設定ページにあいまい検索の新機能の仕様を追加
+- **テストケースの追加**: 上付き・下付き・丸数字、数字の区切り文字に関するテストケースを追加
+
 ## [1.1.1] - 2024-12-XX
 
 ### 修正 (Fixed)
@@ -163,6 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.0
 [1.1.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.1
 [1.1.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.0
 [1.0.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.0.0
