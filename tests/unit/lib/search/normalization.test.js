@@ -83,6 +83,15 @@ describe('normalization', () => {
         expect(result.mapping.ranges.length).toBe(7);
       });
 
+      it('複数の区切り文字で最後が2桁（1,234,56 → 123456、あいまい検索で1,234,567にマッチ）', () => {
+        const result = normalizeText('1,234,56');
+        // 最後のセパレータの後に2桁があるが、3+桁の前に複数のセパレータがあるため
+        // 千の区切りとして扱われ、削除される（123456）
+        // これにより "1,234,56" で検索した場合、"1,234,567" もマッチする
+        expect(result.normalizedText).toBe('123456');
+        expect(result.mapping.ranges.length).toBe(6);
+      });
+
       it('小数点のみ（123.45 → 123.45）', () => {
         const result = normalizeText('123.45');
         expect(result.normalizedText).toBe('123.45');

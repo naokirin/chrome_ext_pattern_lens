@@ -157,15 +157,33 @@ function processNumberSequence(
           const prevSepPos = separatorPositions[separatorPositions.length - 2];
           const digitsBetween = lastSepPos - prevSepPos;
           if (digitsBetween === 3) {
-            isThousandsSeparator = true;
+            // Pattern like 1,234,567 - previous separator has 3 digits after it
+            // For fuzzy search, we want "1,234,56" to match "1,234,567"
+            // The issue is:
+            // - "1,234,56" → "1234.56" (last separator treated as decimal point)
+            // - "1,234,567" → "1234567" (last separator removed as thousands separator)
+            // These don't match.
+            // Solution: For patterns like "1,234,56" where we have multiple separators
+            // and the last separator has 2 digits after it, we should treat it as
+            // a thousands separator (remove it) to allow matching with "1,234,567"
+            // This means "1,234,56" → "123456" which matches "1234567"
+            if (digitsBeforeLastSep >= 3) {
+              // 3+ digits before - likely thousands separator
+              isThousandsSeparator = true;
+            } else {
+              // Less than 3 digits before last separator with 3 digits after
+              // For consistency with "1,234,56" pattern, treat as thousands separator
+              isThousandsSeparator = true;
+            }
           }
         }
       } else if (digitsAfterLastSep < 3) {
         // Less than 3 digits after - check if it's a decimal point or thousands separator
-        if (digitsBeforeLastSep >= 3) {
-          // 3+ digits before and less than 3 digits after - likely decimal point (e.g., 123.45)
+        if (separatorPositions.length === 1) {
+          // Single separator with less than 3 digits after - likely decimal point (e.g., 123.45)
           isThousandsSeparator = false;
         } else if (separatorPositions.length > 1) {
+          // Multiple separators - check if pattern is consistent
           // Multiple separators with less than 3 digits after last separator
           // Check if previous separators have consistent pattern
           const prevSepPos = separatorPositions[separatorPositions.length - 2];
@@ -173,8 +191,37 @@ function processNumberSequence(
           if (digitsBetween === 3) {
             // Previous separator has 3 digits after it - likely thousands separator pattern
             // But last separator has less than 3 digits after it - might be decimal point
-            // However, if there are multiple separators, treat as thousands separator
-            isThousandsSeparator = true;
+            // For fuzzy search, we want to match both patterns:
+            // - If it's a thousands separator: 1,234,56 → 123456 (no decimal point)
+            // - If it's a decimal point: 1,234,56 → 1234.56
+            // However, if there are multiple separators with 3 digits between them,
+            // and the last separator has 2 digits after it, treat as decimal point for better matching
+            // This allows "1,234,56" to match "1,234,567" (both can be interpreted as having decimal parts)
+            if (digitsAfterLastSep === 2) {
+              // 2 digits after last separator - could be decimal point (e.g., 1,234,56)
+              // Check separator type: if last separator is different type from previous ones,
+              // it's likely a decimal point (e.g., 1,234.56 - comma is thousands, period is decimal)
+              const prevSepType = separatorTypes[separatorTypes.length - 2];
+              if (lastSepType !== prevSepType) {
+                // Different separator types - last one is likely decimal point
+                isThousandsSeparator = false;
+              } else if (separatorPositions.length >= 3) {
+                // 3+ separators with same type - if last separator has 2 digits after it,
+                // it's likely a decimal point (e.g., 1,234.567.89)
+                isThousandsSeparator = false;
+              } else if (digitsBeforeLastSep >= 3) {
+                // Same separator type with 2 separators (e.g., 1,234,56) - for fuzzy search compatibility
+                // with "1,234,567", treat as thousands separator (remove it)
+                // so "1,234,56" → "123456" which matches "1234567"
+                isThousandsSeparator = true;
+              } else {
+                // Less than 3 digits before - likely decimal point
+                isThousandsSeparator = false;
+              }
+            } else {
+              // Less than 2 digits - treat as thousands separator
+              isThousandsSeparator = true;
+            }
           } else if (digitsBetween < 3) {
             // Less than 3 digits between separators - likely not thousands separator (e.g., 1,2,3)
             // All separators should be removed (not decimal point)
