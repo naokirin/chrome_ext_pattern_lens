@@ -24,6 +24,7 @@ import {
   isRectVisibleInViewport,
 } from '~/lib/utils/domUtils';
 import { throttleAnimationFrame } from '~/lib/utils/throttle';
+import { updateMinimap } from './minimap';
 
 /**
  * Merge adjacent rectangles on the same line
@@ -223,6 +224,15 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
   const container = getElementById<HTMLDivElement>(HIGHLIGHT_OVERLAY_ID);
   if (!container) return;
 
+  // If there are no ranges or elements, clear all overlays
+  if (!stateManager.hasMatches()) {
+    container.innerHTML = '';
+    stateManager.clearOverlays();
+    overlayToRangeInfoMap.clear();
+    overlayToElementInfoMap.clear();
+    return;
+  }
+
   // Get scroll position for compatibility (though not needed with fixed positioning)
   const { scrollX, scrollY } = getScrollPosition();
 
@@ -354,6 +364,9 @@ export function updateOverlayPositions(stateManager: SearchStateManager): void {
       stateManager.overlays.splice(index, 1);
     }
   }
+
+  // Update minimap to reflect current scroll position
+  updateMinimap(stateManager);
 }
 
 /**
