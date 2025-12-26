@@ -12,6 +12,7 @@ import type { CharMapEntry, SearchResult, VirtualMatch } from '~/lib/types';
 import {
   createOverlay,
   initializeOverlayContainer,
+  registerOverlayForRange,
   setupEventListeners,
   updateOverlayPositions,
 } from '../highlight/overlay';
@@ -844,8 +845,8 @@ export function createOverlaysFromRanges(
 
       // Create overlay for each merged rectangle (handles multi-line matches)
       const isCurrent = count === 0; // First match is current
-      for (let i = 0; i < mergedRects.length; i++) {
-        const rect = mergedRects[i];
+      for (let rectIndex = 0; rectIndex < mergedRects.length; rectIndex++) {
+        const rect = mergedRects[rectIndex];
         // Only create overlay if rectangle is visible in viewport and within scrollable parents
         if (
           isRectVisibleInViewport(rect) &&
@@ -854,6 +855,8 @@ export function createOverlaysFromRanges(
           const overlay = createOverlay(rect, scrollX, scrollY, isCurrent);
           container.appendChild(overlay);
           stateManager.addOverlay(overlay);
+          // Register mapping for efficient position updates
+          registerOverlayForRange(overlay, range, count, rectIndex);
         }
       }
 
