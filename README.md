@@ -2,6 +2,11 @@
 
 Chrome拡張機能：正規表現とDOM要素検索に対応した高度なページ内検索ツール
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-インストール-4285F4?logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/pattern-lens/glpadfkklnjgjccblhpnkigoppbofhfm)
+[![CI](https://github.com/naokirin/chrome_ext_pattern_lens/actions/workflows/ci.yml/badge.svg)](https://github.com/naokirin/chrome_ext_pattern_lens/actions/workflows/ci.yml)
+
+![Pattern Lens スクリーンショット](sample.jpg)
+
 ## 機能
 
 ### 検索機能
@@ -48,6 +53,10 @@ Chrome拡張機能：正規表現とDOM要素検索に対応した高度なペ�
 - **カスタマイズ可能**: デフォルト設定をオプションページで保存
 
 ## インストール方法
+
+### Chrome Web Storeからインストール
+
+[Chrome Web Store](https://chromewebstore.google.com/detail/pattern-lens/glpadfkklnjgjccblhpnkigoppbofhfm) から直接インストールできます。
 
 ### 開発環境のセットアップ
 
