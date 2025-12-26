@@ -216,7 +216,7 @@ function updateOverlayPosition(overlay: HTMLDivElement, rect: DOMRect, isCurrent
  * Update overlay positions (for scroll/resize events)
  * Since overlay container uses position: fixed, getClientRects() viewport coordinates
  * can be used directly without adding scroll position
- * 
+ *
  * Optimized version: Updates existing overlays in place when possible,
  * only recreates when necessary (new matches, removed matches, or structure changes)
  */

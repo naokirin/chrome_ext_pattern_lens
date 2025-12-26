@@ -93,7 +93,14 @@ export async function handleSearch(
 
     if (message.useElementSearch) {
       result = searchElements(message.query, message.elementSearchMode, context.stateManager);
-      searchFunction = (query, options, stateManager, updateCallback, skipNavigation) => {
+      searchFunction = (
+        query,
+        options,
+        stateManager,
+        updateCallback,
+        skipNavigation,
+        onComplete
+      ) => {
         // Save previous index before clearing
         const previousIndex = skipNavigation ? stateManager.currentIndex : -1;
         // Clear highlights before re-searching
@@ -107,6 +114,10 @@ export async function handleSearch(
           skipNavigation,
           previousIndex
         );
+        // 検索完了後にコールバックを呼び出す
+        if (onComplete) {
+          onComplete();
+        }
       };
     } else {
       result = searchText(
@@ -121,7 +132,14 @@ export async function handleSearch(
         minDistance,
         maxDistance
       );
-      searchFunction = (query, options, stateManager, updateCallback, skipNavigation) => {
+      searchFunction = (
+        query,
+        options,
+        stateManager,
+        updateCallback,
+        skipNavigation,
+        onComplete
+      ) => {
         // Save previous index before clearing
         const previousIndex = skipNavigation ? stateManager.currentIndex : -1;
         // Clear highlights before re-searching
@@ -152,6 +170,10 @@ export async function handleSearch(
               minDist,
               maxDist
             );
+            // 検索完了後にコールバックを呼び出す
+            if (onComplete) {
+              onComplete();
+            }
           }
         );
       };

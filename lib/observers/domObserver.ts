@@ -29,7 +29,8 @@ export type SearchFunction = (
   options: SearchState,
   stateManager: SearchStateManager,
   updateCallback?: (() => void) | null,
-  skipNavigation?: boolean
+  skipNavigation?: boolean,
+  onComplete?: (() => void) | null
 ) => void;
 
 /**
@@ -223,16 +224,18 @@ export class DOMSearchObserver {
       this.isSearching = true;
 
       // 既存の検索ロジックを呼び出し（スクロール位置を変えないため skipNavigation=true）
+      // 検索完了後に通知を送るため、onCompleteコールバックを渡す
       this.searchFunction(
         this.currentSearchQuery,
         this.searchOptions,
         this.stateManager,
         this.updateCallback,
-        true // skipNavigation
+        true, // skipNavigation
+        () => {
+          // 検索完了後にポップアップに検索結果の更新を通知
+          this.notifyPopup();
+        }
       );
-
-      // ポップアップに検索結果の更新を通知
-      this.notifyPopup();
     } catch (error) {
       handleError(error, 'DOMSearchObserver: Search failed', undefined);
     } finally {
