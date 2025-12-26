@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-12-25
+
+### 修正 (Fixed)
+
+- **スクロール時の検索結果数値表示とminimapの更新**: スクロール時にminimapが更新され、検索結果数値が正しく表示されるように修正
+  - DOM変更検出時の再検索で検索完了後に通知を送るように修正
+  - searchFunctionにonCompleteコールバックを追加し、非同期検索完了後に正しい検索結果数を通知
+  - これにより、スクロール時に検索結果数値が0/0になる問題を解消
+
+### 改善 (Improved)
+
+- **スクロール時のオーバーレイ追従遅延**: オーバーレイ位置の更新方式を改善し、スクロール時の追従遅延を解消
+  - オーバーレイ位置を直接更新する方式に変更（再作成を回避）
+  - オーバーレイとRange/Elementのマッピングを管理して効率的に更新
+  - スクロールイベントハンドラを最適化し、即座に更新するように改善
+  - 複数行にまたがる検索結果でも正しく位置更新されるように修正
+- **オーバーレイの状態管理**: range/elementがない場合にコンテナをクリアする処理を追加
+  - updateOverlayPositionsでrange/elementがない場合にコンテナをクリア
+  - オーバーレイマッピングもクリアして状態をリセット
+
 ## [1.2.0] - 2025-12-25
 
 ### 追加 (Added)
@@ -183,6 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.1
 [1.2.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.0
 [1.1.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.1
 [1.1.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.0
