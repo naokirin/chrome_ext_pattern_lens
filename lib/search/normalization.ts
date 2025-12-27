@@ -86,7 +86,9 @@ function processNumberSequence(
   let i = startIndex;
   const originalStart = startIndex;
   const digitsOnly: string[] = [];
-  const separatorPositions: number[] = [];
+  const digitOriginalPositions: number[] = []; // Track original position of each digit
+  const separatorPositions: number[] = []; // Position in digitsOnly array
+  const separatorOriginalPositions: number[] = []; // Track original position of each separator
   const separatorTypes: Array<'comma' | 'period'> = [];
 
   // Collect digits and track separator positions and types
@@ -96,9 +98,11 @@ function processNumberSequence(
     if (isDigit(char)) {
       const normalized = normalizeSingleChar(char);
       digitsOnly.push(normalized);
+      digitOriginalPositions.push(i); // Store original position of this digit
       i++;
     } else if (isNumberSeparator(char)) {
       separatorPositions.push(digitsOnly.length);
+      separatorOriginalPositions.push(i); // Store original position of this separator
       // Determine separator type: comma (,) or period (.)
       const isComma = char === ',' || char === '，';
       separatorTypes.push(isComma ? 'comma' : 'period');
@@ -288,29 +292,47 @@ function processNumberSequence(
 
   // Build normalized number: digits only, with decimal point if applicable
   const normalizedNumber: string[] = [];
+  const normalizedToOriginalPosition: Array<{ start: number; end: number }> = []; // Map normalized position to original position
   for (let j = 0; j < digitsOnly.length; j++) {
     if (j === decimalPointPos) {
       normalizedNumber.push('.');
+      // Decimal point maps to the separator position
+      // Find the separator index that corresponds to decimalPointPos
+      const separatorIndex = separatorPositions.indexOf(decimalPointPos);
+      if (separatorIndex >= 0 && separatorIndex < separatorOriginalPositions.length) {
+        const separatorPos = separatorOriginalPositions[separatorIndex];
+        normalizedToOriginalPosition.push({ start: separatorPos, end: separatorPos + 1 });
+      } else {
+        // Fallback: use position between digits
+        const prevDigitPos = j > 0 ? digitOriginalPositions[j - 1] : originalStart;
+        normalizedToOriginalPosition.push({ start: prevDigitPos + 1, end: prevDigitPos + 1 });
+      }
     }
     normalizedNumber.push(digitsOnly[j]);
+    // Map to original digit position
+    if (j < digitOriginalPositions.length) {
+      const originalPos = digitOriginalPositions[j];
+      normalizedToOriginalPosition.push({ start: originalPos, end: originalPos + 1 });
+    } else {
+      // Fallback: should not happen
+      normalizedToOriginalPosition.push({ start: originalStart, end: i });
+    }
   }
 
   // Add normalized number to output
   const normalizedStr = normalizedNumber.join('');
-  // Calculate the number of characters in the original text (excluding separators that are removed)
-  // This is: digitsOnly.length + (1 if decimal point is added, 0 otherwise)
-  const originalCharCount = digitsOnly.length + (decimalPointPos >= 0 ? 1 : 0);
 
+  // Map each character in normalized string to its corresponding original position
   for (let j = 0; j < normalizedStr.length; j++) {
     normalizedText.push(normalizedStr[j]);
-    // Each character in normalized string gets its own range mapping to the entire original number sequence
-    ranges.push({ start: originalStart, end: i });
-  }
-
-  // If the normalized string is shorter than the original character count, add additional ranges
-  // This happens when separators are removed but we still want to map to the original positions
-  while (ranges.length < originalCharCount) {
-    ranges.push({ start: originalStart, end: i });
+    if (j < normalizedToOriginalPosition.length) {
+      const originalPos = normalizedToOriginalPosition[j];
+      // Each character maps to its corresponding position only (not the entire sequence)
+      ranges.push(originalPos);
+    } else {
+      // Fallback: should not happen, but use the entire sequence if position not found
+      ranges.push({ start: originalStart, end: i });
+    }
   }
 
   return i;
