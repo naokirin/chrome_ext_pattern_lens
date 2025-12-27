@@ -1,6 +1,6 @@
 {
   "name": "pattern-lens",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Chrome extension for enhanced page search with regex and DOM element selector support",
   "type": "module",
   "scripts": {

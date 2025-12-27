@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-12-25
+
+### 追加 (Added)
+
+- **数字のカンマを無視した検索**: 検索時に数字のカンマを削除して比較する処理を追加
+  - カンマなしの数字（例: 280067500）がカンマありの数字（例: 280,067,500）にマッチするように修正
+  - あいまい検索でも同様にカンマを無視して検索できるように修正
+  - 位置マッピングを修正して、マッチ位置を正確に元のテキスト位置にマッピング
+
+### 修正 (Fixed)
+
+- **数字のマッチ範囲を最小範囲に修正**: 数字シーケンス全体ではなく、各桁を個別にマッピングするように変更
+  - 数字の一部を検索した場合でも、マッチ範囲が最小範囲（検索した部分のみ）になる
+  - 各桁の元の位置を追跡するdigitOriginalPositions配列を追加
+  - セパレータの元の位置を追跡するseparatorOriginalPositions配列を追加
+  - 正規化された各文字を対応する元の位置のみにマッピング
+
+### 改善 (Improved)
+
+- **ドキュメントの更新**: READMEにChrome Web Storeリンク、スクリーンショット、CIバッジを追加
+- **テストケースの追加**: 数字のカンマを無視した検索とマッチ範囲に関するテストケースを追加
+
 ## [1.2.1] - 2025-12-25
 
 ### 修正 (Fixed)
@@ -203,6 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.2]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.2
 [1.2.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.1
 [1.2.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.0
 [1.1.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.1.1
