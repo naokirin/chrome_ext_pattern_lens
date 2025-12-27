@@ -150,6 +150,61 @@ function findMatchesWithRegex(regex: RegExp, virtualText: string): VirtualMatch[
 }
 
 /**
+ * Remove commas from numbers in text
+ * This allows matching between numbers with and without commas (e.g., 280067500 and 280,067,500)
+ * Returns the text with commas removed from numbers, and a mapping of positions
+ */
+function removeCommasFromNumbers(text: string): { text: string; positionMap: Map<number, number> } {
+  const result: string[] = [];
+  const positionMap = new Map<number, number>();
+  let resultIndex = 0;
+  let textIndex = 0;
+
+  while (textIndex < text.length) {
+    const char = text[textIndex];
+
+    // Check if we're in a number sequence with commas
+    // Look ahead to see if this is part of a number with commas (pattern: digits, comma, digits, ...)
+    if (/\d/.test(char)) {
+      // Try to match a number with commas starting from this position
+      // Pattern: digits, followed by comma and digits (repeated)
+      // This matches patterns like 1,23, 1,234, 1,234,567, etc.
+      const remaining = text.slice(textIndex);
+      const numberWithCommasMatch = remaining.match(/^(\d+)(,\d+)+/);
+
+      if (numberWithCommasMatch) {
+        // Found a number with commas (e.g., 280,067,500 or 1,23)
+        const fullMatch = numberWithCommasMatch[0];
+
+        // Map each digit position
+        for (let k = 0; k < fullMatch.length; k++) {
+          if (fullMatch[k] !== ',') {
+            positionMap.set(resultIndex, textIndex + k);
+            result.push(fullMatch[k]);
+            resultIndex++;
+          }
+        }
+        textIndex += fullMatch.length;
+      } else {
+        // Regular digit, not part of a number with commas
+        positionMap.set(resultIndex, textIndex);
+        result.push(char);
+        resultIndex++;
+        textIndex++;
+      }
+    } else {
+      // Not a digit, copy as-is
+      positionMap.set(resultIndex, textIndex);
+      result.push(char);
+      resultIndex++;
+      textIndex++;
+    }
+  }
+
+  return { text: result.join(''), positionMap };
+}
+
+/**
  * Search for matches in virtual text
  */
 export function searchInVirtualText(
@@ -173,9 +228,32 @@ export function searchInVirtualText(
     }
   } else {
     // Normal search: escape regex special characters, then convert spaces to \s+ for flexible matching
-    const normalizedQuery = normalizePlainTextQuery(query);
+    // Also remove commas from numbers in both query and text to allow matching between numbers with and without commas
+    // Remove commas from numbers in the query first
+    const { text: queryWithoutCommas } = removeCommasFromNumbers(query);
+    const normalizedQuery = normalizePlainTextQuery(queryWithoutCommas);
+    // Remove commas from numbers in the virtual text as well
+    const { text: textWithoutCommas, positionMap } = removeCommasFromNumbers(virtualText);
     const regex = new RegExp(normalizedQuery, flags);
-    return findMatchesWithRegex(regex, virtualText);
+    const matches = findMatchesWithRegex(regex, textWithoutCommas);
+
+    // Map match positions back to original text positions
+    return matches.map((match) => {
+      const originalStart = positionMap.get(match.start) ?? match.start;
+      // For end position, find the last mapped position before or at match.end - 1
+      let originalEnd = match.end - 1;
+      for (let i = match.end - 1; i >= match.start; i--) {
+        const mappedPos = positionMap.get(i);
+        if (mappedPos !== undefined) {
+          originalEnd = mappedPos;
+          break;
+        }
+      }
+      return {
+        start: originalStart,
+        end: originalEnd + 1,
+      };
+    });
   }
 }
 
@@ -629,11 +707,30 @@ function performSingleKeywordFuzzySearch(
   // Fast path: if only one expanded query and no accented chars in query, use simple search
   if (expandedQueries.length === 1 && !queryHasAccentedChars) {
     const normalizedQuery = normalizeText(expandedQueries[0]).normalizedText;
-    const normalizedMatches = searchInVirtualText(normalizedQuery, normalizedText, false, false);
+    // Remove commas from numbers in both query and text to allow matching between numbers with and without commas
+    const { text: queryWithoutCommas } = removeCommasFromNumbers(normalizedQuery);
+    const { text: textWithoutCommas, positionMap: textPositionMap } =
+      removeCommasFromNumbers(normalizedText);
+    const normalizedMatches = searchInVirtualText(
+      queryWithoutCommas,
+      textWithoutCommas,
+      false,
+      false
+    );
+
+    // Map match positions back to original normalized text positions
+    const mappedMatches = normalizedMatches.map((match) => {
+      const originalStart = textPositionMap.get(match.start) ?? match.start;
+      const originalEnd = textPositionMap.get(match.end - 1) ?? match.end - 1;
+      return {
+        start: originalStart,
+        end: originalEnd + 1,
+      };
+    });
 
     // Expand matches to include adjacent characters that refer to the same original range
     const expandedNormalizedMatches = expandMatchesToSameRange(
-      normalizedMatches,
+      mappedMatches,
       normalizedText,
       textMapping
     );

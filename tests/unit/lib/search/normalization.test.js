@@ -50,11 +50,11 @@ describe('normalization', () => {
     });
 
     describe('数字の区切り文字と小数点の正規化', () => {
-      it('カンマ区切りの数字（1,000 → 1000）', () => {
+      it('カンマ区切りの数字（1,000 → 1,000、カンマを保持）', () => {
         const result = normalizeText('1,000');
-        expect(result.normalizedText).toBe('1000');
-        // 1(1) + ,(削除) + 0(1) + 0(1) + 0(1) = 4文字
-        expect(result.mapping.ranges.length).toBe(4);
+        expect(result.normalizedText).toBe('1,000');
+        // 1(1) + ,(1) + 0(1) + 0(1) + 0(1) = 5文字（カンマを保持）
+        expect(result.mapping.ranges.length).toBe(5);
       });
 
       it('ピリオド区切りの数字（1.000 → 1000）', () => {
@@ -63,11 +63,11 @@ describe('normalization', () => {
         expect(result.mapping.ranges.length).toBe(4);
       });
 
-      it('小数点を含む数字（1,234.56 → 1234.56）', () => {
+      it('小数点を含む数字（1,234.56 → 1,234.56、カンマを保持）', () => {
         const result = normalizeText('1,234.56');
-        expect(result.normalizedText).toBe('1234.56');
-        // 1(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 7文字（カンマは削除される）
-        expect(result.mapping.ranges.length).toBe(7);
+        expect(result.normalizedText).toBe('1,234.56');
+        // 1(1) + ,(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 8文字（カンマを保持）
+        expect(result.mapping.ranges.length).toBe(8);
       });
 
       it('ヨーロッパ形式の小数点（1.234,56 → 1234.56）', () => {
@@ -77,19 +77,17 @@ describe('normalization', () => {
         expect(result.mapping.ranges.length).toBe(7);
       });
 
-      it('複数の区切り文字（1,234,567 → 1234567）', () => {
+      it('複数の区切り文字（1,234,567 → 1,234,567、カンマを保持）', () => {
         const result = normalizeText('1,234,567');
-        expect(result.normalizedText).toBe('1234567');
-        expect(result.mapping.ranges.length).toBe(7);
+        expect(result.normalizedText).toBe('1,234,567');
+        expect(result.mapping.ranges.length).toBe(9);
       });
 
-      it('複数の区切り文字で最後が2桁（1,234,56 → 123456、あいまい検索で1,234,567にマッチ）', () => {
+      it('複数の区切り文字で最後が2桁（1,234,56 → 1,234,56、カンマを保持）', () => {
         const result = normalizeText('1,234,56');
-        // 最後のセパレータの後に2桁があるが、3+桁の前に複数のセパレータがあるため
-        // 千の区切りとして扱われ、削除される（123456）
-        // これにより "1,234,56" で検索した場合、"1,234,567" もマッチする
-        expect(result.normalizedText).toBe('123456');
-        expect(result.mapping.ranges.length).toBe(6);
+        // カンマを保持するため、1,234,56のまま
+        expect(result.normalizedText).toBe('1,234,56');
+        expect(result.mapping.ranges.length).toBe(8);
       });
 
       it('小数点のみ（123.45 → 123.45）', () => {
@@ -98,16 +96,18 @@ describe('normalization', () => {
         expect(result.mapping.ranges.length).toBe(6);
       });
 
-      it('カンマのみ（123,45 → 123.45、小数点として扱う）', () => {
+      it('カンマのみ（123,45 → 123,45、千の区切りとして扱う）', () => {
         const result = normalizeText('123,45');
-        expect(result.normalizedText).toBe('123.45');
+        // カンマの前に3桁以上あり、後ろに2桁の場合は千の区切りとして扱う
+        // これにより、280,06が280,067,500にマッチできるようになる
+        expect(result.normalizedText).toBe('123,45');
         expect(result.mapping.ranges.length).toBe(6);
       });
 
-      it('全角カンマ区切りの数字（１，０００ → 1000）', () => {
+      it('全角カンマ区切りの数字（１，０００ → 1,000、カンマを保持）', () => {
         const result = normalizeText('１，０００');
-        expect(result.normalizedText).toBe('1000');
-        expect(result.mapping.ranges.length).toBe(4);
+        expect(result.normalizedText).toBe('1,000');
+        expect(result.mapping.ranges.length).toBe(5);
       });
 
       it('全角ピリオド区切りの数字（１．０００ → 1000）', () => {
@@ -116,44 +116,105 @@ describe('normalization', () => {
         expect(result.mapping.ranges.length).toBe(4);
       });
 
-      it('全角小数点を含む数字（１，２３４．５６ → 1234.56）', () => {
+      it('全角小数点を含む数字（１，２３４．５６ → 1,234.56、カンマを保持）', () => {
         const result = normalizeText('１，２３４．５６');
-        expect(result.normalizedText).toBe('1234.56');
-        // 1(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 7文字（全角が半角に変換、カンマは削除）
-        expect(result.mapping.ranges.length).toBe(7);
+        expect(result.normalizedText).toBe('1,234.56');
+        // 1(1) + ,(1) + 2(1) + 3(1) + 4(1) + .(1) + 5(1) + 6(1) = 8文字（全角が半角に変換、カンマを保持）
+        expect(result.mapping.ranges.length).toBe(8);
       });
 
       it('数字と文字の混在（価格1,000円）', () => {
         const result = normalizeText('価格1,000円');
-        expect(result.normalizedText).toBe('価格1000円');
-        // 価(1) + 格(1) + 1(1) + 0(1) + 0(1) + 0(1) + 円(1) = 7文字（カンマは削除される）
-        expect(result.mapping.ranges.length).toBe(7);
+        expect(result.normalizedText).toBe('価格1,000円');
+        // 価(1) + 格(1) + 1(1) + ,(1) + 0(1) + 0(1) + 0(1) + 円(1) = 8文字（カンマを保持）
+        expect(result.mapping.ranges.length).toBe(8);
       });
 
       it('複数の数字文字列（1,000と2,000）', () => {
         const result = normalizeText('1,000と2,000');
-        expect(result.normalizedText).toBe('1000と2000');
-        expect(result.mapping.ranges.length).toBe(9);
+        expect(result.normalizedText).toBe('1,000と2,000');
+        expect(result.mapping.ranges.length).toBe(11);
       });
 
-      it('小数点が最後の区切り文字でない場合（1,234.567.89 → 1234567.89）', () => {
+      it('小数点が最後の区切り文字でない場合（1,234.567.89 → 1,234567.89、カンマを保持）', () => {
         const result = normalizeText('1,234.567.89');
         // 最後の区切り文字（.89）が小数点として扱われる
-        expect(result.normalizedText).toBe('1234567.89');
-        expect(result.mapping.ranges.length).toBe(10);
+        // 最初のカンマは保持される
+        expect(result.normalizedText).toBe('1,234567.89');
+        expect(result.mapping.ranges.length).toBe(11);
       });
 
-      it('小数点が最後の区切り文字でない場合（1.234,567,89 → 1234567.89）', () => {
+      it('小数点が最後の区切り文字でない場合（1.234,567,89 → 1234,567.89、カンマを保持）', () => {
         const result = normalizeText('1.234,567,89');
-        // 最後の区切り文字（,89）が小数点として扱われる
-        expect(result.normalizedText).toBe('1234567.89');
-        expect(result.mapping.ranges.length).toBe(10);
+        // 最後の区切り文字（,89）が小数点として扱われる（.に変換）
+        // 中間のカンマは保持される
+        expect(result.normalizedText).toBe('1234,567.89');
+        expect(result.mapping.ranges.length).toBe(11);
       });
 
-      it('区切り文字のみの数字（1,2,3 → 123）', () => {
+      it('区切り文字のみの数字（1,2,3 → 1,2,3、カンマを保持）', () => {
         const result = normalizeText('1,2,3');
-        expect(result.normalizedText).toBe('123');
-        expect(result.mapping.ranges.length).toBe(3);
+        expect(result.normalizedText).toBe('1,2,3');
+        expect(result.mapping.ranges.length).toBe(5);
+      });
+
+      it('カンマ単体で検索可能（数字の間のカンマを保持）', () => {
+        const result = normalizeText('1,234,567');
+        // カンマが保持されているため、カンマ単体で検索できる
+        expect(result.normalizedText).toContain(',');
+        expect(result.normalizedText).toBe('1,234,567');
+        // カンマの位置を確認
+        const commaIndices = [];
+        for (let i = 0; i < result.normalizedText.length; i++) {
+          if (result.normalizedText[i] === ',') {
+            commaIndices.push(i);
+          }
+        }
+        expect(commaIndices.length).toBe(2); // 2つのカンマが保持されている
+      });
+
+      it('280,0が280,067,500にマッチする（カンマの前に3桁以上ある場合は千の区切りとして扱う）', () => {
+        const queryResult = normalizeText('280,0');
+        const textResult = normalizeText('280,067,500');
+        // 280,0は千の区切りとして扱われ、カンマが保持される
+        expect(queryResult.normalizedText).toBe('280,0');
+        // 280,067,500もカンマが保持される
+        expect(textResult.normalizedText).toBe('280,067,500');
+        // 部分マッチが可能
+        expect(textResult.normalizedText).toContain(queryResult.normalizedText);
+      });
+
+      it('280,06が280,067,500にマッチする（カンマの前に3桁以上、後ろに2桁の場合は千の区切りとして扱う）', () => {
+        const queryResult = normalizeText('280,06');
+        const textResult = normalizeText('280,067,500');
+        // 280,06は千の区切りとして扱われ、カンマが保持される
+        expect(queryResult.normalizedText).toBe('280,06');
+        // 280,067,500もカンマが保持される
+        expect(textResult.normalizedText).toBe('280,067,500');
+        // 部分マッチが可能
+        expect(textResult.normalizedText).toContain(queryResult.normalizedText);
+      });
+
+      it('280,067が280,067,500にマッチする', () => {
+        const queryResult = normalizeText('280,067');
+        const textResult = normalizeText('280,067,500');
+        // 280,067は千の区切りとして扱われ、カンマが保持される
+        expect(queryResult.normalizedText).toBe('280,067');
+        // 280,067,500もカンマが保持される
+        expect(textResult.normalizedText).toBe('280,067,500');
+        // 部分マッチが可能
+        expect(textResult.normalizedText).toContain(queryResult.normalizedText);
+      });
+
+      it('280067500が280,067,500にマッチする（カンマなしで検索）', () => {
+        const queryResult = normalizeText('280067500');
+        const textResult = normalizeText('280,067,500');
+        // 280067500はそのまま
+        expect(queryResult.normalizedText).toBe('280067500');
+        // 280,067,500はカンマが保持される
+        expect(textResult.normalizedText).toBe('280,067,500');
+        // 検索時にカンマが無視されるため、マッチする
+        // このテストは正規化の結果を確認するもので、実際のマッチングはsearchInVirtualTextで行われる
       });
 
       it('小数点が1桁の数字の後（1.2 → 1.2）', () => {
