@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-01-04
+
+### 修正 (Fixed)
+
+- **非レンダリング要素のチェック処理を適正化**: 非レンダリング要素のチェック処理を共通関数に統一して適切に実施されるように修正
+  - `NON_RENDERABLE_TAGS`定数を追加してタグリストを一元管理
+  - `isNonRenderableTag()`と`isNonRenderableElement()`関数を追加
+  - すべての箇所で分散していたタグチェック処理を共通関数に統一
+  - 保守性と可読性を向上
+
 ## [1.2.2] - 2025-12-25
 
 ### 追加 (Added)
@@ -225,6 +235,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.3]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.3
 [1.2.2]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.2
 [1.2.1]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.1
 [1.2.0]: https://github.com/naokirin/chrome_ext_pattern_lens/releases/tag/v1.2.0

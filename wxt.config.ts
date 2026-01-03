@@ -7,7 +7,7 @@ export default defineConfig({
 
     return {
       name: '__MSG_extName__',
-      version: '1.2.2',
+      version: '1.2.3',
       description: '__MSG_extDescription__',
       default_locale: 'ja',
       permissions: ['storage', 'activeTab', 'scripting'],
