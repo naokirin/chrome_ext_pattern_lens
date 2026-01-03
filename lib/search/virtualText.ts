@@ -166,11 +166,11 @@ function isBlockLevel(element: Element | null): boolean {
       error,
       element: element
         ? {
-          tagName: element.tagName,
-          id: element.id,
-          className: element.className,
-          parentElement: element.parentElement?.tagName || null,
-        }
+            tagName: element.tagName,
+            id: element.id,
+            className: element.className,
+            parentElement: element.parentElement?.tagName || null,
+          }
         : null,
     });
     return false;
@@ -278,11 +278,11 @@ function isVisible(element: Element | null): boolean {
       error,
       element: element
         ? {
-          tagName: element.tagName,
-          id: element.id,
-          className: element.className,
-          parentElement: element.parentElement?.tagName || null,
-        }
+            tagName: element.tagName,
+            id: element.id,
+            className: element.className,
+            parentElement: element.parentElement?.tagName || null,
+          }
         : null,
     });
     return false;
@@ -577,10 +577,10 @@ export function createVirtualTextAndMap(): { virtualText: string; charMap: CharM
           },
           lastVisibleNode: lastVisibleNode
             ? {
-              nodeType: lastVisibleNode.nodeType,
-              nodeName: lastVisibleNode.nodeName,
-              parentElement: lastVisibleNode.parentElement?.tagName || null,
-            }
+                nodeType: lastVisibleNode.nodeType,
+                nodeName: lastVisibleNode.nodeName,
+                parentElement: lastVisibleNode.parentElement?.tagName || null,
+              }
             : null,
         });
       }
@@ -600,9 +600,9 @@ export function createVirtualTextAndMap(): { virtualText: string; charMap: CharM
       errorStack: error instanceof Error ? error.stack : undefined,
       documentBody: document.body
         ? {
-          tagName: document.body.tagName,
-          childElementCount: document.body.childElementCount,
-        }
+            tagName: document.body.tagName,
+            childElementCount: document.body.childElementCount,
+          }
         : null,
     });
     // 空の結果を返してクラッシュを防ぐ
