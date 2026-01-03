@@ -23,7 +23,9 @@ const NON_RENDERABLE_TAGS = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'] as const
  */
 function isNonRenderableTag(tagName: string | null | undefined): boolean {
   if (!tagName) return false;
-  return NON_RENDERABLE_TAGS.includes(tagName.toUpperCase() as typeof NON_RENDERABLE_TAGS[number]);
+  return NON_RENDERABLE_TAGS.includes(
+    tagName.toUpperCase() as (typeof NON_RENDERABLE_TAGS)[number]
+  );
 }
 
 /**
@@ -70,7 +72,10 @@ function getCachedComputedStyle(element: Element): CSSStyleDeclaration | null {
   }
 
   if (computedStyleCache.has(element)) {
-    return computedStyleCache.get(element)!;
+    const cached = computedStyleCache.get(element);
+    if (cached) {
+      return cached;
+    }
   }
   try {
     const style = window.getComputedStyle(element);
@@ -105,7 +110,10 @@ function isBlockLevel(element: Element | null): boolean {
 
     // キャッシュをチェック
     if (blockLevelCache.has(element)) {
-      return blockLevelCache.get(element)!;
+      const cached = blockLevelCache.get(element);
+      if (cached !== undefined) {
+        return cached;
+      }
     }
 
     // Always treat these as inline elements regardless of CSS
@@ -156,12 +164,14 @@ function isBlockLevel(element: Element | null): boolean {
   } catch (error) {
     console.error('[VirtualText] Error in isBlockLevel:', {
       error,
-      element: element ? {
-        tagName: element.tagName,
-        id: element.id,
-        className: element.className,
-        parentElement: element.parentElement?.tagName || null,
-      } : null,
+      element: element
+        ? {
+          tagName: element.tagName,
+          id: element.id,
+          className: element.className,
+          parentElement: element.parentElement?.tagName || null,
+        }
+        : null,
     });
     return false;
   }
@@ -174,7 +184,10 @@ function getNearestBlockAncestor(node: Node): Element {
   try {
     // キャッシュをチェック
     if (blockAncestorCache.has(node)) {
-      return blockAncestorCache.get(node)!;
+      const cached = blockAncestorCache.get(node);
+      if (cached) {
+        return cached;
+      }
     }
 
     let current: Node | null = node;
@@ -245,7 +258,10 @@ function isVisible(element: Element | null): boolean {
 
     // キャッシュをチェック
     if (visibilityCache.has(element)) {
-      return visibilityCache.get(element)!;
+      const cached = visibilityCache.get(element);
+      if (cached !== undefined) {
+        return cached;
+      }
     }
 
     const style = getCachedComputedStyle(element);
@@ -260,12 +276,14 @@ function isVisible(element: Element | null): boolean {
   } catch (error) {
     console.error('[VirtualText] Error in isVisible:', {
       error,
-      element: element ? {
-        tagName: element.tagName,
-        id: element.id,
-        className: element.className,
-        parentElement: element.parentElement?.tagName || null,
-      } : null,
+      element: element
+        ? {
+          tagName: element.tagName,
+          id: element.id,
+          className: element.className,
+          parentElement: element.parentElement?.tagName || null,
+        }
+        : null,
     });
     return false;
   }
@@ -557,14 +575,14 @@ export function createVirtualTextAndMap(): { virtualText: string; charMap: CharM
             parentElement: walker.currentNode.parentElement?.tagName || null,
             textContent: walker.currentNode.textContent?.substring(0, 50) || null,
           },
-          lastVisibleNode: lastVisibleNode ? {
-            nodeType: lastVisibleNode.nodeType,
-            nodeName: lastVisibleNode.nodeName,
-            parentElement: lastVisibleNode.parentElement?.tagName || null,
-          } : null,
+          lastVisibleNode: lastVisibleNode
+            ? {
+              nodeType: lastVisibleNode.nodeType,
+              nodeName: lastVisibleNode.nodeName,
+              parentElement: lastVisibleNode.parentElement?.tagName || null,
+            }
+            : null,
         });
-        // エラーが発生したノードはスキップして続行
-        continue;
       }
     }
 
@@ -580,10 +598,12 @@ export function createVirtualTextAndMap(): { virtualText: string; charMap: CharM
       error,
       errorMessage: error instanceof Error ? error.message : String(error),
       errorStack: error instanceof Error ? error.stack : undefined,
-      documentBody: document.body ? {
-        tagName: document.body.tagName,
-        childElementCount: document.body.childElementCount,
-      } : null,
+      documentBody: document.body
+        ? {
+          tagName: document.body.tagName,
+          childElementCount: document.body.childElementCount,
+        }
+        : null,
     });
     // 空の結果を返してクラッシュを防ぐ
     return { virtualText: '', charMap: [] };
